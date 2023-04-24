@@ -13,6 +13,7 @@ export interface ItemFormat {
 }
 
 export interface Environment {
+  basicAuthDisabled: boolean;
   firebaseConfig: FirebaseConfig;
   recaptchaSiteKey: string;
   site: string;
@@ -36,6 +37,7 @@ export default {
   localhost: "http://localhost:3000/",
   environments: {
     default: {
+      basicAuthDisabled: false,
       recaptchaSiteKey: "6LekWdUhAAAAAOKeHNJ-B1oIL_m-JYyZiqKF7uPV",
       site: "https://niiifty.com",
       headerTitle: "NIIIFTY",
