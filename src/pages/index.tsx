@@ -7,7 +7,7 @@ export default function Home() {
     <>
       <Metatags title={title} description={description} />
       <p className="text-lg font-semibold">
-        NIIIFTY is a project funded by{" "}
+        <a href="https://github.com/NIIIFTY">NIIIFTY</a> is a project funded by{" "}
         <a href="https://github.com/filecoin-project/devgrants/issues/504">
           Protocol Labs Dev Grant #504
         </a>{" "}
@@ -17,9 +17,10 @@ export default function Home() {
       <br />
       <p className="text-md">
         NIIIFTY makes it easy to share <a href="https://iiif.io">IIIF</a>
-        -formatted content via <a href="https://ipfs.io/">IPFS</a>. Therefore
-        increasing the reliability of this data for use in third-party apps such
-        as <a href="https://exhibit.so">Exhibit</a>.
+        -formatted high resolution images, 3d models, and audiovisual content
+        via <a href="https://ipfs.io/">IPFS</a>. Therefore increasing the
+        reliability of this data for use in third-party apps such as{" "}
+        <a href="https://exhibit.so">Exhibit</a>.
       </p>
       <br />
       <p className="text-md">
