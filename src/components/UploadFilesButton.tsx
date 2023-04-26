@@ -8,21 +8,25 @@ const UploadFilesButton = ({ href }) => {
 const Large = ({ href }) => {
   const { t } = useTranslation();
 
+  //transition-color flex cursor-pointer   lg:mx-0
+
   return (
     <Link href={href}>
-      <a className="transition-color mx-auto flex cursor-pointer flex-row items-center rounded-md bg-black px-6 py-3 text-lg font-medium text-white no-underline shadow-md duration-500 hover:bg-white hover:text-black focus:outline-none dark:bg-white dark:text-black lg:mx-0">
+      <a className="flex flex-row items-center justify-center rounded-md bg-black px-6 py-3 text-lg font-medium text-white no-underline shadow-md duration-500 hover:bg-white hover:text-black focus:outline-none dark:bg-white dark:text-black">
         <>
-          {t("uploadFile")}
+          {t("uploadFiles")}
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="ml-2 h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="ml-2 h-6 w-6"
           >
             <path
-              fillRule="evenodd"
-              d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-              clipRule="evenodd"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
             />
           </svg>
         </>
