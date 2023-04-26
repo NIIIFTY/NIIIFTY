@@ -3,7 +3,7 @@ body {
 }
 
 .docs p {
-  @apply my-4 mx-0 block;
+  @apply my-4 mx-0 block leading-loose;
 }
 
 .docs h1:first-of-type {
