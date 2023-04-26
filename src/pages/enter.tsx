@@ -63,7 +63,6 @@ type Errors = {
 
 function SignInWithGoogle() {
   const [errors, setErrors] = useState<Errors>({});
-  // const [passedRecaptcha, setPassedRecaptcha] = useState<boolean>(false);
   const [agreedToPolicies, setAgreedToPolicies] = useState<boolean>(false);
   const { t } = useTranslation();
 

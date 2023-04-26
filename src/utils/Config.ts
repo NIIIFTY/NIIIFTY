@@ -23,7 +23,6 @@ const getApiUrl = () => {
 export const api = getApiUrl();
 export const firebaseConfig = config.environments[env].firebaseConfig;
 export const basicAuthDisabled = config.environments[env].basicAuthDisabled;
-export const recaptchaSiteKey = config.environments[env].recaptchaSiteKey;
 // export const email = config.environments[env].email;
 export const headerTitle = config.environments[env].headerTitle;
 export const theme = config.environments[env].theme;
