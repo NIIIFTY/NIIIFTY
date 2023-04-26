@@ -9,9 +9,17 @@ const Figure = ({
   video?: string | undefined;
   children?: React.ReactNode;
 }) => {
+  function titleToAnchor() {
+    return title.toLowerCase().replace(/ /g, "-");
+  }
+
   return (
     <figure>
-      {img && <img alt={title} src={img} loading="lazy" />}
+      {img && (
+        <a id={titleToAnchor()} href={`#${titleToAnchor()}`}>
+          <img alt={title} src={img} loading="lazy" />
+        </a>
+      )}
       {video && (
         <video title={title} loop autoPlay muted playsInline src={video} />
       )}
