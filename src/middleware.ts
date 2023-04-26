@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hash2 } from "./utils/Utils";
-
-// export const config = {
-//   matcher: ["/", "/index"],
-// };
+import { basicAuthDisabled } from "@/utils/Config";
 
 export const config = {
   matcher: ["/enter"],
@@ -11,6 +8,10 @@ export const config = {
 
 // https://github.com/vercel/examples/blob/main/edge-functions/basic-auth-password/middleware.ts
 export function middleware(req: NextRequest) {
+  if (basicAuthDisabled) {
+    return NextResponse.next();
+  }
+
   const basicAuth = req.headers.get("authorization");
   const url = req.nextUrl;
 

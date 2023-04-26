@@ -3,6 +3,32 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
       allow read, write: if request.auth != null;
+
+      match /users/{userId} {
+      	allow read;
+        allow create: if isValidUser(userId);
+      }
+
+      match /usernames/{username} {
+      	allow read;
+        allow create: if isValidUsername(username);
+      }
+
+      function isValidUser(userId) {
+        let isOwner = request.auth.uid == userId;
+      	let username = request.resource.data.username;
+        let usernameExists = existsAfter(/databases/$(database)/documents/usernames/$(username));
+
+        return isOwner && usernameExists;        
+      }
+
+      function isValidUsername(username) {
+		    let isOwner = request.auth.uid == request.resource.data.uid;
+        let isValidLength = username.size() >= 1 && username.size() <= 15;
+        let isValidUserDoc = getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username == username;
+
+        return isOwner && isValidLength && isValidUserDoc;     
+      }
     }
   }
 }
