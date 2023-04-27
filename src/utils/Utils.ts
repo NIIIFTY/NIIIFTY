@@ -1,6 +1,6 @@
 import { default as slug } from "slugify";
 import crypto from "crypto";
-import { SavedFile } from "./Types";
+import { FileSystem, SavedFile } from "./Types";
 import config from "../../niiifty.config";
 
 // stackoverflow.com/questions/1322732/convert-seconds-to-hh-mm-ss-with-javascript
@@ -48,14 +48,22 @@ export const hash2 = (value: string) => {
     );
 };
 
-export const getFileUrl = (name: string) => {
-  // name example: BgV2gRaOStRzwc6uMTZu/original.jpg
-  const firebaseConfig = config.environments[config.environment].firebaseConfig;
-  return `https://${firebaseConfig.storageBucket}.storage.googleapis.com/${name}`;
+export const getFileUrl = (
+  fs: FileSystem,
+  fsID: string, // the bucket id for GCS or the CID for IPFS
+  name: string
+) => {
+  if (fs === "GCS") {
+    const firebaseConfig =
+      config.environments[config.environment].firebaseConfig;
+    return `https://${firebaseConfig.storageBucket}.storage.googleapis.com/${fsID}/${name}`;
+  } else {
+    return `https://${fsID}.ipfs.w3s.link/${name}`;
+  }
 };
 
-export const getThumbnailUrl = (fileId: string) => {
-  return getFileUrl(`${fileId}/thumb.jpg`);
+export const getThumbnailUrl = (fs: FileSystem, fileId: string) => {
+  return getFileUrl(fs, `thumb.jpg`, fileId);
 };
 
 export const copyText = (text: string) => {

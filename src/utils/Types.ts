@@ -137,4 +137,7 @@ export type LicenseURL =
   | "https://creativecommons.org/licenses/by-nd/4.0/"
   | "https://creativecommons.org/licenses/by-nc/4.0/"
   | "https://creativecommons.org/licenses/by-nc-sa/4.0/"
-  | "https://creativecommons.org/licenses/by-nc-nd/4.0/";
+  | "https://creativecommons.org/licenses/by-nc-nd/4.0/"
+  | "https://unsplash.com/license";
+
+export type FileSystem = "GCS" | "IPFS";

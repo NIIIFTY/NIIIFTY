@@ -18,8 +18,10 @@ export default function Home() {
         <a href="https://ipfs.io/">IPFS</a>. This makes it ideal for use in
         third-party applications such as{" "}
         <a href="https://exhibit.so">Exhibit</a>. It is built on top of{" "}
-        <a href="https://web3.storage/">web3.storage</a>, and{" "}
-        <a href="https://firebase.google.com/">Firebase</a>.
+        <a href="https://firebase.google.com/">Firebase</a> and{" "}
+        <a href="https://web3.storage/">web3.storage</a> using{" "}
+        <a href="https://nextjs.org/">Next.js</a> and{" "}
+        <a href="https://tailwindcss.com/">TailwindCSS</a>.
       </p>
       <br />
       <p className="text-md">

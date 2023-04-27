@@ -4,13 +4,19 @@ import Metatags from "@/components/Metatags";
 import { useTranslation } from "react-i18next";
 import { LoadingMessage } from "../LoadingMessage";
 import { remove, useAuthoringFile } from "@/hooks/useFile";
-import { AuthoringFile, LicenseURL, MIMETYPES } from "@/utils/Types";
+import {
+  AuthoringFile,
+  FileSystem,
+  LicenseURL,
+  MIMETYPES,
+} from "@/utils/Types";
 import { useMounted } from "@/hooks/useMounted";
 import Alert from "../Alert";
 import { getFileUrl } from "@/utils/Utils";
 import { ErrorMessage } from "../ErrorMessage";
 import cx from "classnames";
 import CopyText from "../CopyText";
+import Tabs, { Tab } from "../Tabs";
 
 type PageErrorType = "fileNotFound";
 
@@ -56,7 +62,13 @@ const licenses: License[] = [
       "Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)",
     value: "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   },
+  {
+    label: "Unsplash",
+    value: "https://unsplash.com/license",
+  },
 ];
+
+type TabName = "GCS" | "IPFS";
 
 export function EditFile({ id }: { id: string }) {
   const { user, userAdapter } = useContext(UserContext);
@@ -70,6 +82,8 @@ export function EditFile({ id }: { id: string }) {
   const [license, setLicense] = useState<LicenseURL>();
   const [cid, setCid] = useState<string>("");
   const [type, setType] = useState<string>("");
+  const [fs, setFS] = useState<FileSystem>("GCS");
+  const [fsID, setFSID] = useState<string>(id);
 
   const [_file, { update }] = useAuthoringFile(userAdapter!, id as string, {
     onData: (file) => {
@@ -136,15 +150,58 @@ export function EditFile({ id }: { id: string }) {
     }
 
     const Formats = () => {
-      const dash: string = getFileUrl(`${id}/dash/optimized.mpd`);
-      const glb: string = getFileUrl(`${id}/optimized.glb`);
-      const hls: string = getFileUrl(`${id}/hls/optimized.m3u8`);
-      const iiif: string = getFileUrl(`${id}/iiif/index.json`);
-      const jpg: string = getFileUrl(`${id}/optimized.jpg`);
-      const mp4: string = getFileUrl(`${id}/optimized.mp4`);
+      let tabs: Tab<TabName>[] = [
+        {
+          name: "GCS",
+          label: t("googleCloudStorage"),
+        },
+        {
+          name: "IPFS",
+          label: t("ipfs"),
+        },
+      ];
+
+      const dash: string = getFileUrl(fs, fsID, `dash/optimized.mpd`);
+      const glb: string = getFileUrl(fs, fsID, `optimized.glb`);
+      const hls: string = getFileUrl(fs, fsID, `hls/optimized.m3u8`);
+      const iiifManifest: string = getFileUrl(fs, fsID, `iiif/index.json`);
+      const jpg: string = getFileUrl(fs, fsID, `optimized.jpg`);
+      const mp4: string = getFileUrl(fs, fsID, `optimized.mp4`);
 
       return (
         <>
+          <div className="pt-8">
+            <Tabs
+              tabs={tabs.map((tab, _index) => {
+                return {
+                  name: tab.name,
+                  label: tab.label,
+                  current: tab.name === fs,
+                };
+              })}
+              onChange={(current: number) => {
+                const name: FileSystem = tabs[current].name;
+                setFS(name);
+                setFSID(name === "GCS" ? id : cid);
+              }}
+            />
+          </div>
+          {/* thumbnail */}
+          <label className="mt-8 font-light text-gray-600 dark:text-white">
+            <>{t("thumbnail")}</>
+          </label>
+          <div className="w-64">
+            <a href={getFileUrl(fs, fsID, `thumb.jpg`)} target="_blank">
+              <img src={getFileUrl(fs, fsID, `thumb.jpg`)} alt={title} />
+            </a>
+            <a href={getFileUrl(fs, fsID, `regular.jpg`)} target="_blank">
+              {t("regular")}
+            </a>
+            <br />
+            <a href={getFileUrl(fs, fsID, `small.jpg`)} target="_blank">
+              {t("small")}
+            </a>
+          </div>
           {(type === MIMETYPES.JPG ||
             type === MIMETYPES.PNG ||
             type === MIMETYPES.TIF ||
@@ -219,10 +276,19 @@ export function EditFile({ id }: { id: string }) {
                 <CopyText id="dash" text={dash} />
               </div>
 
-              <a
+              {/* <a
                 href={`https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html?mpd=${encodeURIComponent(
                   dash
                 )}+&debug.logLevel=4&streaming.delay.liveDelayFragmentCount=NaN&streaming.delay.liveDelay=NaN&streaming.buffer.initialBufferLevel=NaN&streaming.liveCatchup.maxDrift=NaN&streaming.liveCatchup.playbackRate.min=NaN&streaming.liveCatchup.playbackRate.max=NaN`}
+                target="_blank"
+              >
+                {t("view")}
+              </a> */}
+
+              <a
+                href={`https://players.akamai.com/players/dashjs?streamUrl=${encodeURIComponent(
+                  dash
+                )}`}
                 target="_blank"
               >
                 {t("view")}
@@ -241,7 +307,7 @@ export function EditFile({ id }: { id: string }) {
               </div>
 
               <a
-                href={`https://www.hlsplayer.net/#type=m3u8&src=${hls}`}
+                href={`https://players.akamai.com/players/hlsjs?streamUrl=${hls}`}
                 target="_blank"
               >
                 {t("view")}
@@ -258,9 +324,9 @@ export function EditFile({ id }: { id: string }) {
           </label>
 
           <div>
-            <CopyText id="iiif" text={iiif} />
+            <CopyText id="iiif" text={iiifManifest} />
             <a
-              href={`https://www.universalviewer.dev/#?iiifManifestId=${iiif}`}
+              href={`https://www.universalviewer.dev/#?iiifManifestId=${iiifManifest}`}
               target="_blank"
               title={t("viewOnUVLink")}
             >
@@ -278,19 +344,6 @@ export function EditFile({ id }: { id: string }) {
           description={description}
         />
         <form onSubmit={handleSubmit} className="flex flex-col">
-          {/* thumbnail */}
-          <div className="w-64">
-            <a href={getFileUrl(`${id}/thumb.jpg`)} target="_blank">
-              <img src={getFileUrl(`${id}/thumb.jpg`)} alt={title} />
-            </a>
-            <a href={getFileUrl(`${id}/regular.jpg`)} target="_blank">
-              {t("regular")}
-            </a>
-            <br />
-            <a href={getFileUrl(`${id}/small.jpg`)} target="_blank">
-              {t("small")}
-            </a>
-          </div>
           {/* title */}
           <label
             htmlFor="title"
@@ -356,7 +409,7 @@ export function EditFile({ id }: { id: string }) {
           </select>
 
           {/* ipfs */}
-          <label
+          {/* <label
             htmlFor="cid"
             className="mt-8 font-light text-gray-600 dark:text-white"
           >
@@ -372,7 +425,7 @@ export function EditFile({ id }: { id: string }) {
             >
               {t("view")}
             </a>
-          </div>
+          </div> */}
 
           <Formats />
 

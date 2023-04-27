@@ -99,7 +99,7 @@ const FileList = () => {
                         <div className="bg-gray-400">
                           {file.processed ? (
                             <img
-                              src={getFileUrl(`${file.id}/thumb.jpg`)}
+                              src={getFileUrl("GCS", file.id, "thumb.jpg")}
                               alt={file.title}
                             />
                           ) : (

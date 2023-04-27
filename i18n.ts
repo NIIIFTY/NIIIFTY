@@ -36,6 +36,7 @@ i18n
           fullName: "Full name",
           fullNameCannotBeEmpty: "Full name cannot be empty",
           glb: "GLB",
+          googleCloudStorage: "Google Cloud Storage",
           help: "Help",
           hls: "HLS",
           iHaveReadAndAgreedToNIIIFTYs: "I have read and agreed to NIIIFTY's",
@@ -72,6 +73,7 @@ i18n
           siteName: "NIIIFTY",
           small: "Small",
           termsOfService: "Terms of Service",
+          thumbnail: "Thumbnail",
           title: "Title",
           titleInvalid:
             "Title must be at least one character and contain only letters, numbers, spaces, hyphens, and underscores.",
