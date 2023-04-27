@@ -254,7 +254,7 @@ export function EditFile({ id }: { id: string }) {
             htmlFor="iiif"
             className="mt-8 font-light text-gray-600 dark:text-white"
           >
-            <>{t("iiif")}</>
+            <>{t("iiifManifest")}</>
           </label>
 
           <div>
