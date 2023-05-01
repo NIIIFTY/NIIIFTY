@@ -38,6 +38,18 @@ export default function Home() {
       <div className="mx-auto mt-8 max-w-sm">
         <UploadFilesButton.Large href="/admin" />
       </div>
+      <div className="mt-16">
+        <iframe
+          className="mx-auto"
+          width="560"
+          height="315"
+          src="https://www.youtube.com/embed/G2IJNH8g8MM"
+          title="YouTube video player"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        ></iframe>
+      </div>
     </>
   );
 }
