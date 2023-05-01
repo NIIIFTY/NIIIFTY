@@ -38,11 +38,10 @@ export default function Home() {
       <div className="mx-auto mt-8 max-w-sm">
         <UploadFilesButton.Large href="/admin" />
       </div>
-      <div className="mt-16">
+      <div className="mx-auto mt-16 max-w-md lg:max-w-3xl">
         <iframe
-          className="mx-auto"
-          width="560"
-          height="315"
+          className="mx-auto h-[252px] lg:h-[432px]"
+          width="100%"
           src="https://www.youtube.com/embed/G2IJNH8g8MM"
           title="YouTube video player"
           frameBorder="0"
