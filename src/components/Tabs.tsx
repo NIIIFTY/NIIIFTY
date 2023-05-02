@@ -26,7 +26,7 @@ const Tabs = ({
         <select
           id="tabs"
           name="tabs"
-          className="block w-full rounded-md border-gray-500 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          className="block w-full rounded-md border-gray-500 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:text-black"
           defaultValue={tabs.find((tab) => tab.current).name}
           onChange={(event: React.FormEvent<HTMLSelectElement>) => {
             const index: number = tabs.findIndex(
