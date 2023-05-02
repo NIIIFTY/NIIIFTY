@@ -433,7 +433,7 @@ export function EditFile({ id }: { id: string }) {
             <button
               type="submit"
               className={cx(
-                "transition-color mt-8 flex flex-row items-center rounded-md bg-black px-6 py-3 text-lg font-medium text-white shadow-md duration-500 hover:bg-white hover:text-black focus:outline-none dark:bg-white dark:text-black"
+                "transition-color mt-8 flex flex-row items-center rounded-md bg-black px-6 py-3 text-lg font-medium text-white shadow-md duration-500 hover:bg-white hover:text-black focus:outline-none dark:bg-white dark:text-black dark:hover:text-gray-500"
               )}
             >
               <>{t("update")}</>
@@ -453,7 +453,7 @@ export function EditFile({ id }: { id: string }) {
                 }
               }}
               className={cx(
-                "transition-color mt-8 ml-4 flex flex-row items-center rounded-md bg-gray-300 px-6 py-3 text-lg font-medium text-black shadow-md duration-500 hover:bg-white hover:text-black focus:outline-none dark:bg-gray-700 dark:text-white"
+                "transition-color  mt-8 ml-auto flex flex-row items-center rounded-md bg-gray-200 px-6 py-3 text-lg font-medium text-red-500 shadow-md duration-500 hover:bg-white hover:text-red-800 focus:outline-none dark:bg-gray-200 dark:text-red-500 dark:hover:text-red-900"
               )}
             >
               <>{t("delete")}</>

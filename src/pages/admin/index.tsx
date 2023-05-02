@@ -76,7 +76,10 @@ const FileList = () => {
                       <>{t("edit")}</>
                     </span>
                   </th> */}
-                  <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                  <th
+                    scope="col"
+                    className="relative py-3.5 pl-3 pr-4 text-red-500 sm:pr-6"
+                  >
                     <span className="sr-only">
                       <>{t("delete")}</>
                     </span>
@@ -154,7 +157,7 @@ const FileList = () => {
                             remove(userAdapter, file.id);
                           }
                         }}
-                        className="text-blue-600 duration-500 hover:text-blue-900 dark:text-white dark:hover:text-gray-400"
+                        className="text-red-500 duration-500 hover:text-red-800 dark:text-red-500 dark:hover:text-red-300"
                       >
                         <>{t("delete")}</>
                       </button>

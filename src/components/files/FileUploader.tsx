@@ -260,7 +260,7 @@ export function FileUploader(props) {
         <div
           {...getRootProps({
             className:
-              "flex justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none",
+              "flex justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:hover:border-gray-500 dark:focus:border-gray-500",
           })}
         >
           <span className="flex items-center space-x-2">
@@ -278,9 +278,9 @@ export function FileUploader(props) {
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
-            <span className="font-medium text-gray-600">
+            <span className="font-medium text-gray-600 dark:text-white">
               <>{t("dragAndDropFiles")}&nbsp;</>
-              <span className="text-blue-600 underline">
+              <span className="text-blue-600 underline dark:text-white">
                 <>{t("browse")}</>
               </span>
             </span>
