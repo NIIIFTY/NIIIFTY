@@ -266,7 +266,7 @@ export function FileUploader(props) {
           <span className="flex items-center space-x-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="hidden h-6 w-6 text-gray-600 sm:block"
+              className="hidden h-6 w-6 text-gray-600 dark:text-white sm:block"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
