@@ -40,9 +40,9 @@ export default function Home() {
       </div>
       <div className="mx-auto mt-16 max-w-md lg:max-w-3xl">
         <iframe
-          className="mx-auto h-[252px] lg:h-[432px]"
+          className="mx-auto h-[243px] lg:h-[416px]"
           width="100%"
-          src="https://www.youtube.com/embed/G2IJNH8g8MM"
+          src="https://www.youtube.com/embed/OohBvWDvrIc"
           title="YouTube video player"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
