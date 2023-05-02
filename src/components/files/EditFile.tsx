@@ -393,7 +393,7 @@ export function EditFile({ id }: { id: string }) {
           </label>
           <select
             value={license}
-            className="block w-full border-gray-300 py-2 pl-3 pr-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-500 dark:bg-black dark:text-white"
+            className="block w-full border-gray-300 py-2 pl-3 pr-10 text-gray-600 focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-500 dark:bg-black dark:text-white"
             onChange={(event: React.FormEvent<HTMLSelectElement>) => {
               setLicense(event.currentTarget.value as LicenseURL);
             }}
