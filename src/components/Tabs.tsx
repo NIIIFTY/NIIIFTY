@@ -59,8 +59,8 @@ const Tabs = ({
                   }}
                   className={classNames(
                     tab.current
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-600 hover:border-gray-700 hover:text-gray-700",
+                      ? "border-blue-500 text-blue-600 dark:border-white dark:text-white dark:hover:text-white"
+                      : "border-transparent text-gray-600 hover:border-gray-700 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white",
                     "select-none whitespace-nowrap border-b-2 px-1 pb-2 text-sm font-medium no-underline"
                   )}
                   aria-current={tab.current ? "page" : undefined}
