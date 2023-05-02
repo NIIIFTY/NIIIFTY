@@ -67,7 +67,7 @@ const FileList = () => {
                   </th>
                   <th
                     scope="col"
-                    className="hidden px-12 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 lg:table-cell"
+                    className="hidden px-12 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 xl:table-cell"
                   >
                     <>{t("modified")}</>
                   </th>
@@ -78,7 +78,7 @@ const FileList = () => {
                   </th> */}
                   <th
                     scope="col"
-                    className="relative py-3.5 pl-3 pr-4 text-red-500 sm:pr-6"
+                    className="relative py-3.5 pl-3 pr-4 text-gray-900 sm:pr-6"
                   >
                     <span className="sr-only">
                       <>{t("delete")}</>
@@ -127,7 +127,7 @@ const FileList = () => {
                     <td className="hidden whitespace-nowrap px-12 py-4 text-sm text-gray-400 lg:table-cell">
                       {file.type.split("/")[1]}
                     </td>
-                    <td className="hidden whitespace-nowrap px-12 py-4 text-sm text-gray-400 lg:table-cell">
+                    <td className="hidden whitespace-nowrap px-12 py-4 text-sm text-gray-400 xl:table-cell">
                       {`${new Date(
                         file.modified
                       ).toLocaleDateString()} | ${new Date(
