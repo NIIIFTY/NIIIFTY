@@ -393,7 +393,7 @@ export function EditFile({ id }: { id: string }) {
           </label>
           <select
             value={license}
-            className="border-b border-gray-300 bg-transparent py-2 pl-4 font-light text-gray-600 ring-blue-500 focus:outline-none focus:ring-1 dark:border-gray-500 dark:text-white"
+            className="block w-full border-gray-300 py-2 pl-3 pr-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-500 dark:bg-black dark:text-white"
             onChange={(event: React.FormEvent<HTMLSelectElement>) => {
               setLicense(event.currentTarget.value as LicenseURL);
             }}
@@ -401,7 +401,7 @@ export function EditFile({ id }: { id: string }) {
             {licenses.map((l: License, index: number) => {
               const { label, value } = l;
               return (
-                <option key={index} value={value} className="dark:text-black">
+                <option key={index} value={value} className="">
                   {label}
                 </option>
               );
