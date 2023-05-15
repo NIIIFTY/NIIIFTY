@@ -12,9 +12,10 @@ import { useEffect, useState } from "react";
 import { fileToJson } from "@/utils/Utils";
 import { AuthoringFile, SavedFile } from "@/utils/Types";
 import { migrateFile } from "@/utils/Migration";
+import { User } from "firebase/auth";
 
 export const usePaginatedFiles = (
-  user,
+  user: User,
   page: number = 0,
   pageSize: number = 10
 ): [files: AuthoringFile[], allLoaded: boolean, loading: boolean] => {
@@ -41,7 +42,9 @@ export const usePaginatedFiles = (
 
     unsubscribe = onSnapshot(firstPage, (results) => {
       setLoading(false);
-      const newExhibits: any = results.docs.map((doc) => formatFile({ ...doc.data(), id: doc.id }));
+      const newExhibits: any = results.docs.map((doc) =>
+        formatFile({ ...doc.data(), id: doc.id })
+      );
       setExhibits(newExhibits);
       setLastVisible(results.docs[results.docs.length - 1]);
     });

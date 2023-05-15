@@ -4,12 +4,12 @@ import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { remove } from "@/hooks/useFile";
 import { usePaginatedFiles } from "@/hooks/usePaginatedFiles";
-import UploadFilesButton from "@/components/UploadFilesButton";
+import UploadFilesButton from "@/components/files/UploadFilesButton";
 import { getFileUrl } from "@/utils/Utils";
 import cx from "classnames";
 import Spinner from "@/components/Spinner";
 
-export default function AdminPage(_props) {
+export default function AdminPage(_props: any) {
   return <AuthCheck signedInContent={<Admin />}></AuthCheck>;
 }
 
@@ -24,7 +24,7 @@ const FileList = () => {
   const pageSize = 10;
 
   const [files, allFilesLoaded, loading] = usePaginatedFiles(
-    user,
+    user!,
     page,
     pageSize
   );
@@ -154,7 +154,7 @@ const FileList = () => {
                               })
                             )
                           ) {
-                            remove(userAdapter, file.id);
+                            remove(userAdapter!, file.id);
                           }
                         }}
                         className="text-red-500 duration-500 hover:text-red-800 dark:text-red-500 dark:hover:text-red-300"

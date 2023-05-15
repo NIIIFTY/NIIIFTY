@@ -195,11 +195,11 @@ export function EditFile({ id }: { id: string }) {
               <img src={getFileUrl(fs, fsID, `thumb.jpg`)} alt={title} />
             </a>
             <a href={getFileUrl(fs, fsID, `regular.jpg`)} target="_blank">
-              {t("regular")}
+              <>{t("regular")}</>
             </a>
             <br />
             <a href={getFileUrl(fs, fsID, `small.jpg`)} target="_blank">
-              {t("small")}
+              <>{t("small")}</>
             </a>
           </div>
           {(type === MIMETYPES.JPG ||
@@ -220,7 +220,7 @@ export function EditFile({ id }: { id: string }) {
               </div>
 
               <a href={jpg} target="_blank">
-                {t("view")}
+                <>{t("view")}</>
               </a>
             </>
           )}
@@ -242,7 +242,7 @@ export function EditFile({ id }: { id: string }) {
                 href={`https://view-gltf.glitch.me?gltf=${glb}`}
                 target="_blank"
               >
-                {t("view")}
+                <>{t("view")}</>
               </a>
             </>
           )}
@@ -261,7 +261,7 @@ export function EditFile({ id }: { id: string }) {
               </div>
 
               <a href={`${mp4}`} target="_blank">
-                {t("view")}
+                <>{t("view")}</>
               </a>
 
               {/* dash */}
@@ -291,7 +291,7 @@ export function EditFile({ id }: { id: string }) {
                 )}`}
                 target="_blank"
               >
-                {t("view")}
+                <>{t("view")}</>
               </a>
 
               {/* hls */}
@@ -310,7 +310,7 @@ export function EditFile({ id }: { id: string }) {
                 href={`https://players.akamai.com/players/hlsjs?streamUrl=${hls}`}
                 target="_blank"
               >
-                {t("view")}
+                <>{t("view")}</>
               </a>
             </>
           )}
@@ -330,7 +330,7 @@ export function EditFile({ id }: { id: string }) {
               target="_blank"
               title={t("viewOnUVLink")}
             >
-              {t("view")}
+              <>{t("view")}</>
             </a>
           </div>
         </>
@@ -448,7 +448,7 @@ export function EditFile({ id }: { id: string }) {
                     })
                   )
                 ) {
-                  await remove(userAdapter, id);
+                  await remove(userAdapter!, id);
                   window.location.href = "/admin/";
                 }
               }}

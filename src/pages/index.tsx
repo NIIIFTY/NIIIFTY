@@ -1,4 +1,4 @@
-import UploadFilesButton from "@/components/UploadFilesButton";
+import UploadFilesButton from "@/components/files/UploadFilesButton";
 import Metatags from "@/components/Metatags";
 import { title, description } from "../utils/Config";
 

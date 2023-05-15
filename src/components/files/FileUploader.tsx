@@ -17,7 +17,7 @@ import { maxFileSize } from "@/utils/Config";
 
 type FileExtended = FileWithPath & { preview: string; errorMessage: string };
 
-export function FileUploader(props) {
+export function FileUploader(_props: any) {
   const [files, setFiles] = useState<FileExtended[]>([]);
 
   const acceptedFileTypes = [
@@ -34,7 +34,7 @@ export function FileUploader(props) {
   function isFileAccepted(file: FileWithPath) {
     return (
       acceptedFileTypes.includes(file.type.toLowerCase()) ||
-      file.path.split(".").pop() === "glb"
+      file.path!.split(".").pop() === "glb"
     );
   }
 
@@ -196,7 +196,7 @@ export function FileUploader(props) {
     //   return <img src={file.preview} className="w-16 h-16" />;
     // }
 
-    if (!file.type && file.path.split(".").pop() === "glb") {
+    if (!file.type && file.path!.split(".").pop() === "glb") {
       return <CubeIcon />;
     }
 
@@ -211,6 +211,8 @@ export function FileUploader(props) {
     if (file.type.startsWith("video/")) {
       return <VideoIcon />;
     }
+
+    return null;
 
     // model/gltf-binary mime type not supported by browsers yet
     // if (file.type.startsWith("model/")) {
@@ -402,7 +404,7 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
   const uploadTaskRef = useRef<UploadTask>();
 
   useEffect(() => {
-    const uid: string = user.uid;
+    const uid: string = user!.uid;
     const title: string = path.basename(file.name, path.extname(file.name));
 
     let extension: string;
@@ -411,7 +413,7 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
       extension = file.type.split("/")[1];
     } else {
       // fall back to getting the extension from the file name
-      extension = file.name.split(".").pop();
+      extension = file.name.split(".").pop() as string;
     }
 
     // use jpg instead of jpeg for consistency with other derivative files
@@ -474,7 +476,7 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
   }, [file]);
 
   const onCancel = () => {
-    uploadTaskRef.current.cancel();
+    uploadTaskRef.current!.cancel();
   };
 
   return (

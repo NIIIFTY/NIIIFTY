@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 
-const UploadFilesButton = ({ href }) => {
+const UploadFilesButton = ({ href }: { href: string }) => {
   return <Large href={href} />;
 };
 
-const Large = ({ href }) => {
+const Large = ({ href }: { href: string }) => {
   const { t } = useTranslation();
 
   //transition-color flex cursor-pointer   lg:mx-0
@@ -35,7 +35,7 @@ const Large = ({ href }) => {
   );
 };
 
-const Small = ({ href }) => {
+const Small = ({ href }: { href: string }) => {
   const { t } = useTranslation();
 
   return (

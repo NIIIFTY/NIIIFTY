@@ -1,7 +1,7 @@
 import AuthCheck from "@/components/AuthCheck";
 import { FileUploader } from "@/components/files/FileUploader";
 
-export default function CreateExhibitPage(_props) {
+export default function CreateFilePage(_props: any) {
   return <AuthCheck signedInContent={<CreateFile />}></AuthCheck>;
 }
 
