@@ -10,10 +10,13 @@ export default async function processImage(imageFilePath, metadata) {
   await createThumbnails(imageFilePath);
 
   // generate IIIF manifest and image tiles
-  await createImageIIIFDerivatives(imageFilePath, metadata);
+  const { width, height } = await createImageIIIFDerivatives(
+    imageFilePath,
+    metadata
+  );
 
   // delete the original image as it's already on GCS and will otherwise be uploaded again
   deleteFile(imageFilePath);
 
-  return {};
+  return { width, height };
 }

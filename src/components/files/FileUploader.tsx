@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useDropzone, FileWithPath } from "react-dropzone";
 import cx from "classnames";
 import { formatBytes } from "@/utils/Utils";
@@ -17,7 +17,7 @@ import { maxFileSize } from "@/utils/Config";
 
 type FileExtended = FileWithPath & { preview: string; errorMessage: string };
 
-export function FileUploader(_props: any) {
+export function FileUploader() {
   const [files, setFiles] = useState<FileExtended[]>([]);
 
   const acceptedFileTypes = [
@@ -249,65 +249,67 @@ export function FileUploader(_props: any) {
     );
   };
 
-  return (
-    // <section className={cx(
-    //   "bg-gray-200",
-    //   isFocused ? "bg-gray-300" : "",
-    //   isDragAccept ? "bg-green-300" : "",
-    //   isDragReject ? "bg-red-300" : ""
-    // )}>
-    <section>
-      {/* drop zone */}
-      {!files.length && (
-        <div
-          {...getRootProps({
-            className:
-              "flex justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:hover:border-gray-500 dark:focus:border-gray-500",
-          })}
-        >
-          <span className="flex items-center space-x-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="hidden h-6 w-6 text-gray-600 dark:text-white sm:block"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-            <span className="font-medium text-gray-600 dark:text-white">
-              <>{t("dragAndDropFiles")}&nbsp;</>
-              <span className="text-blue-600 underline dark:text-white">
-                <>{t("browse")}</>
+  return useMemo(() => {
+    return (
+      // <section className={cx(
+      //   "bg-gray-200",
+      //   isFocused ? "bg-gray-300" : "",
+      //   isDragAccept ? "bg-green-300" : "",
+      //   isDragReject ? "bg-red-300" : ""
+      // )}>
+      // <section>
+      <>
+        {/* drop zone */}
+        {!files.length && (
+          <div
+            {...getRootProps({
+              className:
+                "flex justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:hover:border-gray-500 dark:focus:border-gray-500",
+            })}
+          >
+            <span className="flex items-center space-x-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="hidden h-6 w-6 text-gray-600 dark:text-white sm:block"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              <span className="font-medium text-gray-600 dark:text-white">
+                <>{t("dragAndDropFiles")}&nbsp;</>
+                <span className="text-blue-600 underline dark:text-white">
+                  <>{t("browse")}</>
+                </span>
               </span>
             </span>
-          </span>
-          <input {...getInputProps()} />
-        </div>
-      )}
+            <input {...getInputProps()} />
+          </div>
+        )}
 
-      {files.length > 0 && (
-        <table className="mt-4 min-w-full">
-          <thead>
-            <tr>
-              <th scope="col" className="hidden sm:table-cell"></th>
-              <th scope="col"></th>
-              <th scope="col"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <FileItems />
-          </tbody>
-        </table>
-      )}
+        {files.length > 0 && (
+          <table className="mt-4 min-w-full">
+            <thead>
+              <tr>
+                <th scope="col" className="hidden sm:table-cell"></th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <FileItems />
+            </tbody>
+          </table>
+        )}
 
-      {/* for testing styles */}
-      {/* <table className="mt-4 min-w-full">
+        {/* for testing styles */}
+        {/* <table className="mt-4 min-w-full">
         <thead>
           <tr>
             <th scope="col" className="hidden sm:table-cell"></th>
@@ -390,8 +392,10 @@ export function FileUploader(_props: any) {
           </tr>
         </tbody>
       </table> */}
-    </section>
-  );
+      </>
+      // </section>
+    );
+  }, [files]);
 }
 
 const FileUpload = ({ file }: { file: FileExtended }) => {
@@ -404,6 +408,7 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
   const uploadTaskRef = useRef<UploadTask>();
 
   useEffect(() => {
+    console.log("uploading file", file.name);
     const uid: string = user!.uid;
     const title: string = path.basename(file.name, path.extname(file.name));
 
@@ -466,6 +471,7 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
         // onComplete(file);
         // file is now in cloud storage
         // create a file record in firestore (triggers fileCreated cloud function to generate derivatives)
+        console.log("upload complete");
         await add(userAdapter!, id, {
           uid,
           type,

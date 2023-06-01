@@ -215,7 +215,7 @@ export async function createImageIIIFDerivatives(imageFilePath, metadata) {
         console.log(`deleting iiif.zip`);
         deleteFile(zipFile);
 
-        resolve();
+        resolve(imgMetadata);
       })
       .on("error", reject)
   );

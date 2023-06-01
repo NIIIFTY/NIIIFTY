@@ -146,7 +146,7 @@ export const fileDeleted = functions
 
     console.log(`Found ${files.length} files in ${fileId}/`);
 
-    deleteGCSFiles(files);
+    await deleteGCSFiles(files);
 
     console.log(`Finished deleting ${files.length} files in ${fileId}/`);
   });
