@@ -42,7 +42,7 @@ export const FileList = ({
             )}
           </div>
           <div className="mt-6 sm:mt-0 sm:ml-16 sm:flex-none">
-            <UploadFilesButton.Small href="/admin/files/create" />
+            <UploadFilesButton.Small href="/admin/create" />
           </div>
         </div>
         {files.length > 0 && (
