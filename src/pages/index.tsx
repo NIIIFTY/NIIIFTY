@@ -25,7 +25,8 @@ export default function Home() {
       </p>
       <br />
       <p className="text-md">
-        <a href="https://github.com/NIIIFTY">NIIIFTY</a> is a project funded by{" "}
+        {/* <a href="https://github.com/NIIIFTY">NIIIFTY</a> is a project funded by{" "} */}
+        NIIIFTY is a project funded by{" "}
         <a href="https://github.com/filecoin-project/devgrants/issues/504">
           Protocol Labs Dev Grant #504
         </a>{" "}
