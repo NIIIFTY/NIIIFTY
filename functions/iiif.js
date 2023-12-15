@@ -12,7 +12,7 @@ export function getIIIFManifestJson(path, metadata) {
   const canvasId = `${manifestId}/canvas/0`;
   const annotationPageId = `${manifestId}/canvas/0/annotationpage/0`;
   const annotationId = `${manifestId}/canvas/0/annotation/0`;
-  const { type, title, license } = metadata;
+  const { type, title, license, width, height } = metadata;
 
   let canvas, label, body, thumbnail;
 
@@ -37,6 +37,8 @@ export function getIIIFManifestJson(path, metadata) {
         type: "Image",
         format: "image/jpeg",
         label,
+        width,
+        height,
         service: [
           {
             id,
@@ -183,7 +185,14 @@ export async function createImageIIIFDerivatives(imageFilePath, metadata) {
   const iiifDir = createIIIFDir(imageFilePath);
   const zipFile = path.join(iiifDir, "iiif.zip");
 
-  const id = await createIIIFManifest(iiifDir, metadata);
+  // get image height and width
+  const imgMetadata = await sharp(imageFilePath).metadata();
+  // console.log("imgMetadata", imgMetadata);
+
+  const id = await createIIIFManifest(iiifDir, {
+    ...metadata,
+    ...imgMetadata,
+  });
 
   // generate iiif image tiles
   console.log(`generating iiif image tiles`);

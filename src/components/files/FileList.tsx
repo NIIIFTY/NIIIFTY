@@ -3,21 +3,20 @@ import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { remove } from "@/hooks/useFile";
 import { usePaginatedFiles } from "@/hooks/usePaginatedFiles";
-import UploadFilesButton from "@/components/files/UploadFilesButton";
 import { getFileUrl } from "@/utils/Utils";
-import cx from "classnames";
 import Spinner from "@/components/Spinner";
 import { useMounted } from "@/hooks/useMounted";
+import { AuthoringFile } from "@/utils/Types";
 
 export const FileList = ({
-  filesRoute = "/admin/",
+  onSelectFile,
 }: {
-  filesRoute?: string;
+  onSelectFile: (fileId: string) => void;
 }) => {
   const { user, userAdapter } = useContext(UserContext);
   const { t } = useTranslation();
   const [page, setPage] = useState(0);
-  const pageSize = 10;
+  const pageSize = 50;
 
   const [files, allFilesLoaded, loading] = usePaginatedFiles(
     user!,
@@ -29,22 +28,7 @@ export const FileList = ({
 
   if (isMounted()) {
     return (
-      <div className="w-full">
-        <div className="sm:flex sm:items-center">
-          <div className="sm:flex-auto">
-            <h1 className="text-xl font-semibold">
-              <>{t("myFiles")}</>
-            </h1>
-            {files.length === 0 && (
-              <p className="mt-2 text-sm">
-                <>{t("noFilesFound")}</>
-              </p>
-            )}
-          </div>
-          <div className="mt-6 sm:mt-0 sm:ml-16 sm:flex-none">
-            <UploadFilesButton.Small href="/admin/create" />
-          </div>
-        </div>
+      <>
         {files.length > 0 && (
           <>
             <div className="mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 dark:ring-gray-600 md:mx-0 md:rounded-lg">
@@ -86,31 +70,33 @@ export const FileList = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                  {files.map((file: any) => (
+                  {files.map((file: AuthoringFile) => (
                     <tr
                       key={file.id}
-                      className={cx(
-                        !file.processed ? "pointer-events-none opacity-50" : ""
-                      )}
+                      // className={cx(
+                      //   !file.processed ? "pointer-events-none opacity-50" : ""
+                      // )}
                     >
-                      <td className="w-8">
-                        <a
-                          className="block w-24 px-2 py-2"
-                          href={`${filesRoute}${file.id}`}
+                      <td className="w-8 lg:w-32">
+                        <button
+                          className="block w-24 px-2 py-2 lg:w-32"
+                          onClick={() => {
+                            onSelectFile(file.id);
+                          }}
                         >
-                          <div className="bg-gray-400">
+                          <div className="bg-gray-500">
                             {file.processed ? (
                               <img
                                 src={getFileUrl("GCS", file.id, "thumb.jpg")}
                                 alt={file.title}
                               />
                             ) : (
-                              <div className="flex h-20 w-20 content-center items-center justify-center pl-4">
+                              <div className="flex h-20 w-24 content-center items-center justify-center text-white lg:h-28 lg:w-32">
                                 <Spinner />
                               </div>
                             )}
                           </div>
-                        </a>
+                        </button>
                       </td>
                       <td className="max-w-[45vw] overflow-hidden text-ellipsis whitespace-nowrap py-4 pr-3 pl-4 text-sm font-medium text-gray-900">
                         {/* <a
@@ -118,21 +104,25 @@ export const FileList = ({
                         target="_blank"
                         className="text-blue-600 no-underline duration-500 hover:text-blue-900"
                       > */}
-                        <a
+                        <button
                           className="no-underline"
-                          href={`${filesRoute}${file.id}`}
+                          onClick={() => {
+                            onSelectFile(file.id);
+                          }}
                         >
                           {file.title}
-                        </a>
+                        </button>
                         {/* </a> */}
                       </td>
-                      <td className="hidden whitespace-nowrap px-12 py-4 text-sm text-gray-400 lg:table-cell">
+                      <td className="hidden whitespace-nowrap px-12 py-4 text-sm text-gray-500 lg:table-cell">
                         {file.type.split("/")[1]}
                       </td>
-                      <td className="hidden whitespace-nowrap px-12 py-4 text-sm text-gray-400 xl:table-cell">
+                      <td className="hidden whitespace-nowrap px-12 py-4 text-sm text-gray-500 xl:table-cell">
                         {`${new Date(
+                          // @ts-ignore
                           file.modified
                         ).toLocaleDateString()} | ${new Date(
+                          // @ts-ignore
                           file.modified
                         ).toLocaleTimeString()}`}
                       </td>
@@ -176,7 +166,7 @@ export const FileList = ({
                   onClick={() => {
                     setPage(page + 1);
                   }}
-                  className="text-blue-600 duration-500 hover:text-blue-900 dark:text-white dark:hover:text-gray-400"
+                  className="text-blue-600 duration-500 hover:text-blue-900 dark:text-white dark:hover:text-gray-500"
                 >
                   <>{t("showMore")}</>
                 </button>
@@ -185,7 +175,7 @@ export const FileList = ({
             </div>
           </>
         )}
-      </div>
+      </>
     );
   } else {
     return null;

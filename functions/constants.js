@@ -4,4 +4,6 @@ export const REGULAR_WIDTH = 1080;
 export const SMALL_WIDTH = 400;
 export const THUMB_WIDTH = 200;
 export const WEB3_STORAGE_ENABLED = process.env.WEB3_STORAGE_ENABLED;
-export const WEB3_STORAGE_API_KEY = process.env.WEB3_STORAGE_API_KEY;
+// export const WEB3_STORAGE_API_KEY = process.env.WEB3_STORAGE_API_KEY;
+export const WEB3_STORAGE_KEY = process.env.KEY;
+export const WEB3_STORAGE_PROOF = process.env.PROOF;

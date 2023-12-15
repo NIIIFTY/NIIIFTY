@@ -29,6 +29,7 @@ i18n
           dragAndDropFiles: "Drap & Drop your files or",
           edit: "Edit",
           email: "hello@mnemoscene.io",
+          files: "Files",
           fileNotFound: "File not found",
           filesFound: "{{val}} files found.",
           fileTooLarge: "File too large ({{val}} MB max)",

@@ -10,30 +10,36 @@
     "logs": "firebase functions:log"
   },
   "engines": {
-    "node": "16"
+    "node": "18"
   },
   "type": "module",
   "dependencies": {
-    "@gltf-transform/core": "^3.0.2",
-    "@gltf-transform/extensions": "^3.0.2",
-    "@gltf-transform/functions": "^3.0.2",
+    "@gltf-transform/core": "3.0.2",
+    "@gltf-transform/extensions": "3.0.2",
+    "@gltf-transform/functions": "3.0.2",
     "@google-cloud/firestore": "4.4.0",
     "@google-cloud/storage": "6.9.4",
+    "@ipld/car": "^5.2.4",
+    "@ucanto/core": "^9.0.1",
+    "@ucanto/principal": "^9.0.0",
+    "@web3-storage/w3up-client": "11.2.1",
     "cors": "2.8.5",
-    "draco3dgltf": "^1.5.6",
+    "draco3dgltf": "1.5.6",
     "extract-zip": "2.0.1",
-    "ffmpeg-static": "^5.1.0",
-    "ffprobe": "^1.1.2",
-    "ffprobe-static": "^3.1.0",
+    "ffmpeg-static": "5.1.0",
+    "ffprobe": "1.1.2",
+    "ffprobe-static": "3.1.0",
+    "files-from-path": "^1.0.4",
     "firebase-admin": "8.10.0",
     "firebase-functions": "3.20.0",
     "firebase-tools": "8.4.3",
-    "fluent-ffmpeg": "^2.1.2",
-    "node-fetch": "^2.6.6",
+    "fluent-ffmpeg": "2.1.2",
+    "node-fetch": "2.6.6",
     "puppeteer": "18.1.0",
     "sharp": "0.31.3",
     "url-join": "4.0.1",
-    "web3.storage": "4.4.0"
+    "web3.storage": "4.4.0",
+    "yn": "5.0.0"
   },
   "devDependencies": {
     "eslint": "5.12.0",
