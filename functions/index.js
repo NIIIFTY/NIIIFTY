@@ -72,8 +72,6 @@ export const fileCreated = functions
       // upload the generated files to web3.storage
       const cid = await uploadTempFilesToWeb3Storage(tempDir);
 
-      console.log("cid", cid);
-
       // delete the original file as it's no longer needed
       await originalFile.delete();
 
