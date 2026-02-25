@@ -4,7 +4,7 @@ import { headerTitle } from '../utils/Config';
 import Link from './Link';
 import SectionContainer from './SectionContainer';
 import Footer from './Footer';
-import ThemeSwitch from './ThemeSwitch';
+
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/user-store';
 import { auth } from '@/utils/Firebase';
@@ -222,7 +222,7 @@ const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
                 </a>
               )}
             </div>
-            <ThemeSwitch />
+
             <MobileNav />
           </div>
         </header>

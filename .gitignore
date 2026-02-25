@@ -5,6 +5,7 @@
 /.pnp
 .pnp.js
 .pnpm-store
+.antigravity
 
 # testing
 /coverage
@@ -37,3 +38,8 @@ yarn-error.log*
 next-env.d.ts
 
 firebase-debug.log
+.agent/rules/discord-ping.md
+database-debug.log
+firestore-debug.log
+pubsub-debug.log
+.agent/skills/discord-notifier/SKILL.md
