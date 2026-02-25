@@ -1,22 +1,131 @@
-import { headerTitle } from "../utils/Config";
-import Link from "./Link";
-import SectionContainer from "./SectionContainer";
-import Footer from "./Footer";
-import MobileNav from "./MobileNav";
-import ThemeSwitch from "./ThemeSwitch";
-import { useTranslation } from "react-i18next";
-import { useContext } from "react";
-import { UserContext } from "@/utils/UserContext";
-import { auth } from "@/utils/Firebase";
-import router from "next/router";
+'use client';
 
-const LayoutWrapper = ({ children }) => {
-  const { username } = useContext(UserContext);
+import { headerTitle } from '../utils/Config';
+import Link from './Link';
+import SectionContainer from './SectionContainer';
+import Footer from './Footer';
+import ThemeSwitch from './ThemeSwitch';
+import { useTranslation } from 'react-i18next';
+import { useUserStore } from '@/store/user-store';
+import { auth } from '@/utils/Firebase';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-  const signOut = (e) => {
+const MobileNav = () => {
+  const { username } = useUserStore();
+  const { t } = useTranslation();
+  const [navShow, setNavShow] = useState(false);
+  const router = useRouter();
+
+  const signOut = (e: React.MouseEvent) => {
     e.preventDefault();
     auth.signOut();
-    router.reload();
+    router.push('/');
+  };
+
+  const onToggleNav = () => {
+    setNavShow((status) => {
+      if (status) {
+        document.body.style.overflow = 'auto';
+      } else {
+        document.body.style.overflow = 'hidden';
+      }
+      return !status;
+    });
+  };
+
+  return (
+    <div className="sm:hidden">
+      <button type="button" className="mr-1 ml-1 h-8 w-8 rounded" aria-label="Toggle Menu" onClick={onToggleNav}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="text-gray-900 dark:text-gray-100"
+        >
+          {navShow ? (
+            <path
+              fillRule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          ) : (
+            <path
+              fillRule="evenodd"
+              d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+              clipRule="evenodd"
+            />
+          )}
+        </svg>
+      </button>
+      <div
+        className={`fixed top-0 left-0 z-10 h-full w-full transform bg-white duration-300 ease-in-out dark:bg-gray-900 ${
+          navShow ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="flex justify-end">
+          <button type="button" className="mt-11 mr-5 h-8 w-8 rounded" aria-label="Toggle Menu" onClick={onToggleNav}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="text-gray-900 dark:text-gray-100"
+            >
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+        <nav className="fixed mt-8 h-full">
+          <div className="px-12 py-4">
+            <Link
+              href="/admin"
+              className="text-2xl font-bold tracking-widest text-gray-900 dark:text-gray-100"
+              onClick={onToggleNav}
+            >
+              {t('myFiles')}
+            </Link>
+          </div>
+          <div className="px-12 py-4">
+            <Link
+              href="/docs"
+              className="text-2xl font-bold tracking-widest text-gray-900 dark:text-gray-100"
+              onClick={onToggleNav}
+            >
+              {t('docs')}
+            </Link>
+          </div>
+          {username && (
+            <div className="px-12 py-4">
+              <a
+                onClick={(e) => {
+                  signOut(e);
+                  onToggleNav();
+                }}
+                role="menuitem"
+                className="cursor-pointer text-2xl font-bold tracking-widest text-gray-900 dark:text-gray-100"
+              >
+                <>{t('signOut')}</>
+              </a>
+            </div>
+          )}
+        </nav>
+      </div>
+    </div>
+  );
+};
+
+const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { username } = useUserStore();
+  const router = useRouter();
+
+  const signOut = (e: React.MouseEvent) => {
+    e.preventDefault();
+    auth.signOut();
+    router.push('/');
   };
 
   const { t } = useTranslation();
@@ -29,13 +138,7 @@ const LayoutWrapper = ({ children }) => {
               <div className="flex items-center justify-between">
                 <div className="mr-3 text-black dark:text-white">
                   {/* logo */}
-                  <svg
-                    width="50"
-                    height="54"
-                    viewBox="0 0 50 54"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
+                  <svg width="50" height="54" viewBox="0 0 50 54" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect
                       x="33.6455"
                       y="3.22137"
@@ -47,7 +150,7 @@ const LayoutWrapper = ({ children }) => {
                     <mask
                       id="mask0_309_11"
                       style={{
-                        maskType: "alpha",
+                        maskType: 'alpha',
                       }}
                       maskUnits="userSpaceOnUse"
                       x="2"
@@ -103,25 +206,19 @@ const LayoutWrapper = ({ children }) => {
           </div>
           <div className="flex items-center text-base leading-5">
             <div className="hidden sm:block">
-              <Link
-                href="/admin"
-                className="p-1 font-medium text-gray-900 dark:text-gray-100 sm:p-4"
-              >
-                {t("myFiles")}
+              <Link href="/admin" className="p-1 font-medium text-gray-900 sm:p-4 dark:text-gray-100">
+                {t('myFiles')}
               </Link>
-              <Link
-                href="/docs"
-                className="p-1 font-medium text-gray-900 dark:text-gray-100 sm:p-4"
-              >
-                {t("docs")}
+              <Link href="/docs" className="p-1 font-medium text-gray-900 sm:p-4 dark:text-gray-100">
+                {t('docs')}
               </Link>
               {username && (
                 <a
                   onClick={signOut}
                   role="menuitem"
-                  className="cursor-pointer p-1 font-medium text-gray-900 dark:text-gray-100 sm:p-4"
+                  className="cursor-pointer p-1 font-medium text-gray-900 sm:p-4 dark:text-gray-100"
                 >
-                  <>{t("signOut")}</>
+                  <>{t('signOut')}</>
                 </a>
               )}
             </div>

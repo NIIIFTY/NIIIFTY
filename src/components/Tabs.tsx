@@ -1,5 +1,5 @@
-import React from "react";
-import classNames from "classnames";
+import React from 'react';
+import classNames from 'classnames';
 
 type TabName = string;
 
@@ -10,13 +10,7 @@ export type Tab<TabName> = {
   disabled?: boolean;
 };
 
-const Tabs = ({
-  tabs,
-  onChange,
-}: {
-  tabs: Tab<TabName>[];
-  onChange: (current: number) => void;
-}) => {
+const Tabs = ({ tabs, onChange }: { tabs: Tab<TabName>[]; onChange: (current: number) => void }) => {
   return (
     <div>
       <div className="lg:hidden">
@@ -26,12 +20,10 @@ const Tabs = ({
         <select
           id="tabs"
           name="tabs"
-          className="block w-full border-gray-300 py-2 pl-3 pr-10 text-gray-600 focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-500 dark:bg-black dark:text-white"
-          defaultValue={tabs.find((tab) => tab.current).name}
+          className="block w-full border-gray-300 py-2 pr-10 pl-3 text-gray-600 focus:border-blue-500 focus:ring-blue-500 focus:outline-none dark:border-gray-500 dark:bg-black dark:text-white"
+          defaultValue={tabs.find((tab) => tab.current)?.name}
           onChange={(event: React.FormEvent<HTMLSelectElement>) => {
-            const index: number = tabs.findIndex(
-              (tab) => tab.name === event.currentTarget.value
-            );
+            const index: number = tabs.findIndex((tab) => tab.name === event.currentTarget.value);
             onChange(index);
           }}
         >
@@ -52,18 +44,16 @@ const Tabs = ({
                   key={tab.name}
                   role="button"
                   onClick={() => {
-                    const index: number = tabs.findIndex(
-                      (t) => t.name === tab.name
-                    );
+                    const index: number = tabs.findIndex((t) => t.name === tab.name);
                     onChange(index);
                   }}
                   className={classNames(
                     tab.current
-                      ? "border-blue-500 text-blue-600 hover:text-blue-600 dark:border-white dark:text-white dark:hover:text-white"
-                      : "border-transparent text-gray-600 hover:border-gray-700 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-300 dark:hover:text-gray-300",
-                    "select-none whitespace-nowrap border-b-2 px-1 pb-2 text-sm font-medium no-underline"
+                      ? 'border-blue-500 text-blue-600 hover:text-blue-600 dark:border-white dark:text-white dark:hover:text-white'
+                      : 'border-transparent text-gray-600 hover:border-gray-700 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-300 dark:hover:text-gray-300',
+                    'border-b-2 px-1 pb-2 text-sm font-medium whitespace-nowrap no-underline select-none',
                   )}
-                  aria-current={tab.current ? "page" : undefined}
+                  aria-current={tab.current ? 'page' : undefined}
                 >
                   {tab.label}
                 </a>
