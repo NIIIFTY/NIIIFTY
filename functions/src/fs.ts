@@ -1,9 +1,9 @@
-import os from "os";
-import fs from "fs";
-import path from "path";
+import os from 'os';
+import fs from 'fs';
+import path from 'path';
 
 // Recursively get a list of all files in the directory
-export const getAllFiles = function (dirPath, arrayOfFiles) {
+export const getAllFiles = function (dirPath: string, arrayOfFiles: string[] = []): string[] {
   const files = fs.readdirSync(dirPath);
 
   arrayOfFiles = arrayOfFiles || [];
@@ -31,7 +31,7 @@ export function createTempDir() {
 }
 
 export function createDir(path) {
-  fs.mkdirSync(path);
+  fs.mkdirSync(path, { recursive: true });
 }
 
 export function deleteFile(file) {

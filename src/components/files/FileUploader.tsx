@@ -203,10 +203,12 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
   const [uploadComplete, setUploadComplete] = useState(false);
   const [progress, setProgress] = useState(0);
   const { user, userAdapter } = useUserStore();
-  const uploadTaskRef = useRef<UploadTask>(null);
+  const uploadTaskRef = useRef<UploadTask | null>(null);
 
   useEffect(() => {
     if (!user) return;
+    if (uploadTaskRef.current) return;
+
     const uid: string = user.uid;
     const id = doc(collection(db, 'files')).id;
     const title: string = path.basename(file.name, path.extname(file.name));

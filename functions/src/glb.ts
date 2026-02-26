@@ -1,6 +1,6 @@
-import fs from "fs";
-import { NodeIO } from "@gltf-transform/core";
-import { KHRONOS_EXTENSIONS } from "@gltf-transform/extensions";
+import fs from 'fs';
+import { NodeIO } from '@gltf-transform/core';
+import { KHRONOS_EXTENSIONS } from '@gltf-transform/extensions';
 import {
   dedup,
   flatten,
@@ -11,17 +11,17 @@ import {
   sparse,
   // textureCompress,
   draco,
-} from "@gltf-transform/functions";
-import draco3d from "draco3dgltf";
-import path from "path";
-import puppeteer from "puppeteer";
-import createThumbnails from "./thumbnails.js";
-import { REGULAR_WIDTH } from "./constants.js";
-import { createGLBIIIFDerivatives } from "./iiif.js";
-import { deleteFile } from "./fs.js";
-import express from "express";
-import cors from "cors";
-import net from "net";
+} from '@gltf-transform/functions';
+import draco3d from 'draco3dgltf';
+import path from 'path';
+import puppeteer from 'puppeteer';
+import createThumbnails from './thumbnails.js';
+import { REGULAR_WIDTH } from './constants.js';
+import { createGLBIIIFDerivatives } from './iiif.js';
+import { deleteFile } from './fs.js';
+import express from 'express';
+import cors from 'cors';
+import net from 'net';
 
 export default async function processGLB(glbFilePath, metadata) {
   // optimise glb using gltf-transform
@@ -44,14 +44,12 @@ export default async function processGLB(glbFilePath, metadata) {
 }
 
 async function optimizeGLB(glbFilePath) {
-  console.log("optimizing glb", glbFilePath);
+  console.log('optimizing glb', glbFilePath);
 
-  const io = new NodeIO()
-    .registerExtensions(KHRONOS_EXTENSIONS)
-    .registerDependencies({
-      "draco3d.decoder": await draco3d.createDecoderModule(), // Optional.
-      "draco3d.encoder": await draco3d.createEncoderModule(), // Optional.
-    });
+  const io = new NodeIO().registerExtensions(KHRONOS_EXTENSIONS).registerDependencies({
+    'draco3d.decoder': await draco3d.createDecoderModule(), // Optional.
+    'draco3d.encoder': await draco3d.createEncoderModule(), // Optional.
+  });
   // .setAllowHTTP(true);
 
   const document = await io.read(glbFilePath);
@@ -72,15 +70,12 @@ async function optimizeGLB(glbFilePath) {
     //   targetFormat: "auto",
     //   resize: [2048, 2048],
     // }),
-    draco()
+    draco(),
   );
 
   const optimizedGLB = await io.writeBinary(document);
 
-  const optimizedGLBFilePath = path.join(
-    path.dirname(glbFilePath),
-    "optimized.glb"
-  );
+  const optimizedGLBFilePath = path.join(path.dirname(glbFilePath), 'optimized.glb');
 
   // write the optimized glb to the temp dir
   fs.writeFileSync(optimizedGLBFilePath, optimizedGLB);
@@ -89,27 +84,20 @@ async function optimizeGLB(glbFilePath) {
 }
 
 function toHTMLAttributeString(args) {
-  if (!args) return "";
+  if (!args) return '';
 
   return Object.entries(args)
     .map(([key, value]) => {
       return `${key}="${value}"`;
     })
-    .join("\n");
+    .join('\n');
 }
 
-function modelViewerHTMLTemplate(
-  modelViewerUrl,
-  width,
-  height,
-  src,
-  backgroundColor,
-  devicePixelRatio
-) {
+function modelViewerHTMLTemplate(modelViewerUrl, width, height, src, backgroundColor, devicePixelRatio) {
   const defaultAttributes = {
-    id: "snapshot-viewer",
+    id: 'snapshot-viewer',
     style: `background-color: ${backgroundColor};`,
-    "interaction-prompt": "none",
+    'interaction-prompt': 'none',
     src: src,
   };
 
@@ -149,18 +137,19 @@ function getAvailablePort() {
 
     server.unref(); // Allows the program to exit if this is the only active server
 
-    server.on("error", (err) => {
+    server.on('error', (err) => {
       reject(err);
     });
 
-    server.on("listening", () => {
-      const port = server.address().port;
+    server.on('listening', () => {
+      const address = server.address();
+      const port = typeof address === 'string' ? null : address?.port;
       server.close(() => {
         resolve(port);
       });
     });
 
-    server.listen(0, "localhost");
+    server.listen(0, 'localhost');
   });
 }
 
@@ -179,12 +168,12 @@ function serveGLB(glbFilePath) {
 
     const src = `http://localhost:${port}/${file}`;
 
-    process.on("SIGTERM", shutDown);
-    process.on("SIGINT", shutDown);
+    process.on('SIGTERM', shutDown);
+    process.on('SIGINT', shutDown);
 
     let connections = [];
 
-    app.get("/", (req, res) => res.json({ ping: true }));
+    app.get('/', (req, res) => res.json({ ping: true }));
 
     const server = app.listen(port, () => {
       console.log(`Server listening on port: ${port}`);
@@ -194,12 +183,9 @@ function serveGLB(glbFilePath) {
       });
     });
 
-    server.on("connection", (connection) => {
+    server.on('connection', (connection) => {
       connections.push(connection);
-      connection.on(
-        "close",
-        () => (connections = connections.filter((curr) => curr !== connection))
-      );
+      connection.on('close', () => (connections = connections.filter((curr) => curr !== connection)));
     });
 
     // setInterval(
@@ -211,16 +197,14 @@ function serveGLB(glbFilePath) {
     // );
 
     function shutDown() {
-      console.log("Received kill signal, shutting down gracefully");
+      console.log('Received kill signal, shutting down gracefully');
       server.close(() => {
-        console.log("Closed out remaining connections");
+        console.log('Closed out remaining connections');
         process.exit(0);
       });
 
       setTimeout(() => {
-        console.error(
-          "Could not close connections in time, forcefully shutting down"
-        );
+        console.error('Could not close connections in time, forcefully shutting down');
         process.exit(1);
       }, 10000);
 
@@ -233,26 +217,25 @@ function serveGLB(glbFilePath) {
 async function screenshotGLB(glbFilePath) {
   console.log(`screenshotGLB: ${glbFilePath}`);
 
-  const { src } = await serveGLB(glbFilePath);
+  const { src } = (await serveGLB(glbFilePath)) as any;
 
   console.log(`glb src: ${src}`);
 
   const args = [
-    "--no-sandbox",
-    "--disable-gpu",
-    "--disable-dev-shm-usage",
-    "--disable-setuid-sandbox",
-    "--no-zygote",
-    "--single-process",
+    '--no-sandbox',
+    '--disable-gpu',
+    '--disable-dev-shm-usage',
+    '--disable-setuid-sandbox',
+    '--no-zygote',
+    '--single-process',
   ];
 
   const headless = true;
   const width = REGULAR_WIDTH;
   const height = REGULAR_WIDTH;
   const devicePixelRatio = 1;
-  const modelViewerUrl =
-    "https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js";
-  const backgroundColor = "#000000";
+  const modelViewerUrl = 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js';
+  const backgroundColor = '#000000';
 
   const browser = await puppeteer.launch({
     args,
@@ -268,22 +251,15 @@ async function screenshotGLB(glbFilePath) {
 
   await page.setDefaultNavigationTimeout(0);
 
-  const data = modelViewerHTMLTemplate(
-    modelViewerUrl,
-    width,
-    height,
-    src,
-    backgroundColor,
-    devicePixelRatio
-  );
+  const data = modelViewerHTMLTemplate(modelViewerUrl, width, height, src, backgroundColor, devicePixelRatio);
 
   // console.log("modelviewer template", data);
 
   await page.setContent(data, {
-    waitUntil: ["domcontentloaded", "networkidle0"],
+    waitUntil: ['domcontentloaded', 'networkidle0'],
   });
 
-  const element = await page.$("model-viewer");
+  const element = await page.$('model-viewer');
   const boundingBox = await element.boundingBox();
 
   await page.setViewport({
@@ -294,7 +270,7 @@ async function screenshotGLB(glbFilePath) {
 
   const screenshot = await element.screenshot(); // returns a buffer
 
-  const screenshotPath = path.join(path.dirname(glbFilePath), "screenshot.png");
+  const screenshotPath = path.join(path.dirname(glbFilePath), 'screenshot.png');
 
   fs.writeFileSync(screenshotPath, screenshot);
 

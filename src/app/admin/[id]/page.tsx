@@ -6,8 +6,8 @@ export const metadata: Metadata = {
   title: 'NIIIFTY | Edit File',
 };
 
-export default function EditFilePage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function EditFilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
   return <AuthCheck signedInContent={<EditFile id={id} />}></AuthCheck>;
 }

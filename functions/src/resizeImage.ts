@@ -1,12 +1,10 @@
-import path from "path";
-import sharp from "sharp";
-import fs from "fs";
+import path from 'path';
+import sharp from 'sharp';
+import fs from 'fs';
 
 export default async function resizeImage(imageFilePath, name, width, height) {
   const readStream = fs.createReadStream(imageFilePath);
-  const writeStream = fs.createWriteStream(
-    path.join(path.dirname(imageFilePath), `${name}.jpg`)
-  );
+  const writeStream = fs.createWriteStream(path.join(path.dirname(imageFilePath), `${name}.jpg`));
 
   // Create Sharp pipeline for resizing the image and use pipe to read from bucket read stream
   const pipeline = sharp();
@@ -17,7 +15,7 @@ export default async function resizeImage(imageFilePath, name, width, height) {
       width,
       height,
       fit: sharp.fit.cover,
-      format: "jpeg",
+      format: 'jpeg',
       quality: 80,
     })
     .pipe(writeStream);
@@ -26,9 +24,9 @@ export default async function resizeImage(imageFilePath, name, width, height) {
 
   return new Promise((resolve, reject) =>
     writeStream
-      .on("finish", async () => {
-        resolve();
+      .on('finish', async () => {
+        resolve(undefined);
       })
-      .on("error", reject)
+      .on('error', reject),
   );
 }

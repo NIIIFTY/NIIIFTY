@@ -37,15 +37,24 @@ export const hash2 = (value: string) => {
   return value.split('').reduce((prevHash, currVal) => ((prevHash << 5) - prevHash + currVal.charCodeAt(0)) | 0, 0);
 };
 
+import { useFirebaseEmulators, firebaseEmulatorConfig } from '@/lib/config';
+
 export const getFileUrl = (
   fs: FileSystem,
   fsID: string, // the bucket id for GCS or the CID for IPFS
   name: string,
+  ipnsName?: string,
 ) => {
   if (fs === 'GCS') {
     const firebaseConfig = config.environments[config.environment].firebaseConfig;
+    if (useFirebaseEmulators) {
+      return `http://${firebaseEmulatorConfig.storage.host}:${firebaseEmulatorConfig.storage.port}/v0/b/${firebaseConfig.storageBucket}/o/${encodeURIComponent(`${fsID}/${name}`)}?alt=media`;
+    }
     return `https://${firebaseConfig.storageBucket}.storage.googleapis.com/${fsID}/${name}`;
   } else {
+    if (ipnsName) {
+      return `https://${ipnsName}.ipns.dweb.link/${name}`;
+    }
     return `https://${fsID}.ipfs.w3s.link/${name}`;
   }
 };

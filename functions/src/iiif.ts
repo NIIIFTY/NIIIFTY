@@ -1,9 +1,9 @@
-import sharp from "sharp";
+import sharp from 'sharp';
 // import unzip from "unzip-stream";
-import path from "path";
-import fs from "fs";
-import { createDir, deleteFile } from "./fs.js";
-import extract from "extract-zip";
+import path from 'path';
+import fs from 'fs';
+import { createDir, deleteFile } from './fs.js';
+import extract from 'extract-zip';
 
 // returns iiif manifest json for a given file
 export function getIIIFManifestJson(path, metadata) {
@@ -17,63 +17,63 @@ export function getIIIFManifestJson(path, metadata) {
   let canvas, label, body, thumbnail;
 
   label = {
-    "@none": [title],
+    '@none': [title],
   };
 
   thumbnail = [
     {
       id: `${path}/thumb.jpg`,
-      type: "Image",
+      type: 'Image',
     },
   ];
 
   switch (type) {
-    case "image/png":
-    case "image/jpeg":
-    case "image/tif":
-    case "image/tiff": {
+    case 'image/png':
+    case 'image/jpeg':
+    case 'image/tif':
+    case 'image/tiff': {
       body = {
         id: `${path}/optimized.jpg`,
-        type: "Image",
-        format: "image/jpeg",
+        type: 'Image',
+        format: 'image/jpeg',
         label,
         width,
         height,
         service: [
           {
             id,
-            profile: "level0",
-            type: "ImageService3",
+            profile: 'level0',
+            type: 'ImageService3',
           },
         ],
       };
       break;
     }
-    case "model/gltf-binary": {
+    case 'model/gltf-binary': {
       body = {
         id: `${path}/optimized.glb`,
-        type: "Model",
-        format: "model/gltf-binary",
+        type: 'Model',
+        format: 'model/gltf-binary',
         label,
       };
 
       break;
     }
-    case "audio/mpeg": {
+    case 'audio/mpeg': {
       body = {
         id: `${path}/optimized.mp3`,
-        type: "Audio",
-        format: "audio/mp3",
+        type: 'Audio',
+        format: 'audio/mp3',
         label,
       };
 
       break;
     }
-    case "video/mp4": {
+    case 'video/mp4': {
       body = {
         id: `${path}/optimized.mp4`,
-        type: "Video",
-        format: "video/mp4",
+        type: 'Video',
+        format: 'video/mp4',
         label,
       };
 
@@ -83,16 +83,16 @@ export function getIIIFManifestJson(path, metadata) {
 
   canvas = {
     id: canvasId,
-    type: "Canvas",
+    type: 'Canvas',
     items: [
       {
         id: annotationPageId,
-        type: "AnnotationPage",
+        type: 'AnnotationPage',
         items: [
           {
             id: annotationId,
-            type: "Annotation",
-            motivation: "painting",
+            type: 'Annotation',
+            motivation: 'painting',
             body,
             target: canvasId,
           },
@@ -107,30 +107,24 @@ export function getIIIFManifestJson(path, metadata) {
     canvas.duration = metadata.duration;
   }
 
-  const manifest = {
-    "@context": [
-      "http://www.w3.org/ns/anno.jsonld",
-      "http://iiif.io/api/presentation/3/context.json",
-    ],
+  const manifest: any = {
+    '@context': ['http://www.w3.org/ns/anno.jsonld', 'http://iiif.io/api/presentation/3/context.json'],
     id: manifestId,
-    type: "Manifest",
+    type: 'Manifest',
     items: [canvas],
     label,
   };
 
   // metadata
-  const kvp = [
-    ...(metadata.title ? [["Title", title]] : []),
-    ...(metadata.license ? [["License", license]] : []),
-  ];
+  const kvp = [...(metadata.title ? [['Title', title]] : []), ...(metadata.license ? [['License', license]] : [])];
 
   manifest.metadata = kvp.map((x) => {
     return {
       label: {
-        "@none": [x[0]],
+        '@none': [x[0]],
       },
       value: {
-        "@none": [x[1]],
+        '@none': [x[1]],
       },
     };
   });
@@ -138,7 +132,7 @@ export function getIIIFManifestJson(path, metadata) {
   // requiredStatement
   if (metadata.attribution) {
     manifest.requiredStatement = {
-      label: { en: ["Attribution"] },
+      label: { en: ['Attribution'] },
       value: { en: [metadata.attribution] },
     };
   }
@@ -154,15 +148,15 @@ export async function createIIIFManifest(dir, metadata) {
 
   console.log(`creating IIIF manifest for ${fileId}`);
 
-  const id = `${metadata.baseURL}/${fileId}`;
+  const id = metadata.manifestId || `${metadata.baseURL}/${fileId}`;
 
   console.log(`creating iiif manifest with id "${id}"`);
 
   const iiifManifestJSON = getIIIFManifestJson(`${id}`, metadata);
 
-  const jsonPath = path.join(dir, "index.json");
+  const jsonPath = path.join(dir, 'index.json');
 
-  console.log("jsonPath", jsonPath);
+  console.log('jsonPath', jsonPath);
 
   console.log(`writing iiif manifest to ${jsonPath}`);
 
@@ -175,7 +169,7 @@ export async function createIIIFManifest(dir, metadata) {
 
 function createIIIFDir(filePath) {
   const tempDir = path.dirname(filePath);
-  const iiifDir = path.join(tempDir, "iiif");
+  const iiifDir = path.join(tempDir, 'iiif');
   createDir(iiifDir);
   return iiifDir;
 }
@@ -183,7 +177,7 @@ function createIIIFDir(filePath) {
 export async function createImageIIIFDerivatives(imageFilePath, metadata) {
   const tempDir = path.dirname(imageFilePath);
   const iiifDir = createIIIFDir(imageFilePath);
-  const zipFile = path.join(iiifDir, "iiif.zip");
+  const zipFile = path.join(iiifDir, 'iiif.zip');
 
   // get image height and width
   const imgMetadata = await sharp(imageFilePath).metadata();
@@ -205,8 +199,8 @@ export async function createImageIIIFDerivatives(imageFilePath, metadata) {
 
   pipeline
     .tile({
-      layout: "iiif3",
-      basename: "iiif",
+      layout: 'iiif3',
+      basename: 'iiif',
       id,
     })
     .pipe(writeStream);
@@ -215,7 +209,7 @@ export async function createImageIIIFDerivatives(imageFilePath, metadata) {
 
   return new Promise((resolve, reject) =>
     writeStream
-      .on("finish", async () => {
+      .on('finish', async () => {
         // unzip iiif.zip
         console.log(`unzipping iiif.zip`);
         await extract(zipFile, { dir: tempDir });
@@ -226,7 +220,7 @@ export async function createImageIIIFDerivatives(imageFilePath, metadata) {
 
         resolve(imgMetadata);
       })
-      .on("error", reject)
+      .on('error', reject),
   );
 }
 

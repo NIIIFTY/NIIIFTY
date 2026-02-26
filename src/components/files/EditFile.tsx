@@ -86,6 +86,8 @@ export function EditFile({ id }: { id: string }) {
   const [type, setType] = useState<string>('');
   const [fs, setFS] = useState<FileSystem>('GCS');
   const [fsID, setFSID] = useState<string>(id);
+  const [manifestId, setManifestId] = useState<string>('');
+  const [ipnsName, setIpnsName] = useState<string>('');
 
   const form = useForm<FileFormData>({
     resolver: zodResolver(fileSchema),
@@ -107,6 +109,12 @@ export function EditFile({ id }: { id: string }) {
       setValue('license', file.license);
       setCid(file.cid);
       setType(file.type);
+      if (file.manifestId) {
+        setManifestId(file.manifestId);
+      }
+      if (file.ipnsName) {
+        setIpnsName(file.ipnsName);
+      }
     },
     onError: () => {
       setPageError('fileNotFound');
@@ -149,12 +157,13 @@ export function EditFile({ id }: { id: string }) {
         },
       ];
 
-      const dash: string = getFileUrl(fs, fsID, `dash/optimized.mpd`);
-      const glb: string = getFileUrl(fs, fsID, `optimized.glb`);
-      const hls: string = getFileUrl(fs, fsID, `hls/optimized.m3u8`);
-      const iiifManifest: string = getFileUrl(fs, fsID, `iiif/index.json`);
-      const jpg: string = getFileUrl(fs, fsID, `optimized.jpg`);
-      const mp4: string = getFileUrl(fs, fsID, `optimized.mp4`);
+      const dash: string = getFileUrl(fs, fsID, `dash/optimized.mpd`, ipnsName);
+      const glb: string = getFileUrl(fs, fsID, `optimized.glb`, ipnsName);
+      const hls: string = getFileUrl(fs, fsID, `hls/optimized.m3u8`, ipnsName);
+      const iiifManifest: string =
+        fs === 'IPFS' && manifestId ? manifestId : getFileUrl(fs, fsID, `iiif/index.json`, ipnsName);
+      const jpg: string = getFileUrl(fs, fsID, `optimized.jpg`, ipnsName);
+      const mp4: string = getFileUrl(fs, fsID, `optimized.mp4`, ipnsName);
 
       return (
         <>
