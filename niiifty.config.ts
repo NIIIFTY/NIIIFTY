@@ -44,7 +44,7 @@ export default {
       description: 'Store large images, 3D models, and audio/video content as IIIF on IPFS.',
       maxFileSize: 209715200, // 200MB
       firebaseConfig: {
-        apiKey: '', // set NEXT_PUBLIC_FIREBASE_API_KEY in .env.local
+        apiKey: 'AIzaSyDYGyE8lU1tS8Yrg1kGcPL88MIdzgyQVf4', // restricted to niiifty.com
         authDomain: 'niiifty-bd2e2.firebaseapp.com',
         projectId: 'niiifty-bd2e2',
         storageBucket: 'niiifty-bd2e2.appspot.com',
