@@ -57,10 +57,11 @@ _Path: Firebase Functions Handlers_
 
 ### Milestone 3: Demo, Docs & Handover
 
-#### "Global Search" Demo Site
+#### "Global Search" Demo & Integration Test Site
 
-- Create a new route in the NIIIFTY app, e.g., `src/app/discover/page.tsx` or `src/app/search/page.tsx`.
-- Build a front-end interface to query an existing AT Protocol indexer or use the public Firehose (if feasible within the scope) to display newly published IIIF content across the network.
+- Create a dedicated route in the NIIIFTY app (e.g., `src/app/test-harness/page.tsx`) specifically designed to act as a robust integration proving ground.
+- This test site will feature UI controls to manually trigger the new Firebase functions (e.g., "Generate IPNS Name", "Publish IIIF Revision", "Broadcast to ATProto").
+- It will also query an existing AT Protocol indexer or the public Firehose to definitively show the content traversing the network successfully over time.
 - Ensure the demo renders the results natively in the browser, demonstrating that the IPNS URLs resolve flawlessly to the underlying Manifests.
 
 #### Documentation
@@ -72,12 +73,15 @@ _Path: Firebase Functions Handlers_
 
 ### Automated Tests
 
-- Scaffold Unit and Integration tests using Jest/Vitest for the components in `functions/src/`.
-- Test IPNS key generation and w3name pointer updates offline using mocked modules.
-- Test AT protocol payload generation against a sandbox PDS (Personal Data Server).
+- Scaffold Unit and Integration tests using `jest` or `mocha`/`chai` within the `functions/` directory to exhaustively test the isolated backend modules.
+- **IPNS Logic Tests:** Test IPNS key generation (`Name.create()`), w3name pointer updates (`Name.increment`), and payload signing offline using mocked dependencies to ensure correct cryptographic behavior without hitting network limits.
+- **AT Protocol Tests:** Test AT protocol payload generation and authentication against a sandbox PDS (Personal Data Server).
+- **Emulation Tests:** Ensure all new functions integrate correctly with the Firebase Local Emulator Suite. Write tests that mimic a Manifest upload, verifying the emulator properly triggers the IPNS and ATProto flows.
+- Ensure the Github CI/CD pipeline requires 100% passing results on these tests before allowing any merges to the main branch.
 
-### Manual Verification
+### Manual Verification via the Robust Test Site
 
-1.  **Stable ID Test**: Start the dev server (`npm run dev`). Create a new NIIIFTY project. Observe that the generated Manifest has an `ipns://` address in its `@id`.
-2.  **Mutability Test**: Edit the project via the NIIIFTY admin interface. Confirm the underlying IPFS CID changes but the `ipns://` Manifest `@id` remains identical and still resolves to the updated content.
-3.  **Discovery Test**: Deploy the "Global Search" Demo site locally. Verify the AT Protocol indexer catches the new and updated metadata via Firehose and displays the correct Manifest via its stable IPNS URL.
+1. **End-to-End Test Harness**: Navigate to the newly created `src/app/test-harness/page.tsx` while running the local `npm run dev` and emulator suite.
+2. **Stable ID Test**: Utilize the test UI to simulate creating a new NIIIFTY project. Observe the logs and confirm the generated Manifest has an `ipns://` address in its `@id`.
+3. **Mutability Test**: Edit the project via the test interface. Confirm the underlying IPFS CID changes but the `ipns://` Manifest `@id` remains identical and still resolves to the updated content.
+4. **Discovery Test**: Use the test site's indexer UI to verify the AT Protocol catches the new and updated metadata via Firehose and displays the correct Manifest via its stable IPNS URL.
