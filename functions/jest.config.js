@@ -13,6 +13,7 @@ export default {
     '^w3name$': '<rootDir>/node_modules/w3name/dist/index.mjs',
     '^w3name/service$': '<rootDir>/node_modules/w3name/dist/service.mjs',
   },
+  transformIgnorePatterns: ['node_modules/(?!(w3name)/)'],
   testEnvironmentOptions: {
     customExportConditions: ['node', 'node-addons'],
   },

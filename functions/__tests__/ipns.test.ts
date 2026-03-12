@@ -1,4 +1,5 @@
-import { generateName, createNameRevision } from '../src/ipns';
+import { describe, it, expect } from '@jest/globals';
+import { generateName, createNameRevision } from '../src/ipns/index.js';
 
 describe('IPNS Module', () => {
   it('generates a new IPNS keyplate correctly', async () => {

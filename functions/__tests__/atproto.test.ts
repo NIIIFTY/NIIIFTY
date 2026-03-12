@@ -1,4 +1,5 @@
-import { authenticateAgent } from '../src/atproto/auth';
+import { describe, it, expect } from '@jest/globals';
+import { authenticateAgent } from '../src/atproto/auth.js';
 
 describe('AT Protocol Module', () => {
   it('verifies authenticateAgent throws using invalid credentials', async () => {

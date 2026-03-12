@@ -1,51 +1,47 @@
-import { BskyAgent } from '@atproto/api';
+import { AtpAgent } from '@atproto/api';
 
 export interface IIIFRecordPayload {
-  manifestId: string; // The stable IPNS URL resolving to the manifest
-  title?: string;
-  description?: string;
-  thumbnailUrl?: string; // Optional thumbnail IPFS/HTTP URL
+  manifestUrl: string; // The stable IPNS URL resolving to the manifest (mapped to metadata)
+  thumbnailUrl?: string; // Optional thumbnail IPFS/HTTP URL (mapped to preview.url)
 }
 
 /**
  * Publishes a record to the AT Protocol representing a IIIF Manifest.
- * Currently uses the standard 'app.bsky.feed.post' for broad discoverability,
- * but can be extended to use custom standard lexicons (e.g., Matadisco) once stabilized.
+ * Utilizes the Matadisco lexicon for semantic publishing.
  *
- * @param {BskyAgent} agent - The authenticated BskyAgent instance.
+ * @param {AtpAgent} agent - The authenticated AtpAgent instance.
  * @param {IIIFRecordPayload} payload - The metadata for the IIIF content.
  * @returns {Promise<{ uri: string, cid: string }>} The AT URI and CID of the published record.
  */
 export async function publishIIIFRecord(
-  agent: BskyAgent,
+  agent: AtpAgent,
   payload: IIIFRecordPayload,
 ): Promise<{ uri: string; cid: string }> {
-  let text = `New IIIF Manifest Published: ${payload.manifestId}`;
-  if (payload.title) text += `\nTitle: ${payload.title}`;
-  if (payload.description) text += `\n\n${payload.description}`;
+  if (!agent.session?.did) {
+    throw new Error('AT Protocol Agent lacks an active session DID. Authentication failed.');
+  }
 
-  // Use a simple post for Firehose discoverability
-  // Later this can be wrapped in a custom repository record (e.g., com.matadisco...)
-  const record: any = {
-    $type: 'app.bsky.feed.post',
-    text,
-    createdAt: new Date().toISOString(),
-    facets: [
-      {
-        index: {
-          byteStart: text.indexOf(payload.manifestId),
-          byteEnd: text.indexOf(payload.manifestId) + payload.manifestId.length, // Rough byte approx for ASCII URLs
-        },
-        features: [
-          {
-            $type: 'app.bsky.richtext.facet#link',
-            uri: payload.manifestId, // Ensure it's treated as a clickable link if applicable, or just a raw string
-          },
-        ],
-      },
-    ],
+  const recordPayload: Record<string, any> = {
+    $type: 'cx.vmx.matadisco',
+    metadata: payload.manifestUrl,
+    created: new Date().toISOString(),
   };
 
-  const response = await agent.post(record);
-  return { uri: response.uri, cid: response.cid };
+  if (payload.thumbnailUrl) {
+    recordPayload.preview = {
+      url: payload.thumbnailUrl,
+      // If we are hardcoding to jpeg, we could use that, but 'image/jpeg'
+      // or 'image/png' depend on the thumbnail. Hardcoding 'image/jpeg' as placeholder
+      // until we implement actual mimeType extraction or passing it in.
+      mimeType: 'image/jpeg',
+    };
+  }
+
+  const response = await agent.com.atproto.repo.createRecord({
+    repo: agent.session.did,
+    collection: 'cx.vmx.matadisco',
+    record: recordPayload,
+  });
+
+  return { uri: response.data.uri, cid: response.data.cid };
 }

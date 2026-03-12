@@ -9,8 +9,9 @@
     "sourceMap": true,
     "strict": false,
     "target": "ES2022",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["jest", "node"]
   },
   "compileOnSave": true,
-  "include": ["src"]
+  "include": ["src", "__tests__"]
 }
