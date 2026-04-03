@@ -8,14 +8,13 @@
   },
   "hosting": {
     "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
   },
   "storage": {
     "rules": "storage.rules"
+  },
+  "functions": {
+    "source": "functions"
   },
   "emulators": {
     "auth": {
@@ -31,10 +30,13 @@
       "port": 9000
     },
     "hosting": {
-      "port": 5000
+      "port": 5004
     },
     "pubsub": {
       "port": 8085
+    },
+    "storage": {
+      "port": 9199
     },
     "ui": {
       "enabled": true

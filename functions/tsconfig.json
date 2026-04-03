@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "moduleResolution": "NodeNext",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "lib",
+    "sourceMap": true,
+    "strict": false,
+    "target": "ES2022",
+    "skipLibCheck": true,
+    "types": ["jest", "node"]
+  },
+  "compileOnSave": true,
+  "include": ["src", "__tests__"]
+}

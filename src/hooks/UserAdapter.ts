@@ -19,8 +19,15 @@ export class UserAdapter {
 
   async addFile(id: string, values: Partial<File>) {
     const file: Partial<File> = {
+      label: "",
+      summary: "",
+      provider: "",
+      tags: ["iiif"],
+      metadata: {},
+      processed: false,
+      cid: "",
       ...values,
-      license: "https://creativecommons.org/publicdomain/zero/1.0/",
+      rights: "https://creativecommons.org/publicdomain/zero/1.0/",
       created: timestamp(),
       modified: timestamp(),
       softwareVersion: packageJSON.version,

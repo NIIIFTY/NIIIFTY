@@ -1,30 +1,53 @@
-import { useContext, FormEvent, useState } from "react";
-import { UserContext } from "@/utils/UserContext";
-import Metatags from "@/components/Metatags";
-import { useTranslation } from "react-i18next";
-import { LoadingMessage } from "../LoadingMessage";
-import { remove, useAuthoringFile } from "@/hooks/useFile";
-import {
-  AuthoringFile,
-  FileSystem,
-  LicenseURL,
-  MIMETYPES,
-} from "@/utils/Types";
-import { useMounted } from "@/hooks/useMounted";
-import Alert from "../Alert";
-import { getFileUrl } from "@/utils/Utils";
-import { ErrorMessage } from "../ErrorMessage";
-import cx from "classnames";
-import CopyText from "../CopyText";
-import Tabs, { Tab } from "../Tabs";
+'use client';
 
-type PageErrorType = "fileNotFound";
+import { useState } from 'react';
+import { useUserStore } from '@/store/user-store';
+import { useTranslation } from 'react-i18next';
+import { LoadingMessage } from '../LoadingMessage';
+import { remove, useAuthoringFile } from '@/hooks/useFile';
+import { AuthoringFile, FileSystem, LicenseURL, MIMETYPES } from '@/utils/Types';
+import { useMounted } from '@/hooks/useMounted';
+import Alert from '../Alert';
+import { getFileUrl, cn } from '@/utils/Utils';
+import CopyText from '../CopyText';
+import Tabs, { Tab } from '../Tabs';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { X, Plus } from 'lucide-react';
 
-type FormErrorType = "title";
+const fileSchema = z.object({
+  label: z
+    .string()
+    .min(1, 'Label is required')
+    .regex(/^[\w\-\s]+$/, 'Invalid title format (alphanumeric, dashes, spaces only)'),
+  summary: z.string().default(''),
+  provider: z.string().default(''),
+  rights: z.string().default('https://creativecommons.org/publicdomain/zero/1.0/'),
+  tags: z.array(z.string()).default(['iiif']),
+  metadataEntries: z.array(z.object({
+    key: z.string().min(1, 'Key is required'),
+    value: z.string().min(1, 'Value is required')
+  })).default([]),
+});
 
-type FormErrors = {
-  [key in FormErrorType]?: boolean;
-};
+interface FileFormData {
+  label: string;
+  summary: string;
+  provider: string;
+  rights: string;
+  tags: string[];
+  metadataEntries: { key: string; value: string; }[];
+}
+
+type PageErrorType = 'fileNotFound';
 
 export type License = {
   label: string;
@@ -33,140 +56,150 @@ export type License = {
 
 const licenses: License[] = [
   {
-    label: "CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
-    value: "https://creativecommons.org/publicdomain/zero/1.0/",
+    label: 'CC0 1.0 Universal (CC0 1.0) Public Domain Dedication',
+    value: 'https://creativecommons.org/publicdomain/zero/1.0/',
   },
   {
-    label: "Attribution 4.0 International (CC BY 4.0)",
-    value: "https://creativecommons.org/licenses/by/4.0/",
+    label: 'Attribution 4.0 International (CC BY 4.0)',
+    value: 'https://creativecommons.org/licenses/by/4.0/',
   },
   {
-    label: "Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)",
-    value: "https://creativecommons.org/licenses/by-sa/4.0/",
+    label: 'Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)',
+    value: 'https://creativecommons.org/licenses/by-sa/4.0/',
   },
   {
-    label: "Attribution-NoDerivates 4.0 International (CC BY-ND 4.0)",
-    value: "https://creativecommons.org/licenses/by-nd/4.0/",
+    label: 'Attribution-NoDerivates 4.0 International (CC BY-ND 4.0)',
+    value: 'https://creativecommons.org/licenses/by-nd/4.0/',
   },
   {
-    label: "Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)",
-    value: "https://creativecommons.org/licenses/by-nc/4.0/",
+    label: 'Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)',
+    value: 'https://creativecommons.org/licenses/by-nc/4.0/',
   },
   {
-    label:
-      "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)",
-    value: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    label: 'Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)',
+    value: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
   },
   {
-    label:
-      "Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)",
-    value: "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+    label: 'Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)',
+    value: 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
   },
   {
-    label: "Unsplash",
-    value: "https://unsplash.com/license",
+    label: 'Unsplash',
+    value: 'https://unsplash.com/license',
   },
 ];
 
-type TabName = "GCS" | "IPFS";
+type TabName = 'GCS' | 'IPFS';
 
 export function EditFile({ id }: { id: string }) {
-  const { user, userAdapter } = useContext(UserContext);
+  const { user, userAdapter } = useUserStore();
   const { t } = useTranslation();
 
   const [pageError, setPageError] = useState<PageErrorType>();
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [title, setTitle] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [attribution, setAttribution] = useState<string>("");
-  const [license, setLicense] = useState<LicenseURL>();
-  const [cid, setCid] = useState<string>("");
-  const [type, setType] = useState<string>("");
-  const [fs, setFS] = useState<FileSystem>("GCS");
+  const [cid, setCid] = useState<string>('');
+  const [type, setType] = useState<string>('');
+  const [fs, setFS] = useState<FileSystem>('GCS');
   const [fsID, setFSID] = useState<string>(id);
+  const [manifestId, setManifestId] = useState<string>('');
+  const [ipnsName, setIpnsName] = useState<string>('');
+
+  const form = useForm<FileFormData>({
+    resolver: zodResolver(fileSchema) as any,
+    defaultValues: {
+      label: '',
+      summary: '',
+      provider: '',
+      rights: 'https://creativecommons.org/publicdomain/zero/1.0/',
+      tags: ['iiif'],
+      metadataEntries: [],
+    },
+  });
+
+  const { handleSubmit, setValue, watch, control } = form;
+  const { fields, append, remove: removeEntry } = useFieldArray({
+    control,
+    name: "metadataEntries",
+  });
 
   const [_file, { update }] = useAuthoringFile(userAdapter!, id as string, {
     onData: (file) => {
-      setTitle(file.title);
-      setDescription(file.description || "");
-      setAttribution(file.attribution || "");
-      setLicense(file.license);
+      setValue('label', file.label);
+      setValue('summary', file.summary || '');
+      setValue('provider', file.provider || '');
+      setValue('rights', file.rights);
+      setValue('tags', Array.from(new Set(['iiif', ...(file.tags || [])])));
+      
+      // Map dictionary to entries for the form builder
+      const entries = Object.entries(file.metadata || {}).map(([key, value]) => ({ key, value }));
+      setValue('metadataEntries', entries);
+
       setCid(file.cid);
       setType(file.type);
+      if (file.manifestId) {
+        setManifestId(file.manifestId);
+      }
+      if (file.ipnsName) {
+        setIpnsName(file.ipnsName);
+      }
     },
     onError: () => {
-      setPageError("fileNotFound");
+      setPageError('fileNotFound');
     },
   });
 
   const isMounted = useMounted();
+  const label = watch('label') || '';
 
-  const handleValidation = () => {
-    let tempErrors: FormErrors = {};
-    let isValid = true;
+  const onSubmit = async (data: FileFormData) => {
+    // Convert entries back to dictionary
+    const metadata: Record<string, string> = {};
+    data.metadataEntries.forEach(entry => {
+      metadata[entry.key] = entry.value;
+    });
 
-    // https://stackoverflow.com/a/13283557
-    const titleRegex = /^[\w\-\s]+$/;
-
-    if (!titleRegex.test(title)) {
-      tempErrors["title"] = true;
-      isValid = false;
-    }
-
-    setFormErrors({ ...tempErrors });
-    return isValid;
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    let isValidForm = handleValidation();
-
-    if (isValidForm) {
-      await update!(
-        userAdapter!,
-        id as string,
-        {
-          title,
-          description,
-          attribution,
-          license,
-        } as AuthoringFile
-      );
-
-      window.location.href = "/admin/";
-    }
+    await update!(
+      userAdapter!,
+      id as string,
+      {
+        label: data.label,
+        summary: data.summary,
+        provider: data.provider,
+        rights: data.rights as LicenseURL,
+        tags: data.tags,
+        metadata: metadata,
+      } as AuthoringFile,
+    );
+    window.location.href = '/admin/';
   };
 
   if (user) {
-    if (isMounted() && pageError === "fileNotFound") {
+    if (isMounted() && pageError === 'fileNotFound') {
       return (
-        <>
-          <Alert>
-            <>{t("fileNotFound")}</>
-          </Alert>
-        </>
+        <Alert>
+          <>{t('fileNotFound')}</>
+        </Alert>
       );
     }
 
     const Formats = () => {
       let tabs: Tab<TabName>[] = [
         {
-          name: "GCS",
-          label: t("googleCloudStorage"),
+          name: 'GCS',
+          label: t('googleCloudStorage'),
         },
         {
-          name: "IPFS",
-          label: t("ipfs"),
+          name: 'IPFS',
+          label: t('ipfs'),
         },
       ];
 
-      const dash: string = getFileUrl(fs, fsID, `dash/optimized.mpd`);
-      const glb: string = getFileUrl(fs, fsID, `optimized.glb`);
-      const hls: string = getFileUrl(fs, fsID, `hls/optimized.m3u8`);
-      const iiifManifest: string = getFileUrl(fs, fsID, `iiif/index.json`);
-      const jpg: string = getFileUrl(fs, fsID, `optimized.jpg`);
-      const mp4: string = getFileUrl(fs, fsID, `optimized.mp4`);
+      const dash: string = getFileUrl(fs, fsID, `dash/optimized.mpd`, ipnsName);
+      const glb: string = getFileUrl(fs, fsID, `optimized.glb`, ipnsName);
+      const hls: string = getFileUrl(fs, fsID, `hls/optimized.m3u8`, ipnsName);
+      const iiifManifest: string =
+        fs === 'IPFS' && manifestId ? manifestId : getFileUrl(fs, fsID, `iiif/index.json`, ipnsName);
+      const jpg: string = getFileUrl(fs, fsID, `optimized.jpg`, ipnsName);
+      const mp4: string = getFileUrl(fs, fsID, `optimized.mp4`, ipnsName);
 
       return (
         <>
@@ -182,156 +215,147 @@ export function EditFile({ id }: { id: string }) {
               onChange={(current: number) => {
                 const name: FileSystem = tabs[current].name;
                 setFS(name);
-                setFSID(name === "GCS" ? id : cid);
+                setFSID(name === 'GCS' ? id : cid);
               }}
             />
           </div>
           {/* thumbnail */}
-          <label className="mt-8 font-light text-gray-600 dark:text-white">
-            <>{t("thumbnail")}</>
-          </label>
-          <div className="w-64">
-            <a href={getFileUrl(fs, fsID, `thumb.jpg`)} target="_blank">
-              <img src={getFileUrl(fs, fsID, `thumb.jpg`)} alt={title} />
-            </a>
-            <a href={getFileUrl(fs, fsID, `regular.jpg`)} target="_blank">
-              <>{t("regular")}</>
-            </a>
-            <br />
-            <a href={getFileUrl(fs, fsID, `small.jpg`)} target="_blank">
-              <>{t("small")}</>
-            </a>
+          <div className="mt-8">
+            <Label className="font-light text-gray-600 dark:text-white">
+              <>{t('thumbnail')}</>
+            </Label>
+            <div className="mt-2 w-64">
+              <a href={getFileUrl(fs, fsID, `thumb.jpg`)} target="_blank" rel="noreferrer">
+                <img src={getFileUrl(fs, fsID, `thumb.jpg`)} alt={label} />
+              </a>
+              <div className="mt-2 space-x-4">
+                <a
+                  href={getFileUrl(fs, fsID, `regular.jpg`)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  <>{t('regular')}</>
+                </a>
+                <a
+                  href={getFileUrl(fs, fsID, `small.jpg`)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  <>{t('small')}</>
+                </a>
+              </div>
+            </div>
           </div>
-          {(type === MIMETYPES.JPG ||
-            type === MIMETYPES.PNG ||
-            type === MIMETYPES.TIF ||
-            type === MIMETYPES.TIFF) && (
-            <>
-              {/* jpg */}
-              <label
-                htmlFor="jpg"
-                className="mt-8 font-light text-gray-600 dark:text-white"
-              >
-                <>{t("JPG")}</>
-              </label>
 
-              <div>
+          {(type === MIMETYPES.JPG || type === MIMETYPES.PNG || type === MIMETYPES.TIF || type === MIMETYPES.TIFF) && (
+            <div className="mt-8">
+              <Label htmlFor="jpg" className="font-light text-gray-600 dark:text-white">
+                <>{t('JPG')}</>
+              </Label>
+              <div className="mt-2">
                 <CopyText id="jpg" text={jpg} />
               </div>
-
-              <a href={jpg} target="_blank">
-                <>{t("view")}</>
+              <a
+                href={jpg}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-sm text-blue-500 hover:underline"
+              >
+                <>{t('view')}</>
               </a>
-            </>
+            </div>
           )}
           {type === MIMETYPES.GLB && (
-            <>
-              {/* glb */}
-              <label
-                htmlFor="glb"
-                className="mt-8 font-light text-gray-600 dark:text-white"
-              >
-                <>{t("glb")}</>
-              </label>
-
-              <div>
+            <div className="mt-8">
+              <Label htmlFor="glb" className="font-light text-gray-600 dark:text-white">
+                <>{t('glb')}</>
+              </Label>
+              <div className="mt-2">
                 <CopyText id="glb" text={glb} />
               </div>
-
               <a
                 href={`https://view-gltf.glitch.me?gltf=${glb}`}
                 target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-sm text-blue-500 hover:underline"
               >
-                <>{t("view")}</>
+                <>{t('view')}</>
               </a>
-            </>
+            </div>
           )}
           {type === MIMETYPES.MP4 && (
-            <>
-              {/* mp4 */}
-              <label
-                htmlFor="mp4"
-                className="mt-8 font-light text-gray-600 dark:text-white"
-              >
-                <>{t("mp4")}</>
-              </label>
-
+            <div className="mt-8 space-y-8">
               <div>
-                <CopyText id="mp4" text={mp4} />
+                <Label htmlFor="mp4" className="font-light text-gray-600 dark:text-white">
+                  <>{t('mp4')}</>
+                </Label>
+                <div className="mt-2">
+                  <CopyText id="mp4" text={mp4} />
+                </div>
+                <a
+                  href={`${mp4}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-block text-sm text-blue-500 hover:underline"
+                >
+                  <>{t('view')}</>
+                </a>
               </div>
 
-              <a href={`${mp4}`} target="_blank">
-                <>{t("view")}</>
-              </a>
-
-              {/* dash */}
-              <label
-                htmlFor="dash"
-                className="mt-8 font-light text-gray-600 dark:text-white"
-              >
-                <>{t("dash")}</>
-              </label>
-
               <div>
-                <CopyText id="dash" text={dash} />
+                <Label htmlFor="dash" className="font-light text-gray-600 dark:text-white">
+                  <>{t('dash')}</>
+                </Label>
+                <div className="mt-2">
+                  <CopyText id="dash" text={dash} />
+                </div>
+                <a
+                  href={`https://players.akamai.com/players/dashjs?streamUrl=${encodeURIComponent(dash)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-block text-sm text-blue-500 hover:underline"
+                >
+                  <>{t('view')}</>
+                </a>
               </div>
 
-              {/* <a
-                href={`https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html?mpd=${encodeURIComponent(
-                  dash
-                )}+&debug.logLevel=4&streaming.delay.liveDelayFragmentCount=NaN&streaming.delay.liveDelay=NaN&streaming.buffer.initialBufferLevel=NaN&streaming.liveCatchup.maxDrift=NaN&streaming.liveCatchup.playbackRate.min=NaN&streaming.liveCatchup.playbackRate.max=NaN`}
-                target="_blank"
-              >
-                {t("view")}
-              </a> */}
-
-              <a
-                href={`https://players.akamai.com/players/dashjs?streamUrl=${encodeURIComponent(
-                  dash
-                )}`}
-                target="_blank"
-              >
-                <>{t("view")}</>
-              </a>
-
-              {/* hls */}
-              <label
-                htmlFor="hls"
-                className="mt-8 font-light text-gray-600 dark:text-white"
-              >
-                <>{t("hls")}</>
-              </label>
-
               <div>
-                <CopyText id="hls" text={hls} />
+                <Label htmlFor="hls" className="font-light text-gray-600 dark:text-white">
+                  <>{t('hls')}</>
+                </Label>
+                <div className="mt-2">
+                  <CopyText id="hls" text={hls} />
+                </div>
+                <a
+                  href={`https://players.akamai.com/players/hlsjs?streamUrl=${hls}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  <>{t('view')}</>
+                </a>
               </div>
-
-              <a
-                href={`https://players.akamai.com/players/hlsjs?streamUrl=${hls}`}
-                target="_blank"
-              >
-                <>{t("view")}</>
-              </a>
-            </>
+            </div>
           )}
 
-          {/* iiif */}
-          <label
-            htmlFor="iiif"
-            className="mt-8 font-light text-gray-600 dark:text-white"
-          >
-            <>{t("iiifManifest")}</>
-          </label>
-
-          <div>
-            <CopyText id="iiif" text={iiifManifest} />
-            <a
-              href={`https://www.universalviewer.dev/#?iiifManifestId=${iiifManifest}`}
-              target="_blank"
-              title={t("viewOnUVLink")}
-            >
-              <>{t("view")}</>
-            </a>
+          <div className="mt-8">
+            <Label htmlFor="iiif" className="font-light text-gray-600 dark:text-white">
+              <>{t('iiifManifest')}</>
+            </Label>
+            <div className="mt-2">
+              <CopyText id="iiif" text={iiifManifest} />
+              <a
+                href={`https://www.universalviewer.dev/#?iiifManifestId=${iiifManifest}`}
+                target="_blank"
+                rel="noreferrer"
+                title={t('viewOnUVLink')}
+                className="mt-1 inline-block text-sm text-blue-500 hover:underline"
+              >
+                <>{t('view')}</>
+              </a>
+            </div>
           </div>
         </>
       );
@@ -339,127 +363,238 @@ export function EditFile({ id }: { id: string }) {
 
     return (
       <>
-        <Metatags
-          title={`NIIIFTY | ${title} (edit)`}
-          description={description}
-        />
-        <form onSubmit={handleSubmit} className="flex flex-col">
-          {/* title */}
-          <label
-            htmlFor="title"
-            className="mt-8 font-light text-gray-600 dark:text-white"
-          >
-            <>{t("title")}</>
-            <span className="mt-1 ml-1 text-sm text-red-700">*</span>
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-            }}
-            name="title"
-            maxLength={200}
-            className="border-b border-gray-300 bg-transparent py-2 pl-4 font-light text-gray-600 ring-blue-500 focus:outline-none focus:ring-1 dark:border-gray-500 dark:text-white"
-          />
-          {formErrors?.title && (
-            <ErrorMessage>
-              <>{t("titleInvalid")}</>
-            </ErrorMessage>
-          )}
-          {/* attribution */}
-          <label
-            htmlFor="attribution"
-            className="mt-8 font-light text-gray-600 dark:text-white"
-          >
-            <>{t("attribution")}</>
-          </label>
-          <input
-            type="text"
-            value={attribution}
-            onChange={(e) => {
-              setAttribution(e.target.value);
-            }}
-            name="attribution"
-            maxLength={200}
-            className="border-b border-gray-300 bg-transparent py-2 pl-4 font-light text-gray-600 ring-blue-500 focus:outline-none focus:ring-1 dark:border-gray-500 dark:text-white"
-          />
-          {/* license */}
-          <label
-            htmlFor="license"
-            className="mt-8 font-light text-gray-600 dark:text-white"
-          >
-            <>{t("license")}</>
-          </label>
-          <select
-            value={license}
-            className="block w-full border-gray-300 py-2 pl-3 pr-10 text-gray-600 focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-500 dark:bg-black dark:text-white"
-            onChange={(event: React.FormEvent<HTMLSelectElement>) => {
-              setLicense(event.currentTarget.value as LicenseURL);
-            }}
-          >
-            {licenses.map((l: License, index: number) => {
-              const { label, value } = l;
-              return (
-                <option key={index} value={value} className="">
-                  {label}
-                </option>
-              );
-            })}
-          </select>
+        {/* Removed Metatags as dynamic metadata is handled by page.tsx */}
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onSubmit) as any} className="space-y-8">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+              <div className="space-y-8">
+                <FormField<FileFormData>
+                  control={control as any}
+                  name="label"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Label <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter label" 
+                          className=""
+                          value={field.value as string}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          {/* ipfs */}
-          {/* <label
-            htmlFor="cid"
-            className="mt-8 font-light text-gray-600 dark:text-white"
-          >
-            <>{t("ipfs")}</>
-          </label>
+                <FormField<FileFormData>
+                  control={control as any}
+                  name="summary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Summary</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter summary"
+                          className="min-h-[100px]"
+                          value={field.value as string}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <div>
-            <CopyText id="cid" text={cid} />
-            <a
-              href={`https://${cid}.ipfs.w3s.link`}
-              target="_blank"
-              title={t("viewOnW3SLink")}
-            >
-              {t("view")}
-            </a>
-          </div> */}
+                <FormField<FileFormData>
+                  control={control as any}
+                  name="provider"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Provider</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter provider"
+                          value={field.value as string}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <Formats />
+                <FormField<FileFormData>
+                  control={control as any}
+                  name="rights"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rights (License)</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value as string} 
+                        value={field.value as string}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a license" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {licenses.map((l) => (
+                            <SelectItem key={l.value} value={l.value}>
+                              {l.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-          <div className="flex flex-row items-center justify-start">
-            <button
-              type="submit"
-              className={cx(
-                "transition-color mt-8 flex flex-row items-center rounded-md bg-black px-6 py-3 text-lg font-medium text-white shadow-md duration-500 hover:bg-white hover:text-black focus:outline-none dark:bg-white dark:text-black dark:hover:text-gray-500"
-              )}
-            >
-              <>{t("update")}</>
-            </button>
-            <button
-              type="button"
-              onClick={async () => {
-                if (
-                  window.confirm(
-                    t("confirmFileDeletion", {
-                      title: title,
-                    })
-                  )
-                ) {
-                  await remove(userAdapter!, id);
-                  window.location.href = "/admin/";
-                }
-              }}
-              className={cx(
-                "transition-color  mt-8 ml-auto flex flex-row items-center rounded-md bg-gray-200 px-6 py-3 text-lg font-medium text-red-500 shadow-md duration-500 hover:bg-white hover:text-red-800 focus:outline-none dark:bg-gray-200 dark:text-red-500 dark:hover:text-red-900"
-              )}
-            >
-              <>{t("delete")}</>
-            </button>
-          </div>
-        </form>
+              <div className="space-y-8">
+                {/* Tags Input with Badges */}
+                <FormField<FileFormData>
+                  control={control as any}
+                  name="tags"
+                  render={({ field }) => {
+                    const tags = field.value as string[];
+                    return (
+                      <FormItem>
+                        <FormLabel>Tags</FormLabel>
+                        <div className="space-y-4">
+                          <Input
+                            placeholder="Type and press enter to add tags"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const input = e.target as HTMLInputElement;
+                                const value = input.value.trim();
+                                if (value && !tags.includes(value)) {
+                                  field.onChange([...tags, value]);
+                                  input.value = '';
+                                }
+                              }
+                            }}
+                          />
+                          <div className="flex flex-wrap gap-2">
+                            {tags.map((tag) => (
+                              <Badge
+                                key={tag}
+                                variant={tag === 'iiif' ? 'secondary' : 'default'}
+                                className={cn(
+                                  "flex items-center gap-1 px-3 py-1 text-sm font-medium transition-colors",
+                                  tag === 'iiif' && "opacity-50 cursor-not-allowed" 
+                                )}
+                              >
+                                {tag}
+                                {tag !== 'iiif' && (
+                                  <X 
+                                    size={14} 
+                                    className="cursor-pointer hover:text-red-500" 
+                                    onClick={() => field.onChange(tags.filter(t => t !== tag))}
+                                  />
+                                )}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                {/* Metadata Builder */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Metadata (Key-Value Pairs)</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => append({ key: '', value: '' })}
+                      className=""
+                    >
+                      <Plus size={16} className="mr-2" />
+                      Add Field
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="flex gap-2">
+                        <div className="flex-1">
+                          <Input
+                            {...form.register(`metadataEntries.${index}.key` as const)}
+                            placeholder="Key"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            {...form.register(`metadataEntries.${index}.value` as const)}
+                            placeholder="Value"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeEntry(index)}
+                          className="text-zinc-500 hover:bg-red-950 hover:text-red-500"
+                        >
+                          <X size={18} />
+                        </Button>
+                      </div>
+                    ))}
+                    {fields.length === 0 && (
+                      <p className="text-sm text-zinc-500 italic">No custom metadata fields added.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Formats />
+
+            <div className="flex flex-row items-center justify-start space-x-4 border-t border-zinc-800 pt-8">
+              <Button type="submit" size="lg">
+                {t('update')}
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="lg"
+                className="ml-auto"
+                onClick={async () => {
+                  if (
+                    window.confirm(
+                      t('confirmFileDeletion', {
+                        title: label,
+                      }),
+                    )
+                  ) {
+                    await remove(userAdapter!, id);
+                    window.location.href = '/admin/';
+                  }
+                }}
+              >
+                {t('delete')}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </>
     );
   } else {

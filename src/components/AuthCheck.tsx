@@ -1,19 +1,20 @@
-import { useContext, useEffect } from "react";
-import { UserContext } from "@/utils/UserContext";
-import { auth } from "@/utils/Firebase";
+'use client';
+
+import { useEffect } from 'react';
+import { useUserStore } from '@/store/user-store';
 
 export default function AuthCheck({
   signedInContent,
   fallbackContent,
 }: {
-  signedInContent: JSX.Element;
-  fallbackContent?: JSX.Element;
+  signedInContent: React.ReactNode;
+  fallbackContent?: React.ReactNode;
 }) {
-  const { user, username, loaded } = useContext(UserContext);
+  const { user, username, loaded } = useUserStore();
 
   useEffect(() => {
-    if (loaded && auth && !username) {
-      window.location.href = "/enter";
+    if (loaded && !username) {
+      window.location.href = '/enter';
     }
   }, [user, username, loaded]);
 

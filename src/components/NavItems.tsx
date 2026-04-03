@@ -1,18 +1,17 @@
-import { UserContext } from "@/utils/UserContext";
-import { auth } from "@/utils/Firebase";
-import { useTranslation } from "react-i18next";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useContext } from "react";
+import { useUserStore } from '@/store/user-store';
+import { auth } from '@/lib/firebase';
+import { useTranslation } from 'react-i18next';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export function NavItems() {
   const { t } = useTranslation();
-  const { username } = useContext(UserContext);
+  const { username } = useUserStore();
   const router = useRouter();
 
   const signOut = () => {
     auth.signOut();
-    router.reload();
+    router.push('/');
   };
 
   return (
@@ -28,10 +27,11 @@ export function NavItems() {
       )} */}
       {username && (
         <li>
-          <Link href="/admin/">
-            <a className="text-base text-black no-underline transition-colors duration-500 hover:text-gray-600">
-              <>{t("myFiles")}</>
-            </a>
+          <Link
+            href="/admin/"
+            className="text-base text-black no-underline transition-colors duration-500 hover:text-gray-600"
+          >
+            {t('myFiles')}
           </Link>
         </li>
       )}
@@ -58,7 +58,7 @@ export function NavItems() {
             role="menuitem"
             className="cursor-pointer text-base text-black no-underline transition-colors duration-500 hover:text-gray-600"
           >
-            <>{t("signOut")}</>
+            <>{t('signOut')}</>
           </a>
         </li>
       )}

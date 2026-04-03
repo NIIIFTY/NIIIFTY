@@ -1,8 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from 'react';
 
 const ImageWithRetry = (props: any) => {
-
-  const imgRef = useRef();
+  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     // keep trying to load the image until it succeeds
@@ -21,8 +20,7 @@ const ImageWithRetry = (props: any) => {
         }
       };
       // @ts-ignore
-      imgRef.current.onload = () => {
-      };
+      imgRef.current.onload = () => {};
       // @ts-ignore
       imgRef.current.src = props.src;
     }
@@ -33,7 +31,7 @@ const ImageWithRetry = (props: any) => {
       {...props}
       ref={imgRef}
       style={{
-        display: "none",
+        display: 'none',
       }}
       onError={() => {
         // console.log("onError");
@@ -41,7 +39,7 @@ const ImageWithRetry = (props: any) => {
       onLoad={() => {
         // console.log("onLoad");
         // @ts-ignore
-        imgRef.current.style.display = "block";
+        imgRef.current.style.display = 'block';
       }}
     />
   );
