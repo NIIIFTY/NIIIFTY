@@ -96,8 +96,8 @@ export const fileCreated = functions
             process.env.ATPROTO_PASSWORD,
           );
           await publishIIIFRecord(agent, {
-            manifestUrl: `https://${ipnsName}.ipns.dweb.link/index.json`,
-            thumbnailUrl: `https://${ipnsName}.ipns.dweb.link/thumb.jpg`,
+            id: `https://${ipnsName}.ipns.dweb.link/index.json`,
+            thumbnail: `https://${ipnsName}.ipns.dweb.link/thumb.jpg`,
           });
           console.log(`Successfully broadcasted ${ipnsName} to AT Protocol`);
         } catch (e) {
@@ -188,8 +188,8 @@ export const fileUpdated = functions
           process.env.ATPROTO_PASSWORD,
         );
         await publishIIIFRecord(agent, {
-          manifestUrl: `https://${metadata.ipnsName}.ipns.dweb.link/index.json`,
-          thumbnailUrl: `https://${metadata.ipnsName}.ipns.dweb.link/thumb.jpg`,
+          id: `https://${metadata.ipnsName}.ipns.dweb.link/index.json`,
+          thumbnail: `https://${metadata.ipnsName}.ipns.dweb.link/thumb.jpg`,
         });
         console.log(`Successfully broadcasted update for ${metadata.ipnsName} to AT Protocol`);
       } catch (e) {

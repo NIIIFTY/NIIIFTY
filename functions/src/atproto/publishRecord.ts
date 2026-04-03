@@ -1,8 +1,15 @@
 import { AtpAgent } from '@atproto/api';
 
 export interface IIIFRecordPayload {
-  manifestUrl: string; // The stable IPNS URL resolving to the manifest (mapped to resource)
-  thumbnailUrl?: string; // Optional thumbnail IPFS/HTTP URL (mapped to preview.url)
+  id: string; // The stable IPNS URL resolving to the manifest (aligns with IIIF 'id', maps to Matadisco 'resource')
+  thumbnail?: string; // Optional thumbnail IPFS/HTTP URL (aligns with IIIF 'thumbnail', maps to Matadisco 'preview.url')
+  provider?: string; // The publishing institution/provider (aligns with IIIF 'provider')
+  rights?: string; // The license or rights URI (aligns with IIIF 'rights', e.g., 'https://creativecommons.org/licenses/by/4.0/')
+  label?: string; // The title or name of the resource
+  summary?: string; // A short descriptive text (crucial for Vertex AI embeddings)
+  type?: string; // The IIIF resource type (e.g., 'Manifest', 'Collection')
+  tags?: string[]; // Custom tags/subjects for indexing
+  metadata?: Record<string, string>; // Flattened IIIF key-value pairs for precise AppView filtering
 }
 
 /**
@@ -23,13 +30,30 @@ export async function publishIIIFRecord(
 
   const recordPayload: Record<string, any> = {
     $type: 'cx.vmx.matadisco',
-    resource: payload.manifestUrl,
+    resource: payload.id,
     created: new Date().toISOString(),
   };
 
-  if (payload.thumbnailUrl) {
+  // Ensure 'iiif' is always present in our tags for core network filtering
+  recordPayload.tags = Array.from(new Set(['iiif', ...(payload.tags || [])]));
+
+  // Append our custom IIIF schema extension
+  const iiifExtension: Record<string, any> = {
+    $type: 'io.iiif.metadata',
+  };
+  if (payload.provider) iiifExtension.provider = payload.provider;
+  if (payload.rights) iiifExtension.rights = payload.rights;
+  if (payload.label) iiifExtension.label = payload.label;
+  if (payload.summary) iiifExtension.summary = payload.summary;
+  if (payload.type) iiifExtension.type = payload.type;
+  if (payload.metadata) iiifExtension.metadata = payload.metadata;
+  
+  // Attach it to the payload root
+  recordPayload.iiif = iiifExtension;
+
+  if (payload.thumbnail) {
     recordPayload.preview = {
-      url: payload.thumbnailUrl,
+      url: payload.thumbnail,
       // If we are hardcoding to jpeg, we could use that, but 'image/jpeg'
       // or 'image/png' depend on the thumbnail. Hardcoding 'image/jpeg' as placeholder
       // until we implement actual mimeType extraction or passing it in.
