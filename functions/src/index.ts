@@ -12,7 +12,7 @@ import { createTempDir, deleteDir } from './fs.js';
 import { uploadTempFilesToWeb3Storage } from './web3Storage.js';
 import updateMetadataDerivatives from './update.js';
 import { GCS_URL } from './constants.js';
-import { generateName, createNameRevision, publishRevision } from './ipns/index.js';
+import { generateName, createNameRevision, publishRevision, getProxyUrl } from './ipns/index.js';
 import { authenticateAgent, publishIIIFRecord } from './atproto/index.js';
 import * as Name from 'w3name';
 
@@ -48,8 +48,8 @@ export const fileCreated = functions
       const ipnsName = name.toString();
       const ipnsKeyRaw = Buffer.from(name.key.raw).toString('base64');
 
-      // Instruct the IIIF generator to use the stable IPNS path instead of the mutable URL
-      metadata.manifestId = `https://${ipnsName}.ipns.dweb.link`;
+      // Instruct the IIIF generator to use the stable IPNS path via the Next.js proxy
+      metadata.manifestId = getProxyUrl(ipnsName);
 
       const tempDir = createTempDir();
       const tempFilePath = path.join(tempDir, path.basename(originalFile.name));
@@ -96,8 +96,8 @@ export const fileCreated = functions
             process.env.ATPROTO_PASSWORD,
           );
           await publishIIIFRecord(agent, {
-            id: `https://${ipnsName}.ipns.dweb.link/index.json`,
-            thumbnail: `https://${ipnsName}.ipns.dweb.link/thumb.jpg`,
+            id: getProxyUrl(ipnsName, 'index.json'),
+            thumbnail: getProxyUrl(ipnsName, 'thumb.jpg'),
             cid: cid,
             label: metadata.label,
             summary: metadata.summary,
@@ -197,8 +197,8 @@ export const fileUpdated = functions
           process.env.ATPROTO_PASSWORD,
         );
         await publishIIIFRecord(agent, {
-          id: `https://${metadata.ipnsName}.ipns.dweb.link/index.json`,
-          thumbnail: `https://${metadata.ipnsName}.ipns.dweb.link/thumb.jpg`,
+          id: getProxyUrl(metadata.ipnsName, 'index.json'),
+          thumbnail: getProxyUrl(metadata.ipnsName, 'thumb.jpg'),
           cid: metadata.cid,
           label: metadata.label,
           summary: metadata.summary,

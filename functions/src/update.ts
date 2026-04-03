@@ -3,7 +3,7 @@ import { getIIIFManifestJson } from './iiif.js';
 import path from 'path';
 import { uploadTempFilesToWeb3Storage } from './web3Storage.js';
 import { createTempDir, createDir, deleteDir } from './fs.js';
-import { createNameRevision, publishRevision } from './ipns/index.js';
+import { createNameRevision, publishRevision, getProxyUrl } from './ipns/index.js';
 import * as Name from 'w3name';
 import fs from 'fs';
 
@@ -12,7 +12,7 @@ export default async function updateMetadataDerivatives(fileId, metadata) {
 
   // e.g. https://niiifty-bd2e2.appspot.com.storage.googleapis.com/EoLsdWm2MHekqS5eANuJ
   const ipnsName = metadata.ipnsName;
-  const id = `https://${ipnsName}.ipns.dweb.link`;
+  const id = getProxyUrl(ipnsName);
 
   // 1. Download all current derivative files from GCS to a temp directory
   const tempDir = createTempDir();
