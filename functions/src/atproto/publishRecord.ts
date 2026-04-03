@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api';
 
 export interface IIIFRecordPayload {
-  manifestUrl: string; // The stable IPNS URL resolving to the manifest (mapped to metadata)
+  manifestUrl: string; // The stable IPNS URL resolving to the manifest (mapped to resource)
   thumbnailUrl?: string; // Optional thumbnail IPFS/HTTP URL (mapped to preview.url)
 }
 
@@ -23,7 +23,7 @@ export async function publishIIIFRecord(
 
   const recordPayload: Record<string, any> = {
     $type: 'cx.vmx.matadisco',
-    metadata: payload.manifestUrl,
+    resource: payload.manifestUrl,
     created: new Date().toISOString(),
   };
 
