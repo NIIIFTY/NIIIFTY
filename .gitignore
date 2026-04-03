@@ -35,7 +35,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-firebase-debug.log.pnpm-store
+firebase-debug.log
+.pnpm-store/
 .agent/
 .antigravity/
-
