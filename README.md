@@ -59,3 +59,16 @@ To deploy the functions or run full integration tests, you need a decentralized 
 > [!WARNING]
 > **Preserve in your Password Manager!**
 > You must securely save the 24-word **Space Recovery Phrase** generated in Step 2. You should also backup the exact base64 strings for `STORACHA_KEY` and `STORACHA_PROOF` from your `.env` file since they cannot be recovered easily if lost.
+
+## Architecture Notes
+
+### Why We Use an IPNS Proxy Instead of dweb.link
+
+Previously, NIIIFTY hardcoded `dweb.link` URLs for IPNS manifest distribution. This legacy architecture was dropped in favor of a centralized Next.js proxy route (`/api/ipns/[ipnsKey]`) for several critical reasons:
+
+1. **DHT Resolution Unreliability:** `dweb.link` (and most public gateways) relies on the global IPFS Distributed Hash Table (DHT) to resolve IPNS names to content IDs (CIDs). In production, this resulted in extreme latency and frequent `500 Internal Server Error` timeouts, breaking IIIF Viewer tile requests.
+2. **Instant Name Resolution:** By using a custom Next.js proxy, we can directly query the centralized `name.web3.storage` REST API, which instantly maps our generated IPNS keys to their latest CIDs without touching the DHT.
+3. **High-Performance Redirection:** Once the CID is instantly resolved, the proxy issues a `302 Temporary Redirect` to the ultra-fast `w3s.link` dedicated CDN.
+4. **Rate-Limit Resilience:** IIIF Viewers make dozens of parallel requests for individual image tiles. Querying the naming service for *every* tile would instantly trigger 'Too Many Requests' rate blocks. The proxy leverages HTTP caching (`Cache-Control: public, max-age=300`) to guarantee that all parallel tile requests are processed using a single fast, buffered resolution.
+
+Within the Cloud Functions, always use the `getProxyUrl` helper (from `src/ipns/proxy.ts`) to ensure URLs natively point to the Next.js proxy routing.
