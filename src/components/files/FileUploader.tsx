@@ -211,7 +211,7 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
 
     const uid: string = user.uid;
     const id = doc(collection(db, 'files')).id;
-    const title: string = path.basename(file.name, path.extname(file.name));
+    const label: string = path.basename(file.name, path.extname(file.name));
 
     let extension = file.type ? file.type.split('/')[1] : (file.name.split('.').pop() as string);
     if (extension === 'jpeg') extension = 'jpg';
@@ -235,7 +235,7 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
       (error) => console.error(error),
       async () => {
         setUploadComplete(true);
-        await add(userAdapter!, id, { uid, type, title });
+        await add(userAdapter!, id, { uid, type, label });
       },
     );
   }, [file, user, userAdapter]);

@@ -10,6 +10,7 @@ export interface IIIFRecordPayload {
   type?: string; // The IIIF resource type (e.g., 'Manifest', 'Collection')
   tags?: string[]; // Custom tags/subjects for indexing
   metadata?: Record<string, string>; // Flattened IIIF key-value pairs for precise AppView filtering
+  cid?: string; // Optional immutable CID for IPFS verifiability
 }
 
 /**
@@ -31,6 +32,7 @@ export async function publishIIIFRecord(
   const recordPayload: Record<string, any> = {
     $type: 'cx.vmx.matadisco',
     resource: payload.id,
+    cid: payload.cid || '', // Promote CID to root for global verifiability
     created: new Date().toISOString(),
   };
 

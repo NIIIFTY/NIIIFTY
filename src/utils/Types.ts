@@ -21,20 +21,22 @@ export const MIMETYPES = {
 export type MimeType = (typeof MIMETYPES)[keyof typeof MIMETYPES];
 
 export interface File {
-  attribution: string;
-  cid: string;
+  provider: string; // aligns with IIIF provider
+  cid: string; // IPFS CID
   created: Timestamp;
-  description: string;
+  summary: string; // aligns with IIIF summary
   id?: string;
-  license: LicenseURL;
+  rights: LicenseURL; // aligns with IIIF rights
   modified: Timestamp;
   processed: boolean;
   softwareVersion?: string;
-  title: string;
+  label: string; // aligns with IIIF label
   type: MimeType;
   uid: string; // who created it (files are global, not stored in user's collection)
   ipnsName?: string;
   manifestId?: string;
+  tags?: string[]; // Matadisco tags
+  metadata?: Record<string, string>; // IIIF exact-match metadata dictionary
 }
 
 export type FileProps = {
@@ -44,7 +46,7 @@ export type FileProps = {
 };
 
 // all of these props are required on save
-export type SavedFile = MandateProps<File, 'uid' | 'type' | 'title' | 'license'>;
+export type SavedFile = MandateProps<File, 'uid' | 'type' | 'label' | 'rights'>;
 
 // loaded when authoring an file
 export interface AuthoringFile extends SavedFile {

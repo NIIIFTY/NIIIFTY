@@ -8,10 +8,10 @@ import { remove, useAuthoringFile } from '@/hooks/useFile';
 import { AuthoringFile, FileSystem, LicenseURL, MIMETYPES } from '@/utils/Types';
 import { useMounted } from '@/hooks/useMounted';
 import Alert from '../Alert';
-import { getFileUrl } from '@/utils/Utils';
+import { getFileUrl, cn } from '@/utils/Utils';
 import CopyText from '../CopyText';
 import Tabs, { Tab } from '../Tabs';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -20,18 +20,32 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { X, Plus } from 'lucide-react';
 
 const fileSchema = z.object({
-  title: z
+  label: z
     .string()
-    .min(1, 'Title is required')
+    .min(1, 'Label is required')
     .regex(/^[\w\-\s]+$/, 'Invalid title format (alphanumeric, dashes, spaces only)'),
-  description: z.string().optional(),
-  attribution: z.string().optional(),
-  license: z.string().optional(),
+  summary: z.string().default(''),
+  provider: z.string().default(''),
+  rights: z.string().default('https://creativecommons.org/publicdomain/zero/1.0/'),
+  tags: z.array(z.string()).default(['iiif']),
+  metadataEntries: z.array(z.object({
+    key: z.string().min(1, 'Key is required'),
+    value: z.string().min(1, 'Value is required')
+  })).default([]),
 });
 
-type FileFormData = z.infer<typeof fileSchema>;
+interface FileFormData {
+  label: string;
+  summary: string;
+  provider: string;
+  rights: string;
+  tags: string[];
+  metadataEntries: { key: string; value: string; }[];
+}
 
 type PageErrorType = 'fileNotFound';
 
@@ -90,23 +104,35 @@ export function EditFile({ id }: { id: string }) {
   const [ipnsName, setIpnsName] = useState<string>('');
 
   const form = useForm<FileFormData>({
-    resolver: zodResolver(fileSchema),
+    resolver: zodResolver(fileSchema) as any,
     defaultValues: {
-      title: '',
-      description: '',
-      attribution: '',
-      license: 'https://creativecommons.org/publicdomain/zero/1.0/' as LicenseURL,
+      label: '',
+      summary: '',
+      provider: '',
+      rights: 'https://creativecommons.org/publicdomain/zero/1.0/',
+      tags: ['iiif'],
+      metadataEntries: [],
     },
   });
 
-  const { handleSubmit, setValue, watch } = form;
+  const { handleSubmit, setValue, watch, control } = form;
+  const { fields, append, remove: removeEntry } = useFieldArray({
+    control,
+    name: "metadataEntries",
+  });
 
   const [_file, { update }] = useAuthoringFile(userAdapter!, id as string, {
     onData: (file) => {
-      setValue('title', file.title);
-      setValue('description', file.description || '');
-      setValue('attribution', file.attribution || '');
-      setValue('license', file.license);
+      setValue('label', file.label);
+      setValue('summary', file.summary || '');
+      setValue('provider', file.provider || '');
+      setValue('rights', file.rights);
+      setValue('tags', Array.from(new Set(['iiif', ...(file.tags || [])])));
+      
+      // Map dictionary to entries for the form builder
+      const entries = Object.entries(file.metadata || {}).map(([key, value]) => ({ key, value }));
+      setValue('metadataEntries', entries);
+
       setCid(file.cid);
       setType(file.type);
       if (file.manifestId) {
@@ -122,15 +148,25 @@ export function EditFile({ id }: { id: string }) {
   });
 
   const isMounted = useMounted();
-  const title = watch('title') || '';
+  const label = watch('label') || '';
 
   const onSubmit = async (data: FileFormData) => {
+    // Convert entries back to dictionary
+    const metadata: Record<string, string> = {};
+    data.metadataEntries.forEach(entry => {
+      metadata[entry.key] = entry.value;
+    });
+
     await update!(
       userAdapter!,
       id as string,
       {
-        ...data,
-        license: data.license as LicenseURL,
+        label: data.label,
+        summary: data.summary,
+        provider: data.provider,
+        rights: data.rights as LicenseURL,
+        tags: data.tags,
+        metadata: metadata,
       } as AuthoringFile,
     );
     window.location.href = '/admin/';
@@ -190,7 +226,7 @@ export function EditFile({ id }: { id: string }) {
             </Label>
             <div className="mt-2 w-64">
               <a href={getFileUrl(fs, fsID, `thumb.jpg`)} target="_blank" rel="noreferrer">
-                <img src={getFileUrl(fs, fsID, `thumb.jpg`)} alt={title} />
+                <img src={getFileUrl(fs, fsID, `thumb.jpg`)} alt={label} />
               </a>
               <div className="mt-2 space-x-4">
                 <a
@@ -329,79 +365,210 @@ export function EditFile({ id }: { id: string }) {
       <>
         {/* Removed Metatags as dynamic metadata is handled by page.tsx */}
         <Form {...form}>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('title')} <span className="text-red-700">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder={t('title')} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={handleSubmit(onSubmit) as any} className="space-y-8">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+              <div className="space-y-8">
+                <FormField<FileFormData>
+                  control={control as any}
+                  name="label"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Label <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter label" 
+                          className=""
+                          value={field.value as string}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('description')}</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder={t('description')} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField<FileFormData>
+                  control={control as any}
+                  name="summary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Summary</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter summary"
+                          className="min-h-[100px]"
+                          value={field.value as string}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="attribution"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('attribution')}</FormLabel>
-                  <FormControl>
-                    <Input placeholder={t('attribution')} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField<FileFormData>
+                  control={control as any}
+                  name="provider"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Provider</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter provider"
+                          value={field.value as string}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="license"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('license')}</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a license" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {licenses.map((l) => (
-                        <SelectItem key={l.value} value={l.value}>
-                          {l.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField<FileFormData>
+                  control={control as any}
+                  name="rights"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rights (License)</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value as string} 
+                        value={field.value as string}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a license" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {licenses.map((l) => (
+                            <SelectItem key={l.value} value={l.value}>
+                              {l.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="space-y-8">
+                {/* Tags Input with Badges */}
+                <FormField<FileFormData>
+                  control={control as any}
+                  name="tags"
+                  render={({ field }) => {
+                    const tags = field.value as string[];
+                    return (
+                      <FormItem>
+                        <FormLabel>Tags</FormLabel>
+                        <div className="space-y-4">
+                          <Input
+                            placeholder="Type and press enter to add tags"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const input = e.target as HTMLInputElement;
+                                const value = input.value.trim();
+                                if (value && !tags.includes(value)) {
+                                  field.onChange([...tags, value]);
+                                  input.value = '';
+                                }
+                              }
+                            }}
+                          />
+                          <div className="flex flex-wrap gap-2">
+                            {tags.map((tag) => (
+                              <Badge
+                                key={tag}
+                                variant={tag === 'iiif' ? 'secondary' : 'default'}
+                                className={cn(
+                                  "flex items-center gap-1 px-3 py-1 text-sm font-medium transition-colors",
+                                  tag === 'iiif' && "opacity-50 cursor-not-allowed" 
+                                )}
+                              >
+                                {tag}
+                                {tag !== 'iiif' && (
+                                  <X 
+                                    size={14} 
+                                    className="cursor-pointer hover:text-red-500" 
+                                    onClick={() => field.onChange(tags.filter(t => t !== tag))}
+                                  />
+                                )}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                {/* Metadata Builder */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Metadata (Key-Value Pairs)</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => append({ key: '', value: '' })}
+                      className=""
+                    >
+                      <Plus size={16} className="mr-2" />
+                      Add Field
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="flex gap-2">
+                        <div className="flex-1">
+                          <Input
+                            {...form.register(`metadataEntries.${index}.key` as const)}
+                            placeholder="Key"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            {...form.register(`metadataEntries.${index}.value` as const)}
+                            placeholder="Value"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeEntry(index)}
+                          className="text-zinc-500 hover:bg-red-950 hover:text-red-500"
+                        >
+                          <X size={18} />
+                        </Button>
+                      </div>
+                    ))}
+                    {fields.length === 0 && (
+                      <p className="text-sm text-zinc-500 italic">No custom metadata fields added.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <Formats />
 
-            <div className="flex flex-row items-center justify-start space-x-4">
+            <div className="flex flex-row items-center justify-start space-x-4 border-t border-zinc-800 pt-8">
               <Button type="submit" size="lg">
                 {t('update')}
               </Button>
@@ -414,7 +581,7 @@ export function EditFile({ id }: { id: string }) {
                   if (
                     window.confirm(
                       t('confirmFileDeletion', {
-                        title: title,
+                        title: label,
                       }),
                     )
                   ) {

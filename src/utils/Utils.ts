@@ -1,4 +1,6 @@
 import { default as slug } from 'slugify';
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 import { FileSystem, SavedFile } from './Types';
 import config from '../../niiifty.config';
@@ -84,4 +86,8 @@ export function formatBytes(bytes: number | string, decimals = 2) {
   const i = Math.floor(Math.log(numericBytes) / Math.log(k));
 
   return `${parseFloat((numericBytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }

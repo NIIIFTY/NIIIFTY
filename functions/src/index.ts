@@ -98,6 +98,13 @@ export const fileCreated = functions
           await publishIIIFRecord(agent, {
             id: `https://${ipnsName}.ipns.dweb.link/index.json`,
             thumbnail: `https://${ipnsName}.ipns.dweb.link/thumb.jpg`,
+            cid: cid,
+            label: metadata.label,
+            summary: metadata.summary,
+            provider: metadata.provider,
+            rights: metadata.rights,
+            tags: metadata.tags,
+            metadata: metadata.metadata,
           });
           console.log(`Successfully broadcasted ${ipnsName} to AT Protocol`);
         } catch (e) {
@@ -161,10 +168,12 @@ export const fileUpdated = functions
 
     // if the only things that changed were backend properties (like cid), ignore to prevent infinite loops
     if (
-      previousValue.title === metadata.title &&
-      previousValue.description === metadata.description &&
-      previousValue.license === metadata.license &&
-      previousValue.attribution === metadata.attribution
+      previousValue.label === metadata.label &&
+      previousValue.summary === metadata.summary &&
+      previousValue.rights === metadata.rights &&
+      previousValue.provider === metadata.provider &&
+      JSON.stringify(previousValue.tags) === JSON.stringify(metadata.tags) &&
+      JSON.stringify(previousValue.metadata) === JSON.stringify(metadata.metadata)
     ) {
       console.log('metadata unchanged, skipping to prevent infinite loops');
       return null;
@@ -190,6 +199,13 @@ export const fileUpdated = functions
         await publishIIIFRecord(agent, {
           id: `https://${metadata.ipnsName}.ipns.dweb.link/index.json`,
           thumbnail: `https://${metadata.ipnsName}.ipns.dweb.link/thumb.jpg`,
+          cid: metadata.cid,
+          label: metadata.label,
+          summary: metadata.summary,
+          provider: metadata.provider,
+          rights: metadata.rights,
+          tags: metadata.tags,
+          metadata: metadata.metadata,
         });
         console.log(`Successfully broadcasted update for ${metadata.ipnsName} to AT Protocol`);
       } catch (e) {

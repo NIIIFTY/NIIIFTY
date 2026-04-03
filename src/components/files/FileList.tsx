@@ -75,7 +75,7 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
                         >
                           <div className="bg-gray-500">
                             {file.processed ? (
-                              <img src={getFileUrl('GCS', file.id!, 'thumb.jpg')} alt={file.title} />
+                              <img src={getFileUrl('GCS', file.id!, 'thumb.jpg')} alt={file.label} />
                             ) : (
                               <div className="flex h-20 w-24 content-center items-center justify-center text-white lg:h-28 lg:w-32">
                                 <Spinner />
@@ -96,7 +96,7 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
                             onSelectFile(file.id!);
                           }}
                         >
-                          {file.title}
+                          {file.label}
                         </button>
                         {/* </a> */}
                       </td>
@@ -104,12 +104,8 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
                         {file.type.split('/')[1]}
                       </td>
                       <td className="hidden px-12 py-4 text-sm whitespace-nowrap text-gray-500 xl:table-cell">
-                        {`${new Date(
-                          // @ts-ignore
-                          file.modified,
-                        ).toLocaleDateString()} | ${new Date(
-                          // @ts-ignore
-                          file.modified,
+                        {`${new Date(file.modified as any).toLocaleDateString()} | ${new Date(
+                          file.modified as any,
                         ).toLocaleTimeString()}`}
                       </td>
                       {/* <td className="py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
@@ -128,7 +124,7 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
                             if (
                               window.confirm(
                                 t('confirmFileDeletion', {
-                                  title: file.title,
+                                  title: file.label,
                                 }),
                               )
                             ) {
