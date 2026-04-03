@@ -1,4 +1,4 @@
-import config, { EnvironmentType } from '../../exhibit.config';
+import config, { EnvironmentType } from '../../niiifty.config';
 import urljoin from 'url-join';
 
 // is deployed on Vercel
