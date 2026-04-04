@@ -60,15 +60,22 @@ To deploy the functions or run full integration tests, you need a decentralized 
 > **Preserve in your Password Manager!**
 > You must securely save the 24-word **Space Recovery Phrase** generated in Step 2. You should also backup the exact base64 strings for `STORACHA_KEY` and `STORACHA_PROOF` from your `.env` file since they cannot be recovered easily if lost.
 
-## Architecture Notes
+### High-Performance IPNS Streaming Proxy
 
-### Why We Use an IPNS Proxy Instead of dweb.link
+Previously, NIIIFTY hardcoded `dweb.link` URLs for IPNS manifest distribution. To resolve reliability issues, we implemented a centralized Next.js proxy route (`/api/ipns/[ipnsKey]/[...path]`).
 
-Previously, NIIIFTY hardcoded `dweb.link` URLs for IPNS manifest distribution. This legacy architecture was dropped in favor of a centralized Next.js proxy route (`/api/ipns/[ipnsKey]`) for several critical reasons:
+#### Why a Streaming Proxy instead of a 302 Redirect?
 
-1. **DHT Resolution Unreliability:** `dweb.link` (and most public gateways) relies on the global IPFS Distributed Hash Table (DHT) to resolve IPNS names to content IDs (CIDs). In production, this resulted in extreme latency and frequent `500 Internal Server Error` timeouts, breaking IIIF Viewer tile requests.
-2. **Instant Name Resolution:** By using a custom Next.js proxy, we can directly query the centralized `name.web3.storage` REST API, which instantly maps our generated IPNS keys to their latest CIDs without touching the DHT.
-3. **High-Performance Redirection:** Once the CID is instantly resolved, the proxy issues a `302 Temporary Redirect` to the ultra-fast `w3s.link` dedicated CDN.
-4. **Rate-Limit Resilience:** IIIF Viewers make dozens of parallel requests for individual image tiles. Querying the naming service for *every* tile would instantly trigger 'Too Many Requests' rate blocks. The proxy leverages HTTP caching (`Cache-Control: public, max-age=300`) to guarantee that all parallel tile requests are processed using a single fast, buffered resolution.
+Initially, the proxy used a `302 Temporary Redirect`. However, this caused "popcorning" in IIIF viewers because browsers had to establish new TLS handshakes for every tile redirected to `w3s.link`. The current **Streaming Proxy** solves this:
 
-Within the Cloud Functions, always use the `getProxyUrl` helper (from `src/ipns/proxy.ts`) to ensure URLs natively point to the Next.js proxy routing.
+1.  **Instant Name Resolution:** We query the `name.web3.storage` REST API to instantly map IPNS keys to CIDs, bypassing the slow IPFS DHT.
+2.  **Server-Side Streaming:** The Next.js backend fetches the content from the Storacha Gateway and streams the binary data directly to the client.
+3.  **Connection Multiplexing:** The browser maintains a single HTTP/2 connection to `niiifty.com`. Tiles are streamed back in parallel without extra DNS lookups or TLS handshakes.
+4.  **Rate-Limit Resilience:** Resolution results are cached (`revalidate: 300`) to prevent blocking during heavy IIIF tile loads (100+ requests).
+
+#### Cost and Security
+
+*   **Cost (Egress):** Unlike a redirect, streaming consumes Google Cloud egress bandwidth (~$0.12/GB). This is a trade-off for a premium, smooth user experience.
+*   **Security (Restricted Reverse Proxy):** The proxy is **not** an open gateway. It is a restricted reverse proxy that only resolves paths against `w3s.link` using validated IPNS records. It mitigated SSRF risks by hardcoding the destination gateway and only allowing resolution via the trusted naming service.
+
+Within the Cloud Functions, always use the `getProxyUrl` helper (from `src/ipns/proxy.ts`) to ensure manifests point to this routing.
