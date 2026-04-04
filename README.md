@@ -81,15 +81,11 @@ To achieve a production-ready, sustainable system on a grant budget, we made sev
 - **The Compromise:** Unlike a redirect, server-side streaming consumes Google Cloud egress bandwidth (~$0.12/GB). 
 - **The Rationale:** This is a deliberate "UX First" decision. High-resolution IIIF viewers (like Universal Viewer) become unusable when forced to wait for hundreds of sequential TLS handshakes via redirects. Streaming provides the performance level of a centralized CDN while maintaining the data durability of IPFS.
 
-### 2. Regional Consistency vs. Global Latency (The `eur3` Model)
-- **The Compromise:** The project has been migrated to the **`europe-west1`** (Belgium) region to align with the **`eur3`** Firestore multi-region database.
-- **The Rationale:** To ensure that Cloud Functions triggers (for file processing) are atomic and consistent, the functions must reside in a compatible region with the database. This optimizes for **Data Integrity** and **Processing Reliability** for the repository, even if it adds slight latency for US/Asia-based visitors.
-
-### 3. Serverless AppView vs. Full AT Protocol Relay
+### 2. Serverless AppView vs. Full AT Protocol Relay
 - **The Compromise:** Instead of hosting a full, stateful AT Protocol Relay (high disk/CPU overhead), we implemented a lightweight **"Firebase-Native" AppView**.
 - **The Rationale:** Using **Google Cloud Run + Bun + Jetstream**, we index only the specific `matadisco` collections we need. This reduces monthly infrastructure costs by ~90% while providing native **Vector Search** (fuzzy, semantic matching) directly within our existing database.
 
-### 4. Admin SDK Authorization Guard
+### 3. Admin SDK Authorization Guard
 - **The Compromise:** The IPNS proxy uses the **Firebase Admin SDK** for its authorization guard.
 - **The Rationale:** This was necessary due to service account limitations in Firebase App Hosting which prevent granular "impersonation" for server-side Firestore reads under standard client-side security rules. The "Proxy Guard" pattern keeps the proxy restricted to NIIIFTY-managed keys without requiring a complex OAuth flow for public IIIF manifests.
 
@@ -99,7 +95,6 @@ To achieve a production-ready, sustainable system on a grant budget, we made sev
 
 ## Future Directions
 - **Edge Deployment:** Future grants could explore moving the Streaming Proxy to the network edge (e.g., Cloudflare Workers) to reduce GCP egress costs.
-- **Global Data Sharding:** Exploring a multi-region Firestore setup to reduce latency for international users while maintaining the atomic trigger model.
 
 ---
 
