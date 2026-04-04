@@ -1,26 +1,30 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/server';
-import { unstable_cache } from 'next/cache';
 
-// Cached verification function to prevent redundant Firestore reads
-const verifyIpnsKey = unstable_cache(
-  async (ipnsKey: string) => {
-    try {
-      const querySnapshot = await adminDb
-        .collection('files')
-        .where('ipnsName', '==', ipnsKey)
-        .limit(1)
-        .get();
-      
-      return !querySnapshot.empty;
-    } catch (error) {
-      console.error('Firestore Verification Error:', error);
-      return false;
-    }
-  },
-  ['ipns-verification'],
-  { revalidate: 300 } // Cache for 5 minutes
-);
+// Simplified verification function for debugging
+// Temporarily removed unstable_cache to isolate potential cache-related permission issues
+async function verifyIpnsKey(ipnsKey: string) {
+  try {
+    const querySnapshot = await adminDb
+      .collection('files')
+      .where('ipnsName', '==', ipnsKey)
+      .limit(1)
+      .get();
+    
+    return !querySnapshot.empty;
+  } catch (error: any) {
+    // Detailed error logging for production debugging
+    console.error('Firestore Verification Guard Error Detail:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      name: error.name,
+      details: error.details,
+    });
+    // Re-throw so the main catch block handles the 500 response
+    throw error;
+  }
+}
 
 export async function GET(
   request: Request,
@@ -33,9 +37,19 @@ export async function GET(
 
   try {
     // 1. Store Verification Guard
-    // Verify that the requested ipnsKey is actually a project managed by NIIIFTY
-    // Using cached Admin SDK lookup to bypass security rules and minimize latency.
-    const isAuthorized = await verifyIpnsKey(ipnsKey);
+    let isAuthorized = false;
+    try {
+      isAuthorized = await verifyIpnsKey(ipnsKey);
+    } catch (authError: any) {
+      // If we hit a permission error at the guard level, return a 403 Forbidden with details
+      return new NextResponse(JSON.stringify({ 
+        error: 'Forbidden: Verfication Guard Failure',
+        details: authError.code || authError.message || 'Unknown verification error'
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     if (!isAuthorized) {
       return new NextResponse(JSON.stringify({ 
@@ -47,9 +61,6 @@ export async function GET(
     }
 
     // 2. IPNS Resolution
-    // Query Web3.Storage's native IPNS Name resolver API
-    // We cache this fetch for 5 minutes (300 seconds) so that heavy tile loads (which fire 100s of requests)
-    // only resolve the IPNS record once, preventing rate limit blocks.
     const response = await fetch(`https://name.web3.storage/name/${ipnsKey}`, {
       next: { revalidate: 300 }
     });
@@ -69,8 +80,6 @@ export async function GET(
 
     const data = await response.json();
     
-    // data.value is in the format `/ipfs/<cid>` e.g. `/ipfs/bafy...`
-    // We want to construct `https://<cid>.ipfs.w3s.link/<relativePath>`
     const cid = data.value.replace('/ipfs/', '');
     
     const destinationUrl = relativePath 
@@ -78,8 +87,6 @@ export async function GET(
       : `https://${cid}.ipfs.w3s.link/`;
 
     // Server-side streaming proxy
-    // We fetch the tile directly on the server and pipe it to the client.
-    // This eliminates 302 redirects and TLS handshakes for every tile on the client-side.
     const proxyResponse = await fetch(destinationUrl);
 
     if (!proxyResponse.ok) {
@@ -99,8 +106,6 @@ export async function GET(
     return new NextResponse(proxyResponse.body, {
       status: 200,
       headers: {
-        // Cache heavy asset streaming (like imagery) for 1 hour locally depending on your needs.
-        // IPNS generally updates over longer periods, but tiles are usually immutable paths anyway.
         'Cache-Control': 'public, max-age=3600, s-maxage=3600',
         'Content-Type': proxyResponse.headers.get('content-type') || 'application/octet-stream',
         'Access-Control-Allow-Origin': '*',
@@ -108,7 +113,7 @@ export async function GET(
     });
 
   } catch (error: any) {
-    console.error('IPNS Resolution Error:', error);
+    console.error('IPNS Resolution Error Proxy:', error);
     return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
