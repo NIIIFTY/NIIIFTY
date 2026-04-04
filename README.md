@@ -66,26 +66,41 @@ Previously, NIIIFTY hardcoded `dweb.link` URLs for IPNS manifest distribution. T
 
 #### Why a Streaming Proxy instead of a 302 Redirect?
 
-Initially, the proxy used a `302 Temporary Redirect`. However, this caused "popcorning" in IIIF viewers because browsers had to establish new TLS handshakes for every tile redirected to `w3s.link`. The current **Streaming Proxy** solves this:
+Initially, the proxy used a `301/302 Redirect`. However, this caused "popcorning" in IIIF viewers because browsers had to establish new DNS lookups and TLS handshakes for every tile redirected to `w3s.link`. The current **Streaming Proxy** solves this:
 
 1.  **Instant Name Resolution:** We query the `name.web3.storage` REST API to instantly map IPNS keys to CIDs, bypassing the slow IPFS DHT.
 2.  **Server-Side Streaming:** The Next.js backend fetches the content from the Storacha Gateway and streams the binary data directly to the client.
-3.  **Connection Multiplexing:** The browser maintains a single HTTP/2 connection to `niiifty.com`. Tiles are streamed back in parallel without extra DNS lookups or TLS handshakes.
-4.  **Rate-Limit Resilience:** Resolution results are cached (`revalidate: 300`) to prevent blocking during heavy IIIF tile loads (100+ requests).
+3.  **Connection Multiplexing:** The browser maintains a single HTTP/2 connection to `niiifty.com`. Tiles are streamed back in parallel without extra TLS overhead.
+4.  **Aggressive Authorization Caching:** We use Next.js `unstable_cache` to remember "Authorized" keys for 1 hour, reducing Firestore read operations to nearly zero.
 
-### Security
-- **Basic Authentication:** The site is protected by Basic Auth in production. Credentials can be configured via environment variables in Firebase App Hosting:
-    - `BASIC_AUTH_USER`: The username for login.
-    - `BASIC_AUTH_PASS`: The password for login.
-- **Proxy Verification Guard:** The IPNS proxy (`/api/ipns/`) is public but strictly restricted. It only streams content for IPNS keys that are explicitly registered in the NIIIFTY Firestore database, preventing the service from being used as an open proxy for unauthorized IPFS content.
+## Architectural Decisions & Technical Compromises
 
-### Performance
-- **Streaming Proxy:** The IIIF proxy uses server-side streaming to eliminate client-side redirects and TLS handshakes, resulting in significantly smoother tile loading in viewers like Universal Viewer.
-- **Aggressive Caching:** IPNS resolutions are cached for 300s, and image tiles are cached for 1 hour, ensuring high performance under heavy load.
+To achieve a production-ready, sustainable system on a grant budget, we made several strategic architectural trade-offs:
 
-#### Cost and Security
+### 1. Egress Cost vs. User Experience (Streaming Proxy)
+- **The Compromise:** Unlike a redirect, server-side streaming consumes Google Cloud egress bandwidth (~$0.12/GB). 
+- **The Rationale:** This is a deliberate "UX First" decision. High-resolution IIIF viewers (like Universal Viewer) become unusable when forced to wait for hundreds of sequential TLS handshakes via redirects. Streaming provides the performance level of a centralized CDN while maintaining the data durability of IPFS.
 
-*   **Cost (Egress):** Unlike a redirect, streaming consumes Google Cloud egress bandwidth (~$0.12/GB). This is a trade-off for a premium, smooth user experience.
-*   **Security (Restricted Reverse Proxy):** The proxy is **not** an open gateway. It is a restricted reverse proxy that only resolves paths against `w3s.link` using validated IPNS records. It mitigated SSRF risks by hardcoding the destination gateway and only allowing resolution via the trusted naming service.
+### 2. Regional Consistency vs. Global Latency (The `eur3` Model)
+- **The Compromise:** The project has been migrated to the **`europe-west1`** (Belgium) region to align with the **`eur3`** Firestore multi-region database.
+- **The Rationale:** To ensure that Cloud Functions triggers (for file processing) are atomic and consistent, the functions must reside in a compatible region with the database. This optimizes for **Data Integrity** and **Processing Reliability** for the repository, even if it adds slight latency for US/Asia-based visitors.
 
-Within the Cloud Functions, always use the `getProxyUrl` helper (from `src/ipns/proxy.ts`) to ensure manifests point to this routing.
+### 3. Serverless AppView vs. Full AT Protocol Relay
+- **The Compromise:** Instead of hosting a full, stateful AT Protocol Relay (high disk/CPU overhead), we implemented a lightweight **"Firebase-Native" AppView**.
+- **The Rationale:** Using **Google Cloud Run + Bun + Jetstream**, we index only the specific `matadisco` collections we need. This reduces monthly infrastructure costs by ~90% while providing native **Vector Search** (fuzzy, semantic matching) directly within our existing database.
+
+### 4. Admin SDK Authorization Guard
+- **The Compromise:** The IPNS proxy uses the **Firebase Admin SDK** for its authorization guard.
+- **The Rationale:** This was necessary due to service account limitations in Firebase App Hosting which prevent granular "impersonation" for server-side Firestore reads under standard client-side security rules. The "Proxy Guard" pattern keeps the proxy restricted to NIIIFTY-managed keys without requiring a complex OAuth flow for public IIIF manifests.
+
+## Security
+- **Basic Authentication:** The site is protected by Basic Auth in production to prevent unauthorized uploads.
+- **Restricted Reverse Proxy:** The proxy is **not** an open gateway. It only resolves paths against trusted IPFS providers for IPNS keys registered in the NIIIFTY Firestore, mitigating SSRF risks.
+
+## Future Directions
+- **Edge Deployment:** Future grants could explore moving the Streaming Proxy to the network edge (e.g., Cloudflare Workers) to reduce GCP egress costs.
+- **Global Data Sharding:** Exploring a multi-region Firestore setup to reduce latency for international users while maintaining the atomic trigger model.
+
+---
+
+Within the Cloud Functions, always use the `getProxyUrl` helper (from `src/lib/ipns.ts`) to ensure manifests point to this routing.
