@@ -4,8 +4,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:functions": "npm run build --prefix functions",
     "start": "next start",
-    "deploy": "firebase deploy --only firestore,storage,functions",
+    "deploy": "npm run build:functions && firebase deploy --only firestore,storage,functions",
     "emulate": "firebase emulators:start"
   },
   "dependencies": {
