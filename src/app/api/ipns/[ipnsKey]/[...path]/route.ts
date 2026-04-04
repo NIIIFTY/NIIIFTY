@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 
 export async function GET(
   request: Request,
@@ -10,6 +12,22 @@ export async function GET(
   const relativePath = pathParts.join('/');
 
   try {
+    // 1. Store Verification Guard
+    // Verify that the requested ipnsKey is actually a project managed by NIIIFTY
+    // Use the Next.js Data Cache to make this lookup fast and repeatable across parallel tile loads.
+    const q = query(collection(db, 'files'), where('ipnsName', '==', ipnsKey), limit(1));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return new NextResponse(JSON.stringify({ 
+        error: 'Unauthorized: IPNS Key not managed by NIIIFTY' 
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // 2. IPNS Resolution
     // Query Web3.Storage's native IPNS Name resolver API
     // We cache this fetch for 5 minutes (300 seconds) so that heavy tile loads (which fire 100s of requests)
     // only resolve the IPNS record once, preventing rate limit blocks.

@@ -73,6 +73,16 @@ Initially, the proxy used a `302 Temporary Redirect`. However, this caused "popc
 3.  **Connection Multiplexing:** The browser maintains a single HTTP/2 connection to `niiifty.com`. Tiles are streamed back in parallel without extra DNS lookups or TLS handshakes.
 4.  **Rate-Limit Resilience:** Resolution results are cached (`revalidate: 300`) to prevent blocking during heavy IIIF tile loads (100+ requests).
 
+### Security
+- **Basic Authentication:** The site is protected by Basic Auth in production. Credentials can be configured via environment variables in Firebase App Hosting:
+    - `BASIC_AUTH_USER`: The username for login.
+    - `BASIC_AUTH_PASS`: The password for login.
+- **Proxy Verification Guard:** The IPNS proxy (`/api/ipns/`) is public but strictly restricted. It only streams content for IPNS keys that are explicitly registered in the NIIIFTY Firestore database, preventing the service from being used as an open proxy for unauthorized IPFS content.
+
+### Performance
+- **Streaming Proxy:** The IIIF proxy uses server-side streaming to eliminate client-side redirects and TLS handshakes, resulting in significantly smoother tile loading in viewers like Universal Viewer.
+- **Aggressive Caching:** IPNS resolutions are cached for 300s, and image tiles are cached for 1 hour, ensuring high performance under heavy load.
+
 #### Cost and Security
 
 *   **Cost (Egress):** Unlike a redirect, streaming consumes Google Cloud egress bandwidth (~$0.12/GB). This is a trade-off for a premium, smooth user experience.
