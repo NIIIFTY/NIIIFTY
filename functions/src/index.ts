@@ -19,7 +19,7 @@ import * as Name from 'w3name';
 // when a file is created in firestore,
 // generate derivatives, and replicate to web3.storage
 export const fileCreated = functions
-  .region('europe-west3')
+  .region('europe-west1')
   .runWith({
     timeoutSeconds: 540, // max
     memory: '2GB',
@@ -139,7 +139,7 @@ export const fileCreated = functions
 
 // when a file is updated in firestore
 export const fileUpdated = functions
-  .region('europe-west3')
+  .region('europe-west1')
   .runWith({
     timeoutSeconds: 300,
     memory: '1GB',
@@ -222,7 +222,7 @@ export const fileUpdated = functions
 
 // when a file is deleted in firestore
 export const fileDeleted = functions
-  .region('europe-west3')
+  .region('europe-west1')
   .runWith({
     timeoutSeconds: 300,
     memory: '1GB',

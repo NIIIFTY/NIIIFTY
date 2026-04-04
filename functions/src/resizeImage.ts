@@ -10,12 +10,12 @@ export default async function resizeImage(imageFilePath, name, width, height) {
   const pipeline = sharp();
 
   pipeline
-    .jpeg()
     .resize({
       width,
       height,
       fit: sharp.fit.cover,
-      format: 'jpeg',
+    })
+    .jpeg({
       quality: 80,
     })
     .pipe(writeStream);
