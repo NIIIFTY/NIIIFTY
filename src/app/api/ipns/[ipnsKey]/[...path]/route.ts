@@ -40,12 +40,32 @@ export async function GET(
       ? `https://${cid}.ipfs.w3s.link/${relativePath}`
       : `https://${cid}.ipfs.w3s.link/`;
 
-    // 302 Temporary Redirect to the fast CDN
-    return NextResponse.redirect(destinationUrl, {
-      status: 302,
+    // Server-side streaming proxy
+    // We fetch the tile directly on the server and pipe it to the client.
+    // This eliminates 302 redirects and TLS handshakes for every tile on the client-side.
+    const proxyResponse = await fetch(destinationUrl);
+
+    if (!proxyResponse.ok) {
+      if (proxyResponse.status === 404) {
+        return new NextResponse(JSON.stringify({ error: 'Asset not found on IPFS' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new NextResponse(JSON.stringify({ error: `IPFS Gateway Error: ${proxyResponse.statusText}` }), {
+        status: proxyResponse.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Stream the data directly to the client
+    return new NextResponse(proxyResponse.body, {
+      status: 200,
       headers: {
-        // Cache this redirect locally for 5 minutes since IPNS records only occasionally update
-        'Cache-Control': 'public, max-age=300, s-maxage=300',
+        // Cache heavy asset streaming (like imagery) for 1 hour locally depending on your needs.
+        // IPNS generally updates over longer periods, but tiles are usually immutable paths anyway.
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        'Content-Type': proxyResponse.headers.get('content-type') || 'application/octet-stream',
         'Access-Control-Allow-Origin': '*',
       }
     });
