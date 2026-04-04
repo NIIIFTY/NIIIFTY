@@ -1,30 +1,36 @@
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { adminDb } from '@/lib/firebase/server';
 
-// Simplified verification function for debugging
-// Temporarily removed unstable_cache to isolate potential cache-related permission issues
-async function verifyIpnsKey(ipnsKey: string) {
-  try {
-    const querySnapshot = await adminDb
-      .collection('files')
-      .where('ipnsName', '==', ipnsKey)
-      .limit(1)
-      .get();
-    
-    return !querySnapshot.empty;
-  } catch (error: any) {
-    // Detailed error logging for production debugging
-    console.error('Firestore Verification Guard Error Detail:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack,
-      name: error.name,
-      details: error.details,
-    });
-    // Re-throw so the main catch block handles the 500 response
-    throw error;
+// Authorization Guard: Verifies if the IPNS key is managed by NIIIFTY
+// Wrapped in unstable_cache to minimize redundant Firestore reads for the same key
+const verifyIpnsKey = unstable_cache(
+  async (ipnsKey: string) => {
+    try {
+      const querySnapshot = await adminDb
+        .collection('files')
+        .where('ipnsName', '==', ipnsKey)
+        .limit(1)
+        .get();
+      
+      return !querySnapshot.empty;
+    } catch (error: any) {
+      console.error('Firestore Verification Guard Error Detail:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+        name: error.name,
+        details: error.details,
+      });
+      throw error;
+    }
+  },
+  ['ipns-verification'],
+  { 
+    revalidate: 3600, // Cache for 1 hour
+    tags: ['ipns'] 
   }
-}
+);
 
 export async function GET(
   request: Request,
