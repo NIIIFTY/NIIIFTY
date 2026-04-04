@@ -42,7 +42,9 @@ export function NavPopover({
           />
         </svg>
       </button>
+      {/* @ts-ignore */}
       <Dialog as="div" className={cx('fixed inset-0 z-50', display)} open={isOpen} onClose={setIsOpen}>
+        {/* @ts-ignore */}
         <Dialog.Overlay className="fixed inset-0 bg-black/20 backdrop-blur-sm dark:bg-slate-900/80" />
         <div className="dark:highlight-white/5 fixed top-4 right-4 w-full max-w-xs rounded-lg bg-white p-6 text-base font-semibold text-slate-900 shadow-lg dark:bg-slate-800 dark:text-slate-400">
           <button

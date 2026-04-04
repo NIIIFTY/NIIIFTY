@@ -1,6 +1,26 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase/server';
+import { unstable_cache } from 'next/cache';
+
+// Cached verification function to prevent redundant Firestore reads
+const verifyIpnsKey = unstable_cache(
+  async (ipnsKey: string) => {
+    try {
+      const querySnapshot = await adminDb
+        .collection('files')
+        .where('ipnsName', '==', ipnsKey)
+        .limit(1)
+        .get();
+      
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error('Firestore Verification Error:', error);
+      return false;
+    }
+  },
+  ['ipns-verification'],
+  { revalidate: 300 } // Cache for 5 minutes
+);
 
 export async function GET(
   request: Request,
@@ -14,11 +34,10 @@ export async function GET(
   try {
     // 1. Store Verification Guard
     // Verify that the requested ipnsKey is actually a project managed by NIIIFTY
-    // Use the Next.js Data Cache to make this lookup fast and repeatable across parallel tile loads.
-    const q = query(collection(db, 'files'), where('ipnsName', '==', ipnsKey), limit(1));
-    const querySnapshot = await getDocs(q);
+    // Using cached Admin SDK lookup to bypass security rules and minimize latency.
+    const isAuthorized = await verifyIpnsKey(ipnsKey);
 
-    if (querySnapshot.empty) {
+    if (!isAuthorized) {
       return new NextResponse(JSON.stringify({ 
         error: 'Unauthorized: IPNS Key not managed by NIIIFTY' 
       }), {
