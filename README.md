@@ -95,6 +95,7 @@ To achieve a production-ready, sustainable system on a grant budget, we made sev
 
 ## Future Directions
 - **Edge Deployment:** Future grants could explore moving the Streaming Proxy to the network edge (e.g., Cloudflare Workers) to reduce GCP egress costs.
+- **Native Storacha Resolution:** As Storacha evolves their native IPNS resolution and naming services, NIIIFTY is positioned to adopt these standard-track solutions to further decentralize the resolution layer.
 
 ---
 
