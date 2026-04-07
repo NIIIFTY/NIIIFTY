@@ -28,7 +28,7 @@ We will implement the new features securely on the backend within the existing F
 
 _Path: `functions/src/ipns/`_
 
-- Update `functions/package.json` to install `@storacha/client` (for IPFS uploads) AND `w3name` (for IPNS name generation and revisions). Notice that the existing codebase currently uses `@web3-storage/w3up-client` in `functions/src/web3Storage.ts`; Storacha is the evolution of this for storage, but `w3name` remains the dedicated package for the name records.
+- Update `functions/package.json` to install `@storacha/client` (for IPFS uploads) AND `w3name` (for IPNS name generation and revisions). Notice that the existing codebase currently uses `@web3-storage/w3up-client` in `functions/src/storacha.ts`; Storacha is the evolution of this for storage, but `w3name` remains the dedicated package for the name records.
 - Create `generateName.ts`: Logic to provision an IPNS name keypair natively using the `w3name` package's `Name.create()`.
 - Create `createNameRevision.ts`: Logic to implement signing for IPNS name revisions via `Name.v0()` and `Name.increment()`, enabling an updated Manifest CID to be pointed to without breaking the stable address.
 - Create `publishRevision.ts`: Logic to broadcast the new record to the w3name service using `Name.publish()`.

@@ -78,25 +78,27 @@ Initially, the proxy used a `301/302 Redirect`. However, this caused "popcorning
 To achieve a production-ready, sustainable system on a grant budget, we made several strategic architectural trade-offs:
 
 ### 1. Egress Cost vs. User Experience (Streaming Proxy)
-- **The Compromise:** Unlike a redirect, server-side streaming consumes Google Cloud egress bandwidth (~$0.12/GB). 
+
+- **The Compromise:** Unlike a redirect, server-side streaming consumes Google Cloud egress bandwidth (~$0.12/GB).
 - **The Rationale:** This is a deliberate "UX First" decision. High-resolution IIIF viewers (like Universal Viewer) become unusable when forced to wait for hundreds of sequential TLS handshakes via redirects. Streaming provides the performance level of a centralized CDN while maintaining the data durability of IPFS.
 
 ### 2. Serverless AppView vs. Full AT Protocol Relay
+
 - **The Compromise:** Instead of hosting a full, stateful AT Protocol Relay (high disk/CPU overhead), we implemented a lightweight **"Firebase-Native" AppView**.
 - **The Rationale:** Using **Google Cloud Run + Bun + Jetstream**, we index only the specific `matadisco` collections we need. This reduces monthly infrastructure costs by ~90% while providing native **Vector Search** (fuzzy, semantic matching) directly within our existing database.
 
 ### 3. Admin SDK Authorization Guard
+
 - **The Compromise:** The IPNS proxy uses the **Firebase Admin SDK** for its authorization guard.
 - **The Rationale:** This was necessary due to service account limitations in Firebase App Hosting which prevent granular "impersonation" for server-side Firestore reads under standard client-side security rules. The "Proxy Guard" pattern keeps the proxy restricted to NIIIFTY-managed keys without requiring a complex OAuth flow for public IIIF manifests.
 
 ## Security
+
 - **Basic Authentication:** The site is protected by Basic Auth in production to prevent unauthorized uploads.
 - **Restricted Reverse Proxy:** The proxy is **not** an open gateway. It only resolves paths against trusted IPFS providers for IPNS keys registered in the NIIIFTY Firestore, mitigating SSRF risks.
 
 ## Future Directions
-- **Edge Deployment:** Future grants could explore moving the Streaming Proxy to the network edge (e.g., Cloudflare Workers) to reduce GCP egress costs.
+
 - **Native Storacha Resolution:** As Storacha evolves their native IPNS resolution and naming services, NIIIFTY is positioned to adopt these standard-track solutions to further decentralize the resolution layer.
 
 ---
-
-Within the Cloud Functions, always use the `getProxyUrl` helper (from `src/lib/ipns.ts`) to ensure manifests point to this routing.

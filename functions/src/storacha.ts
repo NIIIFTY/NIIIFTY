@@ -6,8 +6,6 @@ import * as Signer from '@ucanto/principal/ed25519';
 import * as Client from '@storacha/client';
 import { filesFromPaths } from 'files-from-path';
 
-// const web3Storage = new Web3Storage({ token: WEB3_STORAGE_API_KEY });
-
 /** @param {string} data Base64 encoded CAR file */
 async function parseProof(data) {
   const blocks = [];
@@ -18,10 +16,10 @@ async function parseProof(data) {
   return Delegation.importDAG(blocks);
 }
 
-export async function uploadTempFilesToWeb3Storage(tempDirPath) {
+export async function uploadTempFilesToStoracha(tempDirPath) {
   let files = getAllFiles(tempDirPath);
 
-  const web3Files = await filesFromPaths(files);
+  const filesToUpload = await filesFromPaths(files);
 
   const principal = Signer.parse(STORACHA_KEY);
   const client = await Client.create({ principal });
@@ -31,11 +29,11 @@ export async function uploadTempFilesToWeb3Storage(tempDirPath) {
     const space = await client.addSpace(proof);
     await client.setCurrentSpace(space.did());
 
-    const cid = await client.uploadDirectory(web3Files);
+    const cid = await client.uploadDirectory(filesToUpload);
 
     return cid.toString();
   } catch (err: any) {
-    console.error('WEB3STORAGE UPLOAD ERROR:', err.message);
+    console.error('STORACHA UPLOAD ERROR:', err.message);
     if (err.cause) {
       console.error('CAUSE DETAILS:', err.cause);
       console.error('CAUSE MESSAGE:', err.cause.message);
@@ -45,14 +43,12 @@ export async function uploadTempFilesToWeb3Storage(tempDirPath) {
   }
 }
 
-// add a google cloud storage file to web3.storage
-// export async function addFileToWeb3Storage(file) {
-//   const cid = await web3Storage.put([
-//     {
-//       name: file.name.split("/").pop(),
-//       stream: () => gcsBucket.file(file.name).createReadStream(),
-//     },
-//   ]);
+// add a google cloud storage file to storacha
+// export async function addFileToStoracha(file) {
+//   const cid = await client.uploadFile({
+//     name: file.name.split("/").pop(),
+//     stream: () => gcsBucket.file(file.name).createReadStream(),
+//   });
 
 //   return cid;
 // }

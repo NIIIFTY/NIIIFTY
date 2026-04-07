@@ -1,7 +1,7 @@
 import { gcsBucket } from './gcs.js';
 import { getIIIFManifestJson } from './iiif.js';
 import path from 'path';
-import { uploadTempFilesToWeb3Storage } from './web3Storage.js';
+import { uploadTempFilesToStoracha } from './storacha.js';
 import { createTempDir, createDir, deleteDir } from './fs.js';
 import { createNameRevision, publishRevision, getProxyUrl } from './ipns/index.js';
 import * as Name from 'w3name';
@@ -48,8 +48,8 @@ export default async function updateMetadataDerivatives(fileId, metadata) {
     },
   });
 
-  // 5. Re-Upload entire tempDir (with updated manifest) to Web3.Storage to generate a new CID
-  const newCid = await uploadTempFilesToWeb3Storage(tempDir);
+  // 5. Re-Upload entire tempDir (with updated manifest) to Storacha to generate a new CID
+  const newCid = await uploadTempFilesToStoracha(tempDir);
 
   // 6. Generate new IPNS Revision and Publish
   console.log(`Publishing IPNS revision to ${ipnsName} pointing to /ipfs/${newCid}`);

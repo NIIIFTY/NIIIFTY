@@ -9,7 +9,7 @@ import processImage from './image.js';
 import processGLB from './glb.js';
 import processMP4 from './mp4.js';
 import { createTempDir, deleteDir } from './fs.js';
-import { uploadTempFilesToWeb3Storage } from './web3Storage.js';
+import { uploadTempFilesToStoracha } from './storacha.js';
 import updateMetadataDerivatives from './update.js';
 import { GCS_URL } from './constants.js';
 import { generateName, createNameRevision, publishRevision, getProxyUrl } from './ipns/index.js';
@@ -17,7 +17,7 @@ import { authenticateAgent, publishIIIFRecord } from './atproto/index.js';
 import * as Name from 'w3name';
 
 // when a file is created in firestore,
-// generate derivatives, and replicate to web3.storage
+// generate derivatives, and replicate to storacha
 export const fileCreated = functions
   .region('europe-west1')
   .runWith({
@@ -78,10 +78,10 @@ export const fileCreated = functions
       // upload the generated files to GCS
       await uploadFilesToGCS(tempDir, fileId);
 
-      // upload the generated files to web3.storage
-      const cid = await uploadTempFilesToWeb3Storage(tempDir);
+      // upload the generated files to storacha
+      const cid = await uploadTempFilesToStoracha(tempDir);
 
-      // NIIIFTY 2: publish the initial IPNS revision pointing to the new Storacha/Web3Storage CID
+      // NIIIFTY 2: publish the initial IPNS revision pointing to the new Storacha CID
       console.log(`Publishing initial IPNS revision to ${ipnsName} pointing to /ipfs/${cid}`);
       const revision = await createNameRevision(name, `/ipfs/${cid}`);
       await publishRevision(revision, name.key);
