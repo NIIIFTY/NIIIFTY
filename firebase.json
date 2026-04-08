@@ -8,7 +8,27 @@
   },
   "hosting": {
     "public": "public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+    "ignore": [
+      "firebase.json",
+      "**/node_modules/**",
+      "**/.*",
+      "!**/.well-known/**"
+    ],
+    "headers": [
+      {
+        "source": "/.well-known/atproto-did",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "text/plain"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          }
+        ]
+      }
+    ]
   },
   "storage": {
     "rules": "storage.rules"

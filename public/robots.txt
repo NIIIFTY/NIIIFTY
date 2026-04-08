@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Allow: /.well-known/atproto-did
+
+Sitemap: https://niiifty.com/sitemap.xml
