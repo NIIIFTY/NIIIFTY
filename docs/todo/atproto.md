@@ -15,40 +15,50 @@ Because NIIIFTY is designed as infrastructure that an institution operates (or w
 
 Currently, discovering IIIF content relies on centralized aggregators crawling ("pulling") data from isolated institutional silos. This is slow, fragile, and expensive to maintain.
 
-The AT Protocol (the underlying network powering Bluesky) solves this by providing a unified, global **Firehose**. By switching to a "Push" model, NIIIFTY allows any institution or user to broadcast their IIIF manifest updates structurally to the global network. Indexers simply listen to this Firehose in real-time, instantly discovering entirely new collections Without having to know they existed beforehand.
+The AT Protocol (the underlying network powering Bluesky) solves this by providing a unified, global **Firehose**. By switching to a "Push" model, NIIIFTY allows any institution or user to broadcast their IIIF manifest updates structurally to the global network. Indexers simply listen to this Firehose in real-time, instantly discovering entirely new collections without having to know they existed beforehand.
 
 ## 3. Phase 1: Semantic Publishing (The Matadisco Lexicon)
 
-Right now, the NIIIFTY prototype broadcasts an IPNS URL wrapped in a standard social media post (`app.bsky.feed.post`). To enable machine-to-machine IIIF discovery, we need to move to strongly-typed data repositories using **Custom Lexicons**.
+Right now, NIIIFTY broadcasts IIIF metadata using the **Matadisco Lexicon** (`cx.vmx.matadisco`). This lexicon provides a generic wrapper for "resources" and supports extensible metadata blocks.
 
-### A. Defining the Lexicon
+### A. The Lexicon Structure
 
-We will collaborate to finalize the `com.matadisco.iiif.manifest` (or similar) AT Protocol Lexicon. This acts as the schema for the data payload.
+NIIIFTY records use the following structure within the `cx.vmx.matadisco` collection:
 
-Expected fields in the Lexicon schema:
+- **Root Fields**:
+    - `resource`: (String, Required) The stable IPNS HTTPS gateway URL for the IIIF Manifest.
+    - `cid`: (String, Optional) The immutable CID for IPFS verifiability.
+    - `publishedAt`: (String, Required) ISO timestamp of publication.
+    - `tags`: (String Array) Subject tags for indexing (always includes `iiif`).
+- **IIIF Extension Block (`io.iiif.metadata`)**:
+    - `label`: (String, Optional) Title of the resource.
+    - `summary`: (String, Optional) Short description.
+    - `provider`: (String, Optional) Publishing institution.
+    - `rights`: (String, Optional) License/Rights URI.
+    - `type`: (String, Optional) IIIF type (e.g., `Manifest`, `Collection`).
+    - `metadata`: (Map, Optional) Arbitrary key-value pairs from the manifest.
 
-- `manifestId`: (String, Required) The stable IPNS HTTPS gateway URL (e.g., `https://[ipnsName].ipns.dweb.link`).
-- `title`: (String, Optional)
-- `description`: (String, Optional)
-- `thumbnailUrl`: (String, Optional)
-- `license`: (String, Optional)
-- `attribution`: (String, Optional)
+### B. The Publisher Implementation
 
-### B. Updating the Publisher Module
-
-We will update `functions/src/atproto/publishRecord.ts`. Instead of using `agent.post()`, it will use the `com.atproto.repo.createRecord` method targeting our new custom Lexicon.
+Implemented in `functions/src/atproto/publishRecord.ts`, the publisher constructs a typed record targeting the custom lexicon instead of a generic text post.
 
 ```typescript
-// Conceptual Implementation
+// Core Publishing Logic
 await agent.com.atproto.repo.createRecord({
   repo: agent.session?.did,
-  collection: 'com.matadisco.iiif.manifest', // The custom lexicon
+  collection: 'cx.vmx.matadisco',
   record: {
-    $type: 'com.matadisco.iiif.manifest',
-    manifestId: payload.manifestId,
-    title: payload.title,
-    // ...other semantic data
-    createdAt: new Date().toISOString(),
+    $type: 'cx.vmx.matadisco',
+    resource: payload.id,
+    cid: payload.cid,
+    publishedAt: new Date().toISOString(),
+    tags: ['iiif', ...payload.tags],
+    iiif: {
+      $type: 'io.iiif.metadata',
+      label: payload.label,
+      summary: payload.summary,
+      // ...other fields
+    }
   },
 });
 ```
@@ -80,8 +90,12 @@ We will build out `src/app/test-harness/page.tsx` (or a dedicated integration ro
 
 ## 6. Step-by-Step Implementation Roadmap
 
-1. **Step 1: Lexicon Design.** Formalize the `com.matadisco.iiif.manifest` schema JSON.
-2. **Step 2: Update Publisher.** Switch NIIIFTY's `publishRecord.ts` to output this custom schema instead of generic text posts.
+1. **Step 1: Publisher Calibration.** Ensure `publishRecord.ts` outputs the exact `cx.vmx.matadisco` schema. [DONE]
+2. **Step 2: Test Suite.** Implement unit tests and CLI harness to verify publishing logic.
 3. **Step 3: Build Test Harness UI.** Create the Integration Test page in the Next.js frontend.
 4. **Step 4: Connect to Relay API.** Ensure the Test Harness can query the database built by the external Relay team.
-5. **Step 6: End-to-End Test.** Upload a file via NIIIFTY -> Watch it broadcast as a custom record -> Query the external Relay -> See it appear seamlessly in our test harness.
+5. **Step 5: End-to-End Test.** Upload a file via NIIIFTY -> Watch it broadcast as a custom record -> Query the external Relay -> See it appear seamlessly in our test harness.
+
+## 7. Verification & Testing
+
+For detailed instructions on unit testing and manual integration verification, see: [atproto-test-plan.md](file:///Users/mnemoscene/Documents/GitHub/NIIIFTY/docs/todo/atproto-test-plan.md)

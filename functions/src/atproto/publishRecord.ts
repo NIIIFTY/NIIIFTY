@@ -33,7 +33,7 @@ export async function publishIIIFRecord(
     $type: 'cx.vmx.matadisco',
     resource: payload.id,
     cid: payload.cid || '', // Promote CID to root for global verifiability
-    created: new Date().toISOString(),
+    publishedAt: new Date().toISOString(),
   };
 
   // Ensure 'iiif' is always present in our tags for core network filtering
