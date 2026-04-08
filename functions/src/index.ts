@@ -23,6 +23,13 @@ export const fileCreated = functions
   .runWith({
     timeoutSeconds: 540, // max
     memory: '2GB',
+    secrets: [
+      'ATPROTO_SERVICE',
+      'ATPROTO_IDENTIFIER',
+      'ATPROTO_PASSWORD',
+      'STORACHA_KEY',
+      'STORACHA_PROOF'
+    ],
   })
   .firestore.document('files/{fileId}')
   .onCreate(async (snap, context) => {
@@ -143,6 +150,13 @@ export const fileUpdated = functions
   .runWith({
     timeoutSeconds: 300,
     memory: '1GB',
+    secrets: [
+      'ATPROTO_SERVICE',
+      'ATPROTO_IDENTIFIER',
+      'ATPROTO_PASSWORD',
+      'STORACHA_KEY',
+      'STORACHA_PROOF'
+    ],
   })
   .firestore.document('files/{fileId}')
   .onUpdate(async (change, context) => {

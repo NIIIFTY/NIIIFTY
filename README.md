@@ -94,6 +94,21 @@ To achieve a production-ready, sustainable system on a grant budget, we made sev
 - **The Compromise:** The IPNS proxy uses the **Firebase Admin SDK** for its authorization guard.
 - **The Rationale:** This was necessary due to service account limitations in Firebase App Hosting which prevent granular "impersonation" for server-side Firestore reads under standard client-side security rules. The "Proxy Guard" pattern keeps the proxy restricted to NIIIFTY-managed keys without requiring a complex OAuth flow for public IIIF manifests.
 
+## AT Protocol Discovery & Verification
+
+To verify that NIIIFTY is successfully broadcasting to the network, you can use a PDS Explorer to view your raw records.
+
+### 1. Constructing the AT URI
+Records are stored in your repository using a unique **AT URI** following this structure:
+`at://[YOUR_DID]/cx.vmx.matadisco/[RECORD_KEY]`
+
+- **Example:** `at://did:plc:2jh3cgm7lljlxuvss65wq7nc/cx.vmx.matadisco/3miz6lsrxdq2w`
+
+### 2. Viewing Records
+You can view these records using the following community tools:
+- **[ATProto Browser](https://atproto-browser.vercel.app/)**: Append your AT URI to the URL to view a specific record.
+- **[PDS Explorer](https://pdsexplorer.com/)**: Enter your DID to browse all collections in your repository.
+
 ## Security
 
 - **Basic Authentication:** The site is protected by Basic Auth in production to prevent unauthorized uploads.
