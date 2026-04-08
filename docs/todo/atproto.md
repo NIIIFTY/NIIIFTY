@@ -23,20 +23,22 @@ Right now, NIIIFTY broadcasts IIIF metadata using the **Matadisco Lexicon** (`cx
 
 ### A. The Lexicon Structure
 
-NIIIFTY records use the following structure within the `cx.vmx.matadisco` collection:
+NIIIFTY records align with the official [cx.vmx.matadisco](https://lexicon.garden/lexicon/did:plc:3mdq56yhyqq5k6d4guztheaf/cx.vmx.matadisco) schema. Although the official schema is minimal, it is **open**, allowing NIIIFTY to embed the following additional semantic fields:
 
-- **Root Fields**:
+- **Root Fields (Official)**:
     - `resource`: (String, Required) The stable IPNS HTTPS gateway URL for the IIIF Manifest.
-    - `cid`: (String, Optional) The immutable CID for IPFS verifiability.
     - `publishedAt`: (String, Required) ISO timestamp of publication.
+    - `preview`: (Object, Optional) Contains `url` and `mimeType`.
+- **NIIIFTY Extensions (Allowed)**:
+    - `cid`: (String, Optional) The immutable CID for IPFS verifiability.
     - `tags`: (String Array) Subject tags for indexing (always includes `iiif`).
-- **IIIF Extension Block (`io.iiif.metadata`)**:
-    - `label`: (String, Optional) Title of the resource.
-    - `summary`: (String, Optional) Short description.
-    - `provider`: (String, Optional) Publishing institution.
-    - `rights`: (String, Optional) License/Rights URI.
-    - `type`: (String, Optional) IIIF type (e.g., `Manifest`, `Collection`).
-    - `metadata`: (Map, Optional) Arbitrary key-value pairs from the manifest.
+    - **IIIF Extension Block (`io.iiif.metadata`)**:
+        - `label`: (String, Optional) Title of the resource.
+        - `summary`: (String, Optional) Short description.
+        - `provider`: (String, Optional) Publishing institution.
+        - `rights`: (String, Optional) License/Rights URI.
+        - `type`: (String, Optional) IIIF type (e.g., `Manifest`, `Collection`).
+        - `metadata`: (Map, Optional) Arbitrary key-value pairs from the manifest.
 
 ### B. The Publisher Implementation
 

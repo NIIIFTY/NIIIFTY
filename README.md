@@ -1,5 +1,7 @@
 # NIIIFTY
 
+**Official Lexicon:** [`cx.vmx.matadisco`](https://lexicon.garden/lexicon/did:plc:3mdq56yhyqq5k6d4guztheaf/cx.vmx.matadisco)
+
 ## Local Development
 
 You can run the full NIIIFTY stack locally using `pnpm`.
@@ -85,7 +87,7 @@ To achieve a production-ready, sustainable system on a grant budget, we made sev
 ### 2. Serverless AppView vs. Full AT Protocol Relay
 
 - **The Compromise:** Instead of hosting a full, stateful AT Protocol Relay (high disk/CPU overhead), we implemented a lightweight **"Firebase-Native" AppView**.
-- **The Rationale:** Using **Google Cloud Run + Bun + Jetstream**, we index only the specific `matadisco` collections we need. This reduces monthly infrastructure costs by ~90% while providing native **Vector Search** (fuzzy, semantic matching) directly within our existing database.
+- **The Rationale:** Using **Google Cloud Run + Bun + Jetstream**, we index only the specific [`cx.vmx.matadisco`](https://lexicon.garden/lexicon/did:plc:3mdq56yhyqq5k6d4guztheaf/cx.vmx.matadisco) collections we need. This reduces monthly infrastructure costs by ~90% while providing native **Vector Search** (fuzzy, semantic matching) directly within our existing database.
 
 ### 3. Admin SDK Authorization Guard
 
