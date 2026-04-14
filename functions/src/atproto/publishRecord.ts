@@ -18,11 +18,13 @@ export interface IIIFRecordPayload {
  * Utilizes the Matadisco lexicon for semantic publishing.
  *
  * @param {AtpAgent} agent - The authenticated AtpAgent instance.
+ * @param {string} rkey - The deterministic record key (e.g., the fileId).
  * @param {IIIFRecordPayload} payload - The metadata for the IIIF content.
  * @returns {Promise<{ uri: string, cid: string }>} The AT URI and CID of the published record.
  */
 export async function publishIIIFRecord(
   agent: AtpAgent,
+  rkey: string,
   payload: IIIFRecordPayload,
 ): Promise<{ uri: string; cid: string }> {
   if (!agent.session?.did) {
@@ -56,16 +58,14 @@ export async function publishIIIFRecord(
   if (payload.thumbnail) {
     recordPayload.preview = {
       url: payload.thumbnail,
-      // If we are hardcoding to jpeg, we could use that, but 'image/jpeg'
-      // or 'image/png' depend on the thumbnail. Hardcoding 'image/jpeg' as placeholder
-      // until we implement actual mimeType extraction or passing it in.
       mimeType: 'image/jpeg',
     };
   }
 
-  const response = await agent.com.atproto.repo.createRecord({
+  const response = await agent.com.atproto.repo.putRecord({
     repo: agent.session.did,
     collection: 'cx.vmx.matadisco',
+    rkey: rkey,
     record: recordPayload,
   });
 

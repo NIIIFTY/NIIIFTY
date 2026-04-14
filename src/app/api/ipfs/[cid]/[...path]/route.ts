@@ -2,42 +2,35 @@ import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { adminDb } from '@/lib/firebase/server';
 
-// Authorization Guard: Verifies if the IPNS key is managed by NIIIFTY
-// Wrapped in unstable_cache to minimize redundant Firestore reads for the same key
-const verifyIpnsKey = unstable_cache(
-  async (ipnsKey: string) => {
+// Authorization Guard: Verifies if the CID is officially managed by NIIIFTY
+const verifyCid = unstable_cache(
+  async (cid: string) => {
     try {
       const querySnapshot = await adminDb
         .collection('files')
-        .where('ipnsName', '==', ipnsKey)
+        .where('cid', '==', cid)
         .limit(1)
         .get();
       
       return !querySnapshot.empty;
     } catch (error: any) {
-      console.error('Firestore Verification Guard Error Detail:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
-        name: error.name,
-        details: error.details,
-      });
+      console.error('Firestore Verification Guard Error Detail:', error);
       throw error;
     }
   },
-  ['ipns-verification'],
+  ['ipfs-verification'],
   { 
     revalidate: 3600, // Cache for 1 hour
-    tags: ['ipns'] 
+    tags: ['ipfs'] 
   }
 );
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ ipnsKey: string; path: string[] }> }
+  { params }: { params: Promise<{ cid: string; path: string[] }> }
 ) {
   const resolvedParams = await params;
-  const ipnsKey = resolvedParams.ipnsKey;
+  const cid = resolvedParams.cid;
   const pathParts = resolvedParams.path || [];
   const relativePath = pathParts.join('/');
 
@@ -45,11 +38,10 @@ export async function GET(
     // 1. Store Verification Guard
     let isAuthorized = false;
     try {
-      isAuthorized = await verifyIpnsKey(ipnsKey);
+      isAuthorized = await verifyCid(cid);
     } catch (authError: any) {
-      // If we hit a permission error at the guard level, return a 403 Forbidden with details
       return new NextResponse(JSON.stringify({ 
-        error: 'Forbidden: Verfication Guard Failure',
+        error: 'Forbidden: Verification Guard Failure',
         details: authError.code || authError.message || 'Unknown verification error'
       }), {
         status: 403,
@@ -59,23 +51,21 @@ export async function GET(
 
     if (!isAuthorized) {
       return new NextResponse(JSON.stringify({ 
-        error: 'Unauthorized: IPNS Key not managed by NIIIFTY' 
+        error: 'Unauthorized: CID not managed by NIIIFTY' 
       }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // 2. Proxy via Filebase Gateway
-    // Resolve gateway from environment variables, fallback to public gateway
+    // 2. Gateway Resolution
     const gatewayBaseUrl = process.env.FILEBASE_GATEWAY_URL || 'https://ipfs.filebase.io';
     
-    // IPFS gateways natively resolve IPNS names without requiring us to pre-fetch the CID
     const destinationUrl = relativePath 
-      ? `${gatewayBaseUrl}/ipns/${ipnsKey}/${relativePath}`
-      : `${gatewayBaseUrl}/ipns/${ipnsKey}/`;
+      ? `${gatewayBaseUrl}/ipfs/${cid}/${relativePath}`
+      : `${gatewayBaseUrl}/ipfs/${cid}/`;
 
-    // Server-side streaming proxy
+    // Fetch the asset from the IPFS gateway
     const proxyResponse = await fetch(destinationUrl);
 
     if (!proxyResponse.ok) {
@@ -91,7 +81,25 @@ export async function GET(
       });
     }
 
-    // Stream the data directly to the client
+    // 3. Dynamic Version Pinning (URL rewriting for JSON manifests)
+    if (relativePath.endsWith('.json')) {
+      const jsonText = await proxyResponse.text();
+      
+      // Replace the __CID__ placeholder with the actual CID from the request URL
+      // This allows NIIIFTY to generate absolute, pinned links without knowing the CID beforehand.
+      const rewrittenJsonText = jsonText.replaceAll('__CID__', cid);
+
+      return new NextResponse(rewrittenJsonText, {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
+    // Stream other binary data natively
     return new NextResponse(proxyResponse.body, {
       status: 200,
       headers: {
@@ -102,7 +110,7 @@ export async function GET(
     });
 
   } catch (error: any) {
-    console.error('IPNS Resolution Error Proxy:', error);
+    console.error('IPFS Pinned Resolution Proxy Error:', error);
     return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

@@ -37,6 +37,8 @@ export interface File {
   manifestId?: string;
   tags?: string[]; // Matadisco tags
   metadata?: Record<string, string>; // IIIF exact-match metadata dictionary
+  atDid?: string; // The AT Protocol DID of the repository
+  atprotoPublishRequested?: boolean; // Flag to trigger manual publishing via Cloud Functions
 }
 
 export type FileProps = {

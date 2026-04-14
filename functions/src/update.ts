@@ -1,18 +1,16 @@
 import { gcsBucket } from './gcs.js';
 import { getIIIFManifestJson } from './iiif.js';
 import path from 'path';
-import { uploadTempFilesToStoracha } from './storacha.js';
+import { uploadTempFilesToFilebase } from './filebase.js';
 import { createTempDir, createDir, deleteDir } from './fs.js';
-import { createNameRevision, publishRevision, getProxyUrl } from './ipns/index.js';
-import * as Name from 'w3name';
+import { getProxyUrl } from './ipns/index.js';
 import fs from 'fs';
 
 export default async function updateMetadataDerivatives(fileId, metadata) {
   console.log(`updating derivatives for ${fileId}`);
 
-  // e.g. https://niiifty-bd2e2.appspot.com.storage.googleapis.com/EoLsdWm2MHekqS5eANuJ
-  const ipnsName = metadata.ipnsName;
-  const id = getProxyUrl(ipnsName);
+  // Use the __CID__ placeholder for manifest links; the IPFS proxy will rewrite this to the actual CID.
+  const id = getProxyUrl('__CID__', '', 'ipfs');
 
   // 1. Download all current derivative files from GCS to a temp directory
   const tempDir = createTempDir();
@@ -49,18 +47,11 @@ export default async function updateMetadataDerivatives(fileId, metadata) {
   });
 
   // 5. Re-Upload entire tempDir (with updated manifest) to Storacha to generate a new CID
-  const newCid = await uploadTempFilesToStoracha(tempDir);
+  const newCid = await uploadTempFilesToFilebase(tempDir);
 
-  // 6. Generate new IPNS Revision and Publish
-  console.log(`Publishing IPNS revision to ${ipnsName} pointing to /ipfs/${newCid}`);
-
-  const name = await Name.from(new Uint8Array(Buffer.from(metadata.ipnsKeyRaw, 'base64')));
-  const previousRevision = Name.Revision.decode(new Uint8Array(Buffer.from(metadata.ipnsRevisionRaw, 'base64')));
-
-  const revision = await createNameRevision(name, `/ipfs/${newCid}`, previousRevision);
-  await publishRevision(revision, name.key);
-
-  const newRevisionRaw = Buffer.from(Name.Revision.encode(revision)).toString('base64');
+  // 6. CID-based manifests don't require IPNS publishing. 
+  // The manifestId in Firestore already points to the pinning proxy.
+  console.log(`Updated exhibit pointing to /ipfs/${newCid}`);
 
   // 7. Cleanup
   deleteDir(tempDir);
@@ -70,6 +61,5 @@ export default async function updateMetadataDerivatives(fileId, metadata) {
   // Return the new properties to be saved back to firestore in onUpdate
   return {
     cid: newCid,
-    ipnsRevisionRaw: newRevisionRaw,
   };
 }

@@ -100,4 +100,4 @@ We will build out `src/app/test-harness/page.tsx` (or a dedicated integration ro
 
 ## 7. Verification & Testing
 
-For detailed instructions on unit testing and manual integration verification, see: [atproto-test-plan.md](file:///Users/mnemoscene/Documents/GitHub/NIIIFTY/docs/todo/atproto-test-plan.md)
+For detailed instructions on unit testing and manual integration verification, see: [atproto-test-plan.md](atproto-test-plan.md)

@@ -9,15 +9,15 @@ import processImage from './image.js';
 import processGLB from './glb.js';
 import processMP4 from './mp4.js';
 import { createTempDir, deleteDir } from './fs.js';
-import { uploadTempFilesToStoracha } from './storacha.js';
+import { uploadTempFilesToFilebase } from './filebase.js';
 import updateMetadataDerivatives from './update.js';
 import { GCS_URL } from './constants.js';
-import { generateName, createNameRevision, publishRevision, getProxyUrl } from './ipns/index.js';
+import { getProxyUrl } from './ipns/index.js';
 import { authenticateAgent, publishIIIFRecord } from './atproto/index.js';
-import * as Name from 'w3name';
+
 
 // when a file is created in firestore,
-// generate derivatives, and replicate to storacha
+// generate derivatives, and replicate to filebase
 export const fileCreated = functions
   .region('europe-west1')
   .runWith({
@@ -27,8 +27,8 @@ export const fileCreated = functions
       'ATPROTO_SERVICE',
       'ATPROTO_IDENTIFIER',
       'ATPROTO_PASSWORD',
-      'STORACHA_KEY',
-      'STORACHA_PROOF'
+      'FILEBASE_ACCESS_TOKEN',
+      'FILEBASE_SECRET_KEY'
     ],
   })
   .firestore.document('files/{fileId}')
@@ -50,13 +50,8 @@ export const fileCreated = functions
 
       console.log(`--- started processing ${originalFile.name} (${metadata.type})---`);
 
-      // NIIIFTY 2: generate stable IPNS identifier for this new project
-      const name = await generateName();
-      const ipnsName = name.toString();
-      const ipnsKeyRaw = Buffer.from(name.key.raw).toString('base64');
-
-      // Instruct the IIIF generator to use the stable IPNS path via the Next.js proxy
-      metadata.manifestId = getProxyUrl(ipnsName);
+      // Use a CID-placeholder for manifest generation; will be replaced by API proxy
+      metadata.manifestId = getProxyUrl('__CID__', 'iiif/index.json', 'ipfs');
 
       const tempDir = createTempDir();
       const tempFilePath = path.join(tempDir, path.basename(originalFile.name));
@@ -85,39 +80,9 @@ export const fileCreated = functions
       // upload the generated files to GCS
       await uploadFilesToGCS(tempDir, fileId);
 
-      // upload the generated files to storacha
-      const cid = await uploadTempFilesToStoracha(tempDir);
-
-      // NIIIFTY 2: publish the initial IPNS revision pointing to the new Storacha CID
-      console.log(`Publishing initial IPNS revision to ${ipnsName} pointing to /ipfs/${cid}`);
-      const revision = await createNameRevision(name, `/ipfs/${cid}`);
-      await publishRevision(revision, name.key);
-      const ipnsRevisionRaw = Buffer.from(Name.Revision.encode(revision)).toString('base64');
-
-      // NIIIFTY 2: Broadcast the newly minted project to ATProtocol (if env variables configure the agent)
-      if (process.env.ATPROTO_SERVICE && process.env.ATPROTO_IDENTIFIER && process.env.ATPROTO_PASSWORD) {
-        try {
-          const agent = await authenticateAgent(
-            process.env.ATPROTO_SERVICE,
-            process.env.ATPROTO_IDENTIFIER,
-            process.env.ATPROTO_PASSWORD,
-          );
-          await publishIIIFRecord(agent, {
-            id: getProxyUrl(ipnsName, 'index.json'),
-            thumbnail: getProxyUrl(ipnsName, 'thumb.jpg'),
-            cid: cid,
-            label: metadata.label,
-            summary: metadata.summary,
-            provider: metadata.provider,
-            rights: metadata.rights,
-            tags: metadata.tags,
-            metadata: metadata.metadata,
-          });
-          console.log(`Successfully broadcasted ${ipnsName} to AT Protocol`);
-        } catch (e) {
-          console.error(`Failed to broadcast to AT Protocol:`, e);
-        }
-      }
+      // upload the generated files to filebase
+      const cid = await uploadTempFilesToFilebase(tempDir);
+      console.log(`Successfully uploaded exhibit to IPFS with CID: ${cid}`);
 
       // delete the original file as it's no longer needed
       await originalFile.delete();
@@ -133,9 +98,6 @@ export const fileCreated = functions
           ...processedProps,
           cid,
           processed: true,
-          ipnsName,
-          ipnsKeyRaw,
-          ipnsRevisionRaw,
         },
         { merge: true },
       );
@@ -154,8 +116,8 @@ export const fileUpdated = functions
       'ATPROTO_SERVICE',
       'ATPROTO_IDENTIFIER',
       'ATPROTO_PASSWORD',
-      'STORACHA_KEY',
-      'STORACHA_PROOF'
+      'FILEBASE_ACCESS_TOKEN',
+      'FILEBASE_SECRET_KEY'
     ],
   })
   .firestore.document('files/{fileId}')
@@ -181,7 +143,9 @@ export const fileUpdated = functions
     }
 
     // if the only things that changed were backend properties (like cid), ignore to prevent infinite loops
+    // UNLESS a manual AT Protocol publish was requested
     if (
+      !metadata.atprotoPublishRequested &&
       previousValue.label === metadata.label &&
       previousValue.summary === metadata.summary &&
       previousValue.rights === metadata.rights &&
@@ -195,11 +159,12 @@ export const fileUpdated = functions
 
     // the original uploaded file cannot be changed, only the metadata associated with it.
     // update any derivatives (like iiif manifests) that include the metadata
-    const updatedProps = await updateMetadataDerivatives(fileId, metadata);
+    const updatedProps: any = (await updateMetadataDerivatives(fileId, metadata)) || {};
 
-    // NIIIFTY 2: Broadcast the updated project to ATProtocol
+    // NIIIFTY 3: Manual Broadcast to ATProtocol
     if (
-      metadata.ipnsName &&
+      metadata.atprotoPublishRequested &&
+      metadata.cid &&
       process.env.ATPROTO_SERVICE &&
       process.env.ATPROTO_IDENTIFIER &&
       process.env.ATPROTO_PASSWORD
@@ -210,9 +175,13 @@ export const fileUpdated = functions
           process.env.ATPROTO_IDENTIFIER,
           process.env.ATPROTO_PASSWORD,
         );
-        await publishIIIFRecord(agent, {
-          id: getProxyUrl(metadata.ipnsName, 'index.json'),
-          thumbnail: getProxyUrl(metadata.ipnsName, 'thumb.jpg'),
+        
+        // Use deterministic pinning URL for the AT Protocol resource
+        const pinnedUrl = getProxyUrl(metadata.cid, 'iiif/index.json', 'ipfs');
+
+        await publishIIIFRecord(agent, fileId, {
+          id: pinnedUrl,
+          thumbnail: getProxyUrl(metadata.cid, 'thumb.jpg', 'ipfs'),
           cid: metadata.cid,
           label: metadata.label,
           summary: metadata.summary,
@@ -221,13 +190,19 @@ export const fileUpdated = functions
           tags: metadata.tags,
           metadata: metadata.metadata,
         });
-        console.log(`Successfully broadcasted update for ${metadata.ipnsName} to AT Protocol`);
+
+        updatedProps.atDid = agent.session.did;
+        updatedProps.atprotoPublishRequested = false;
+        
+        console.log(`Successfully manual-broadcasted ${fileId} to AT Protocol`);
       } catch (e) {
-        console.error(`Failed to broadcast update to AT Protocol:`, e);
+        console.error(`Failed to manual-broadcast to AT Protocol:`, e);
+        // Reset the flag even on failure to prevent infinite loops, or handle error state
+        updatedProps.atprotoPublishRequested = false;
       }
     }
 
-    if (updatedProps) {
+    if (Object.keys(updatedProps).length > 0) {
       return change.after.ref.set(updatedProps, { merge: true });
     }
 

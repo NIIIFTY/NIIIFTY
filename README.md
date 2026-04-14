@@ -19,103 +19,89 @@ You can run the full NIIIFTY stack locally using `pnpm`.
    pnpm dev
    ```
 
-## Storacha Network Setup
+## Cloud Infrastructure Setup
 
-To deploy the functions or run full integration tests, you need a decentralized NIIIFTY Space registered on the Storacha network.
+NIIIFTY utilizes a serverless, vendor-agnostic architecture centered around **Filebase** (S3-compatible IPFS) and **Google Cloud Secret Manager**.
 
-1. **Install the CLI and Authenticate**
+### 1. Filebase Storage (IPFS)
 
-   ```bash
-   npm install -g @storacha/cli
-   w3 login <your_email@domain.com>
-   ```
+To handle high-performance directory uploads with deterministic CIDs, we use the Filebase S3 API with CAR (Content Addressable Archive) support.
 
-2. **Provision a New Space**
+1. **Create a Filebase Account**: You can start on the **Free** tier (which allows unlimited IPFS uploads within storage limits).
+2. **Provision an S3 Bucket**: Create a bucket (e.g., `niiifty`) to store exhibit CAR files.
+3. **Generate S3 Credentials**: Obtain your `Access Key` and `Secret Key`.
 
-   ```bash
-   # Create a space (you will be prompted to backup a recovery phrase)
-   w3 space create "NIIIFTY Production"
-   ```
+### 2. Version Pinning Proxy (Dropping IPNS)
 
-3. **Generate a Headless Sub-Agent Key**
-   Run the helper script to create an Ed25519 identity for your backend. Note the `KEY_STRING` output.
+NIIIFTY has moved away from the InterPlanetary Name System (IPNS) to a **CID-only architecture**. This transition was made to reduce operational complexity and eliminate per-name limits/costs associated with managed IPNS providers.
 
-   ```bash
-   cd functions && node generate-key.js
-   ```
+- **The Rationale**: Since NIIIFTY already requires a server-side proxy for high-performance IIIF resolution and on-the-fly CID injection, the overhead of managing IPNS keys and DHT republication offered diminishing returns.
+- **How it works**: Manifests are generated with a stable `__CID__` placeholder. When requested via the IPFS proxy (`/api/ipfs/[cid]`), the proxy dynamically replaces `__CID__` with the actual requested CID, ensuring absolute, pinned links without dedicated naming infrastructure.
 
-4. **Delegate Capabilities to the Sub-Agent**
-   Using the `DID:` output from Step 3, generate a wildcard delegation proof for the new identity.
+### 3. Environment Variables & Secrets
 
-   ```bash
-   w3 delegation create <DID_STRING> -o proof.ucan
-   ```
+Configure the following secrets in your Firebase environment:
 
-5. **Update Environment**
-   Run the injection script to automatically parse the `proof.ucan` blob and update your `.env` variables with the base64 encoded capability.
-   ```bash
-   node inject-proof.js
-   ```
-   Finally, copy the `KEY_STRING` from Step 3 into your `.env` as `STORACHA_KEY`.
+| Secret                 | Description                                                             |
+| :--------------------- | :---------------------------------------------------------------------- |
+| `FILEBASE_ACCESS_TOKEN` | Filebase S3 Access Token                                                  |
+| `FILEBASE_SECRET_KEY`  | Filebase S3 Secret Key                                                  |
+| `FILEBASE_GATEWAY_URL` | Your dedicated Filebase gateway (e.g. `https://niiifty.myfilebase.com`) |
+| `ATPROTO_SERVICE`      | AT Protocol PDS (e.g. `https://bsky.social`)                            |
+| `ATPROTO_IDENTIFIER`   | Your handle or DID                                                      |
+| `ATPROTO_PASSWORD`     | App Password for your AT account                                        |
 
-> [!WARNING]
-> **Preserve in your Password Manager!**
-> You must securely save the 24-word **Space Recovery Phrase** generated in Step 2. You should also backup the exact base64 strings for `STORACHA_KEY` and `STORACHA_PROOF` from your `.env` file since they cannot be recovered easily if lost.
+```bash
+firebase functions:secrets:set FILEBASE_ACCESS_TOKEN
+# ... etc
+```
 
-### High-Performance IPNS Streaming Proxy
+## High-Performance IPFS Version Pinning
 
-Previously, NIIIFTY hardcoded `dweb.link` URLs for IPNS manifest distribution. To resolve reliability issues, we implemented a centralized Next.js proxy route (`/api/ipns/[ipnsKey]/[...path]`).
+NIIIFTY eliminates "popcorning" and reliability issues by using a specialized server-side deterministic version pinning proxy.
 
-#### Why a Streaming Proxy instead of a 302 Redirect?
+### 1. IPFS Pinning Proxy (`/api/ipfs/...`)
 
-Initially, the proxy used a `301/302 Redirect`. However, this caused "popcorning" in IIIF viewers because browsers had to establish new DNS lookups and TLS handshakes for every tile redirected to `w3s.link`. The current **Streaming Proxy** solves this:
+Instantly resolves content-addressed data using a dedicated Filebase gateway, ensuring high performance for IIIF viewers.
 
-1.  **Instant Name Resolution:** We query the `name.web3.storage` REST API to instantly map IPNS keys to CIDs, bypassing the slow IPFS DHT.
-2.  **Server-Side Streaming:** The Next.js backend fetches the content from the Storacha Gateway and streams the binary data directly to the client.
-3.  **Connection Multiplexing:** The browser maintains a single HTTP/2 connection to `niiifty.com`. Tiles are streamed back in parallel without extra TLS overhead.
-4.  **Aggressive Authorization Caching:** We use Next.js `unstable_cache` to remember "Authorized" keys for 1 hour, reducing Firestore read operations to nearly zero.
+### 2. IPFS Pinning Proxy (`/api/ipfs/...`)
 
-## Architectural Decisions & Technical Compromises
+To ensure long-term verifiability of exhibits, we implemented a **deterministic version pinning proxy**.
 
-To achieve a production-ready, sustainable system on a grant budget, we made several strategic architectural trade-offs:
+- **URL Rewriting**: When fetching IIIF `index.json` manifests, the proxy runs a regex rewriter that transforms all mutable dynamic links into explicit, cid-pinned proxy links.
+- **Immutability**: This guarantees that if a user captures a manifest via the IPFS proxy, it is fixed to a specific content version for all eternity.
 
-### 1. Egress Cost vs. User Experience (Streaming Proxy)
+## Architectural Decisions
 
-- **The Compromise:** Unlike a redirect, server-side streaming consumes Google Cloud egress bandwidth (~$0.12/GB).
-- **The Rationale:** This is a deliberate "UX First" decision. High-resolution IIIF viewers (like Universal Viewer) become unusable when forced to wait for hundreds of sequential TLS handshakes via redirects. Streaming provides the performance level of a centralized CDN while maintaining the data durability of IPFS.
+### 1. "UX First" Streaming
 
-### 2. Serverless AppView vs. Full AT Protocol Relay
+- **The Decision**: We use server-side streaming instead of 302 redirects.
+- **The Rationale**: IIIF zoomable viewers require hundreds of parallel tile requests. Redirects force hundreds of expensive DNS/TLS handshakes, killing performance. Streaming over a single HTTP/2 multiplexed connection to `niiifty.com` provides a "CDN-like" experience for decentralized data.
 
-- **The Compromise:** Instead of hosting a full, stateful AT Protocol Relay (high disk/CPU overhead), we implemented a lightweight **"Firebase-Native" AppView**.
-- **The Rationale:** Using **Google Cloud Run + Bun + Jetstream**, we index only the specific [`cx.vmx.matadisco`](https://lexicon.garden/lexicon/did:plc:3mdq56yhyqq5k6d4guztheaf/cx.vmx.matadisco) collections we need. This reduces monthly infrastructure costs by ~90% while providing native **Vector Search** (fuzzy, semantic matching) directly within our existing database.
+### 2. Manual Federation Control
 
-### 3. Admin SDK Authorization Guard
+- **The Decision**: We moved from automatic broadcasting to a manual "Publish to Bluesky" workflow.
+- **The Rationale**: This allows creators to curate exactly when an exhibit is ready for the federated discovery layer. We use the Firestore `fileId` as the AT Protocol `rkey`, ensuring all updates remain idempotent and stable.
 
-- **The Compromise:** The IPNS proxy uses the **Firebase Admin SDK** for its authorization guard.
-- **The Rationale:** This was necessary due to service account limitations in Firebase App Hosting which prevent granular "impersonation" for server-side Firestore reads under standard client-side security rules. The "Proxy Guard" pattern keeps the proxy restricted to NIIIFTY-managed keys without requiring a complex OAuth flow for public IIIF manifests.
+### 3. Serverless AppView
 
-## AT Protocol Discovery & Verification
+- **The Decision**: We built a lightweight, Firebase-native AppView for indexing `cx.vmx.matadisco` records.
+- **The Rationale**: By using **Cloud Run + Bun + Jetstream**, we achieve 90% cost reduction compared to hosting a full AT Protocol Relay, while maintaining deep semantic search capabilities for exhibit manifests.
 
-To verify that NIIIFTY is successfully broadcasting to the network, you can use a PDS Explorer to view your raw records.
+## Federation & Discovery
 
-### 1. Constructing the AT URI
-Records are stored in your repository using a unique **AT URI** following this structure:
-`at://[YOUR_DID]/cx.vmx.matadisco/[RECORD_KEY]`
+Records are published to your AT Protocol repository and indexed by Matadisco.
 
-- **Example:** `at://did:plc:2jh3cgm7lljlxuvss65wq7nc/cx.vmx.matadisco/3miz6lsrxdq2w`
+### Viewing Records
 
-### 2. Viewing Records
-You can view these records using the following community tools:
-- **[ATProto Browser](https://atproto-browser.vercel.app/)**: Append your AT URI to the URL to view a specific record.
-- **[PDS Explorer](https://pdsexplorer.com/)**: Enter your DID to browse all collections in your repository.
+You can view published records and verify their structure using these community tools:
+
+- **[ATProto Browser](https://atproto-browser.vercel.app/)**: Enter your DID and browse the `cx.vmx.matadisco` collection.
+- **[PDS Explorer](https://pdsexplorer.com/)**: Inspect the raw DAG-CBOR objects in your repository.
 
 ## Security
 
-- **Basic Authentication:** The site is protected by Basic Auth in production to prevent unauthorized uploads.
-- **Restricted Reverse Proxy:** The proxy is **not** an open gateway. It only resolves paths against trusted IPFS providers for IPNS keys registered in the NIIIFTY Firestore, mitigating SSRF risks.
-
-## Future Directions
-
-- **Native Storacha Resolution:** As Storacha evolves their native IPNS resolution and naming services, NIIIFTY is positioned to adopt these standard-track solutions to further decentralize the resolution layer.
+- **GCP IAM**: Authorization is enforced via the **Firebase Admin SDK**. The proxy guard ensures only CIDs managed by NIIIFTY are resolvable through the pinning gateway.
+- **Secret Manager**: Private keys never touch disk or logs; they are pulled on-demand from GCP Secret Manager for RPC signature operations.
 
 ---

@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "build:functions": "npm run build --prefix functions",
+    "build": "pnpm build:functions && next build",
+    "build:functions": "pnpm --prefix functions build",
     "start": "next start",
-    "deploy": "npm run build:functions && firebase deploy --only firestore,storage,functions",
-    "emulate": "firebase emulators:start"
+    "deploy": "pnpm build:functions && firebase deploy --only firestore,storage,functions",
+    "emulate": "pnpm build:functions && firebase emulators:start"
   },
   "dependencies": {
     "@fontsource/inter": "4.5.2",

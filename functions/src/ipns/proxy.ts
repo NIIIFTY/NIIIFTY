@@ -1,5 +1,6 @@
-export function getProxyUrl(ipnsName: string, path = '') {
+export function getProxyUrl(target: string, path = '', type: 'ipns' | 'ipfs' = 'ipns') {
   const siteUrl = process.env.FUNCTIONS_EMULATOR === 'true' ? 'http://localhost:3000' : 'https://niiifty.com';
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  return `${siteUrl}/api/ipns/${ipnsName}${cleanPath ? `/${cleanPath}` : ''}`;
+  const apiBase = type === 'ipns' ? '/api/ipns/' : '/api/ipfs/';
+  return `${siteUrl}${apiBase}${target}${cleanPath ? `/${cleanPath}` : ''}`;
 }

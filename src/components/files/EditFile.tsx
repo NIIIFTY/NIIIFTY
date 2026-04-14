@@ -102,6 +102,8 @@ export function EditFile({ id }: { id: string }) {
   const [fsID, setFSID] = useState<string>(id);
   const [manifestId, setManifestId] = useState<string>('');
   const [ipnsName, setIpnsName] = useState<string>('');
+  const [atDid, setAtDid] = useState<string>('');
+  const [isPublishRequested, setIsPublishRequested] = useState<boolean>(false);
 
   const form = useForm<FileFormData>({
     resolver: zodResolver(fileSchema) as any,
@@ -141,6 +143,10 @@ export function EditFile({ id }: { id: string }) {
       if (file.ipnsName) {
         setIpnsName(file.ipnsName);
       }
+      if (file.atDid) {
+        setAtDid(file.atDid);
+      }
+      setIsPublishRequested(!!file.atprotoPublishRequested);
     },
     onError: () => {
       setPageError('fileNotFound');
@@ -170,6 +176,20 @@ export function EditFile({ id }: { id: string }) {
       } as AuthoringFile,
     );
     window.location.href = '/admin/';
+  };
+
+  const onPublishAtproto = async () => {
+    if (!update) return;
+    
+    // Trigger the manual publish flag in Firestore
+    await update(
+      userAdapter!,
+      id as string,
+      {
+        atprotoPublishRequested: true
+      } as AuthoringFile
+    );
+    // The UI will re-render via useAuthoringFile listener and show "Broadcasting..."
   };
 
   if (user) {
@@ -356,6 +376,64 @@ export function EditFile({ id }: { id: string }) {
                 <>{t('view')}</>
               </a>
             </div>
+          </div>
+
+          <div className="mt-12 border-t border-zinc-800 pt-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium">AT Protocol / Matadisco</h3>
+                <p className="text-sm text-zinc-500">Publish this manifest to the Bluesky federated network.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                {atDid ? (
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1">
+                    Live on Matadisco
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-zinc-500/10 text-zinc-500 border-zinc-500/20 px-3 py-1">
+                    Draft
+                  </Badge>
+                )}
+                <Button 
+                  type="button"
+                  variant={atDid ? "outline" : "default"}
+                  onClick={onPublishAtproto}
+                  disabled={isPublishRequested}
+                >
+                  {isPublishRequested ? (
+                    "Broadcasting..."
+                  ) : atDid ? (
+                    "Update on Bluesky"
+                  ) : (
+                    "Publish to Bluesky"
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {atDid && (
+              <div className="mt-6 space-y-4 rounded-lg bg-zinc-900/50 p-4 border border-zinc-800">
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-zinc-500">AT Protocol URI</Label>
+                  <div className="mt-1 flex items-center gap-2">
+                    <code className="text-sm text-zinc-300">at://{atDid}/cx.vmx.matadisco/{id}</code>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-zinc-500">Public Explorer Link</Label>
+                  <div className="mt-1">
+                    <a 
+                      href={`https://atproto-browser.vercel.app/${atDid}/at://${atDid}/cx.vmx.matadisco/${id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-blue-500 hover:underline"
+                    >
+                      View on AT Protocol Browser →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </>
       );
