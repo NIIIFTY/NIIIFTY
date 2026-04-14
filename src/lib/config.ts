@@ -49,7 +49,9 @@ const inferLocalhost = () => {
   return isLocalhostHost(resolveHostFromEnv());
 };
 
-export const useFirebaseEmulators = !isProduction && (explicitEmulatorOptIn ?? inferLocalhost());
+export const useFirebaseEmulators = 
+  !isProduction && 
+  (explicitEmulatorOptIn ?? (isServerRuntime ? (process.env.NODE_ENV === 'development' || inferLocalhost()) : inferLocalhost()));
 
 const readEnvValue = (...keys: string[]) => keys.map((key) => process.env[key]).find((value) => value?.length);
 

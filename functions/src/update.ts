@@ -10,7 +10,7 @@ export default async function updateMetadataDerivatives(fileId, metadata) {
   console.log(`updating derivatives for ${fileId}`);
 
   // Use the __CID__ placeholder for manifest links; the IPFS proxy will rewrite this to the actual CID.
-  const id = getProxyUrl('__CID__', '', 'ipfs');
+  const id = getProxyUrl('__CID__', '');
 
   // 1. Download all current derivative files from GCS to a temp directory
   const tempDir = createTempDir();

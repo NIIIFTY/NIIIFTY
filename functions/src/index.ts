@@ -50,8 +50,8 @@ export const fileCreated = functions
 
       console.log(`--- started processing ${originalFile.name} (${metadata.type})---`);
 
-      // Use a CID-placeholder for manifest generation; will be replaced by API proxy
-      metadata.manifestId = getProxyUrl('__CID__', 'iiif/index.json', 'ipfs');
+      // Use the __CID__ placeholder for manifest links; the IPFS proxy will rewrite this to the actual CID.
+      metadata.manifestId = getProxyUrl('__CID__', 'iiif/index.json');
 
       const tempDir = createTempDir();
       const tempFilePath = path.join(tempDir, path.basename(originalFile.name));
@@ -177,11 +177,11 @@ export const fileUpdated = functions
         );
         
         // Use deterministic pinning URL for the AT Protocol resource
-        const pinnedUrl = getProxyUrl(metadata.cid, 'iiif/index.json', 'ipfs');
+        const pinnedUrl = getProxyUrl(metadata.cid, 'iiif/index.json');
 
         await publishIIIFRecord(agent, fileId, {
           id: pinnedUrl,
-          thumbnail: getProxyUrl(metadata.cid, 'thumb.jpg', 'ipfs'),
+          thumbnail: getProxyUrl(metadata.cid, 'thumb.jpg'),
           cid: metadata.cid,
           label: metadata.label,
           summary: metadata.summary,

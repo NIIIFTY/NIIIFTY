@@ -12,12 +12,13 @@ export function getIIIFManifestJson(path, metadata) {
   const canvasId = `${manifestId}/canvas/0`;
   const annotationPageId = `${manifestId}/canvas/0/annotationpage/0`;
   const annotationId = `${manifestId}/canvas/0/annotation/0`;
-  const { type, title, license, width, height } = metadata;
+  const { fileId, type, label: dashboardLabel, summary, tags, metadata: customMetadata, provider, rights, attribution, width, height } = metadata;
+  const manifestLabel = dashboardLabel || fileId;
 
-  let canvas, label, body, thumbnail;
+  let canvas, iiifLabel, body, thumbnail;
 
-  label = {
-    '@none': [title],
+  iiifLabel = {
+    en: [manifestLabel],
   };
 
   thumbnail = [
@@ -36,7 +37,7 @@ export function getIIIFManifestJson(path, metadata) {
         id: `${path}/optimized.jpg`,
         type: 'Image',
         format: 'image/jpeg',
-        label,
+        label: iiifLabel,
         width,
         height,
         service: [
@@ -54,7 +55,7 @@ export function getIIIFManifestJson(path, metadata) {
         id: `${path}/optimized.glb`,
         type: 'Model',
         format: 'model/gltf-binary',
-        label,
+        label: iiifLabel,
       };
 
       break;
@@ -64,7 +65,7 @@ export function getIIIFManifestJson(path, metadata) {
         id: `${path}/optimized.mp3`,
         type: 'Audio',
         format: 'audio/mp3',
-        label,
+        label: iiifLabel,
       };
 
       break;
@@ -74,7 +75,7 @@ export function getIIIFManifestJson(path, metadata) {
         id: `${path}/optimized.mp4`,
         type: 'Video',
         format: 'video/mp4',
-        label,
+        label: iiifLabel,
       };
 
       break;
@@ -99,7 +100,7 @@ export function getIIIFManifestJson(path, metadata) {
         ],
       },
     ],
-    label,
+    label: iiifLabel,
     thumbnail,
   };
 
@@ -112,33 +113,63 @@ export function getIIIFManifestJson(path, metadata) {
     id: manifestId,
     type: 'Manifest',
     items: [canvas],
-    label,
+    label: iiifLabel,
   };
 
-  // metadata
-  const kvp = [...(metadata.title ? [['Title', title]] : []), ...(metadata.license ? [['License', license]] : [])];
-
-  manifest.metadata = kvp.map((x) => {
-    return {
-      label: {
-        '@none': [x[0]],
-      },
-      value: {
-        '@none': [x[1]],
-      },
-    };
-  });
-
-  // requiredStatement
-  if (metadata.attribution) {
-    manifest.requiredStatement = {
-      label: { en: ['Attribution'] },
-      value: { en: [metadata.attribution] },
+  // summary
+  if (summary) {
+    manifest.summary = {
+      en: [summary],
     };
   }
 
-  // rights
-  manifest.rights = license;
+  // provider (IIIF v3)
+  const manifestProvider = provider || 'NIIIFTY';
+  manifest.provider = [
+    {
+      id: 'https://niiifty.com',
+      type: 'Agent',
+      label: { en: [manifestProvider] },
+    },
+  ];
+
+  // metadata building
+  const iiifMetadata = [];
+
+  if (rights) {
+    iiifMetadata.push({ label: { en: ['Rights'] }, value: { en: [rights] } });
+  }
+
+  if (tags && Array.isArray(tags)) {
+    iiifMetadata.push({ label: { en: ['Tags'] }, value: { en: [tags.join(', ')] } });
+  }
+
+  // Add custom metadata from dashboard
+  if (customMetadata && Array.isArray(customMetadata)) {
+    customMetadata.forEach((item) => {
+      if (item.label && item.value) {
+        iiifMetadata.push({
+          label: { en: [item.label] },
+          value: { en: [item.value] },
+        });
+      }
+    });
+  }
+
+  manifest.metadata = iiifMetadata;
+
+  // requiredStatement
+  if (attribution) {
+    manifest.requiredStatement = {
+      label: { en: ['Attribution'] },
+      value: { en: [attribution] },
+    };
+  }
+
+  // rights (stable string or URI)
+  if (rights) {
+    manifest.rights = rights;
+  }
 
   return manifest;
 }

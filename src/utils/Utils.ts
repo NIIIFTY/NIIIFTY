@@ -54,17 +54,14 @@ export const getFileUrl = (
     }
     return `https://${firebaseConfig.storageBucket}.storage.googleapis.com/${fsID}/${name}`;
   } else {
-    if (ipnsName) {
-      let baseUrl = '';
-      if (typeof window !== 'undefined') {
-        baseUrl = window.location.origin;
-      } else {
-        const env = config.environments[config.environment];
-        baseUrl = process.env.NODE_ENV === 'development' ? config.localhost.replace(/\/$/, '') : env.site;
-      }
-      return `${baseUrl}/api/ipns/${ipnsName}/${name}`;
+    let baseUrl = '';
+    if (typeof window !== 'undefined') {
+      baseUrl = window.location.origin;
+    } else {
+      const env = config.environments[config.environment];
+      baseUrl = process.env.NODE_ENV === 'development' ? config.localhost.replace(/\/$/, '') : env.site;
     }
-    return `https://${fsID}.ipfs.w3s.link/${name}`;
+    return `${baseUrl}/api/ipfs/${fsID}/${name}`;
   }
 };
 
