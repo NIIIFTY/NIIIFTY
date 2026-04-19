@@ -5,7 +5,6 @@ import ffprobe from "ffprobe";
 import ffprobeStatic from "ffprobe-static";
 import createThumbnails from "./thumbnails.js";
 import { deleteFile, createDir } from "./fs.js";
-import { createMP4IIIFDerivatives } from "./iiif.js";
 
 export default async function processMP4(mp4FilePath, metadata) {
   // optimise mp4
@@ -22,9 +21,6 @@ export default async function processMP4(mp4FilePath, metadata) {
 
   // set the duration on metadata (this will be updated in the db when processing completes)
   metadata.duration = duration;
-
-  // generate IIIF manifest
-  await createMP4IIIFDerivatives(mp4FilePath, metadata);
 
   // delete the original mp4 as it's already on GCS and will otherwise be uploaded again
   deleteFile(mp4FilePath);

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { adminDb } from '@/lib/firebase/server';
 import { useFirebaseEmulators, firebaseEmulatorConfig } from '@/lib/config';
+import { generateIIIFManifest } from '@/lib/iiif-generator';
+import { NiiiftyFile } from '@/types/file';
 
 // Robust Emulator Fix: Ensure host variables are set in the worker context
 if (useFirebaseEmulators && !process.env.FIRESTORE_EMULATOR_HOST) {
@@ -12,7 +14,7 @@ if (useFirebaseEmulators && !process.env.FIRESTORE_EMULATOR_HOST) {
 
 // Authorization Guard: Verifies if the CID is officially managed by NIIIFTY
 const verifyCid = unstable_cache(
-  async (cid: string) => {
+  async (cid: string): Promise<NiiiftyFile | null> => {
     try {
       const querySnapshot = await adminDb
         .collection('files')
@@ -20,7 +22,10 @@ const verifyCid = unstable_cache(
         .limit(1)
         .get();
       
-      return !querySnapshot.empty;
+      if (querySnapshot.empty) return null;
+      
+      const doc = querySnapshot.docs[0];
+      return { fileId: doc.id, ...doc.data() } as NiiiftyFile;
     } catch (error: any) {
       console.error('Firestore Verification Guard Error Detail:', error);
       throw error;
@@ -29,7 +34,7 @@ const verifyCid = unstable_cache(
   ['ipfs-verification'],
   { 
     revalidate: 3600, // Cache for 1 hour
-    tags: ['ipfs'] 
+    tags: ['ipfs', 'files'] 
   }
 );
 
@@ -44,9 +49,9 @@ export async function GET(
 
   try {
     // 1. Store Verification Guard
-    let isAuthorized = false;
+    let metadata: NiiiftyFile | null = null;
     try {
-      isAuthorized = await verifyCid(cid);
+      metadata = await verifyCid(cid);
     } catch (authError: any) {
       return new NextResponse(JSON.stringify({ 
         error: 'Forbidden: Verification Guard Failure',
@@ -57,7 +62,7 @@ export async function GET(
       });
     }
 
-    if (!isAuthorized) {
+    if (!metadata) {
       return new NextResponse(JSON.stringify({ 
         error: 'Unauthorized: CID not managed by NIIIFTY' 
       }), {
@@ -66,7 +71,25 @@ export async function GET(
       });
     }
 
-    // 2. Gateway Resolution
+    // 2. Pure Dynamic Manifest Interception
+    if (relativePath === 'iiif/index.json') {
+      const protocol = request.headers.get('x-forwarded-proto') || 'http';
+      const host = request.headers.get('host');
+      const basePath = `${protocol}://${host}/api/ipfs/${cid}`;
+      
+      const manifest = generateIIIFManifest(basePath, metadata);
+
+      return new NextResponse(JSON.stringify(manifest, null, 2), {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
+    // 3. Gateway Resolution
     const gatewayBaseUrl = process.env.FILEBASE_GATEWAY_URL || 'https://ipfs.filebase.io';
     
     const destinationUrl = relativePath 

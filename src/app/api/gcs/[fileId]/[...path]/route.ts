@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { adminDb } from '@/lib/firebase/server';
 import { useFirebaseEmulators, firebaseEmulatorConfig, firebaseConfig } from '@/lib/config';
+import { generateIIIFManifest } from '@/lib/iiif-generator';
+import { NiiiftyFile } from '@/types/file';
 
 // Robust Emulator Fix: Ensure host variables are set in the worker context
 if (useFirebaseEmulators && !process.env.FIRESTORE_EMULATOR_HOST) {
@@ -12,10 +14,11 @@ if (useFirebaseEmulators && !process.env.FIRESTORE_EMULATOR_HOST) {
 
 // Authorization Guard: Verifies if the FileID is officially managed by NIIIFTY
 const verifyFileId = unstable_cache(
-  async (fileId: string) => {
+  async (fileId: string): Promise<NiiiftyFile | null> => {
     try {
       const doc = await adminDb.collection('files').doc(fileId).get();
-      return doc.exists;
+      if (!doc.exists) return null;
+      return { fileId: doc.id, ...doc.data() } as NiiiftyFile;
     } catch (error: any) {
       console.error('Firestore GCS Verification Guard Error Detail:', error);
       throw error;
@@ -23,8 +26,8 @@ const verifyFileId = unstable_cache(
   },
   ['gcs-verification'],
   { 
-    revalidate: 3600, // Cache for 1 hour
-    tags: ['gcs'] 
+    revalidate: 3600, 
+    tags: ['gcs', 'files'] // The specific fileId tag will be added via the cache key automatically in some Next.js versions, but we should be explicit if we use revalidateTag(fileId)
   }
 );
 
@@ -39,9 +42,9 @@ export async function GET(
 
   try {
     // 1. Store Verification Guard
-    let isAuthorized = false;
+    let metadata: NiiiftyFile | null = null;
     try {
-      isAuthorized = await verifyFileId(fileId);
+      metadata = await verifyFileId(fileId);
     } catch (authError: any) {
       return new NextResponse(JSON.stringify({ 
         error: 'Forbidden: GCS Verification Guard Failure',
@@ -52,7 +55,7 @@ export async function GET(
       });
     }
 
-    if (!isAuthorized) {
+    if (!metadata) {
       return new NextResponse(JSON.stringify({ 
         error: 'Unauthorized: File not managed by NIIIFTY' 
       }), {
@@ -61,7 +64,25 @@ export async function GET(
       });
     }
 
-    // 2. Storage Resolution
+    // 2. Pure Dynamic Manifest Interception
+    if (relativePath === 'iiif/index.json') {
+      const protocol = request.headers.get('x-forwarded-proto') || 'http';
+      const host = request.headers.get('host');
+      const basePath = `${protocol}://${host}/api/gcs/${fileId}`;
+      
+      const manifest = generateIIIFManifest(basePath, metadata);
+
+      return new NextResponse(JSON.stringify(manifest, null, 2), {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
+    // 3. Storage Resolution
     let destinationUrl = '';
     
     if (useFirebaseEmulators) {

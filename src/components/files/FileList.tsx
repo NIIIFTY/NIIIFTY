@@ -23,124 +23,101 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
       <>
         {files.length > 0 && (
           <>
-            <div className="ring-opacity-5 mt-8 overflow-hidden shadow ring-1 ring-black md:mx-0 md:rounded-lg dark:ring-gray-600">
-              <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
-                <thead className="bg-gray-100 dark:bg-gray-600">
-                  <tr>
-                    <th scope="col"></th>
-                    <th
-                      scope="col"
-                      className="py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100"
-                    >
-                      <>{t('title')}</>
-                    </th>
-                    <th
-                      scope="col"
-                      className="hidden px-12 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell dark:text-gray-100"
-                    >
-                      <>{t('type')}</>
-                    </th>
-                    <th
-                      scope="col"
-                      className="hidden px-12 py-3.5 text-left text-sm font-semibold text-gray-900 xl:table-cell dark:text-gray-100"
-                    >
-                      <>{t('modified')}</>
-                    </th>
-                    {/* <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+            <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                  <th scope="col" className="w-16 py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-100 lg:w-32">
+                    {/* Thumbnail column */}
+                  </th>
+                  <th
+                    scope="col"
+                    className="py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-100"
+                  >
+                    <>{t('title')}</>
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-6 py-3.5 text-left text-sm font-semibold text-zinc-900 lg:table-cell dark:text-zinc-100"
+                  >
+                    <>{t('type')}</>
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-6 py-3.5 text-left text-sm font-semibold text-zinc-900 xl:table-cell dark:text-zinc-100"
+                  >
+                    <>{t('modified')}</>
+                  </th>
+                  <th scope="col" className="relative py-3.5 pr-4 pl-3 text-zinc-900 sm:pr-6">
                     <span className="sr-only">
-                      <>{t("edit")}</>
+                      <>{t('actions')}</>
                     </span>
-                  </th> */}
-                    <th scope="col" className="relative py-3.5 pr-4 pl-3 text-gray-900 sm:pr-6">
-                      <span className="sr-only">
-                        <>{t('delete')}</>
-                      </span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                  {files.map((file: AuthoringFile) => (
-                    <tr
-                      key={file.id}
-                      // className={cx(
-                      //   !file.processed ? "pointer-events-none opacity-50" : ""
-                      // )}
-                    >
-                      <td className="w-8 lg:w-32">
-                        <button
-                          className="block w-24 px-2 py-2 lg:w-32"
-                          onClick={() => {
-                            onSelectFile(file.id!);
-                          }}
-                        >
-                          <div className="bg-gray-500">
-                            {file.processed ? (
-                              <img src={getFileUrl('GCS', file.id!, 'thumb.jpg')} alt={file.label} />
-                            ) : (
-                              <div className="flex h-20 w-24 content-center items-center justify-center text-white lg:h-28 lg:w-32">
-                                <Spinner />
-                              </div>
-                            )}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                {files.map((file: AuthoringFile) => (
+                  <tr
+                    key={file.id}
+                    className="group cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+                    onClick={() => onSelectFile(file.id!)}
+                  >
+                    <td className="w-16 py-4 pr-3 pl-4 lg:w-32">
+                      <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 lg:h-20 lg:w-24">
+                        {file.processed ? (
+                          <img 
+                            src={getFileUrl('GCS', file.id!, 'thumb.jpg')} 
+                            alt={file.label}
+                            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center text-zinc-500">
+                            <Spinner />
                           </div>
-                        </button>
-                      </td>
-                      <td className="max-w-[45vw] overflow-hidden py-4 pr-3 pl-4 text-sm font-medium text-ellipsis whitespace-nowrap text-gray-900">
-                        {/* <a
-                        href={`/${username}/${slugify(file.name)}`}
-                        target="_blank"
-                        className="text-blue-600 no-underline duration-500 hover:text-blue-900"
-                      > */}
-                        <button
-                          className="no-underline"
-                          onClick={() => {
-                            onSelectFile(file.id!);
-                          }}
-                        >
-                          {file.label}
-                        </button>
-                        {/* </a> */}
-                      </td>
-                      <td className="hidden px-12 py-4 text-sm whitespace-nowrap text-gray-500 lg:table-cell">
-                        {file.type.split('/')[1]}
-                      </td>
-                      <td className="hidden px-12 py-4 text-sm whitespace-nowrap text-gray-500 xl:table-cell">
-                        {`${new Date(file.modified as any).toLocaleDateString()} | ${new Date(
-                          file.modified as any,
-                        ).toLocaleTimeString()}`}
-                      </td>
-                      {/* <td className="py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                        )}
+                      </div>
+                    </td>
+                    <td className="max-w-[45vw] overflow-hidden py-4 pr-3 pl-4 text-sm font-medium text-ellipsis whitespace-nowrap text-zinc-900 dark:text-zinc-100">
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{file.label}</span>
+                        <span className="text-xs text-zinc-500 lg:hidden">
+                          {file.type.split('/')[1]} • {new Date(file.modified as any).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="hidden px-6 py-4 text-sm whitespace-nowrap text-zinc-500 lg:table-cell uppercase tracking-tight">
+                      {file.type.split('/')[1]}
+                    </td>
+                    <td className="hidden px-6 py-4 text-sm whitespace-nowrap text-zinc-500 xl:table-cell">
+                      <div className="flex flex-col">
+                        <span>{new Date(file.modified as any).toLocaleDateString()}</span>
+                        <span className="text-xs opacity-60">{new Date(file.modified as any).toLocaleTimeString()}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 pr-4 pl-3 text-right text-sm font-medium sm:pr-6">
                       <button
-                        onClick={() => {
-                          window.location.href = `/admin/${file.id}`;
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click
+                          if (
+                            window.confirm(
+                              t('confirmFileDeletion', {
+                                title: file.label,
+                              }),
+                            )
+                          ) {
+                            remove(userAdapter!, file.id!);
+                          }
                         }}
-                        className="text-blue-600 duration-500 hover:text-blue-900"
+                        className="rounded-md px-2 py-1 text-zinc-400 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-500 group-hover:opacity-100"
                       >
-                        <>{t("details")}</>
+                        <>{t('delete')}</>
                       </button>
-                    </td> */}
-                      <td className="py-4 pr-4 pl-3 text-right text-sm font-medium sm:pr-6">
-                        <button
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                t('confirmFileDeletion', {
-                                  title: file.label,
-                                }),
-                              )
-                            ) {
-                              remove(userAdapter!, file.id!);
-                            }
-                          }}
-                          className="text-red-500 duration-500 hover:text-red-800 dark:text-red-500 dark:hover:text-red-300"
-                        >
-                          <>{t('delete')}</>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
             <div className="mt-6 w-full text-sm">
               {loading && <>{t('loading')}</>}
               {!loading && !allFilesLoaded && (

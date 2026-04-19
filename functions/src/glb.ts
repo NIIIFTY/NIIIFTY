@@ -17,7 +17,6 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import createThumbnails from './thumbnails.js';
 import { REGULAR_WIDTH } from './constants.js';
-import { createGLBIIIFDerivatives } from './iiif.js';
 import { deleteFile } from './fs.js';
 import express from 'express';
 import cors from 'cors';
@@ -33,9 +32,6 @@ export default async function processGLB(glbFilePath, metadata) {
 
   // delete screenshot
   deleteFile(screenshotPath);
-
-  // generate IIIF manifest
-  await createGLBIIIFDerivatives(glbFilePath, metadata);
 
   // delete the original glb as it's already on GCS and will otherwise be uploaded again
   deleteFile(glbFilePath);

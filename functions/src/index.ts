@@ -14,7 +14,8 @@ import updateMetadataDerivatives from './update.js';
 import { GCS_URL } from './constants.js';
 import { getProxyUrl } from './ipns/index.js';
 import { authenticateAgent, publishIIIFRecord } from './atproto/index.js';
-import { createIIIFManifest } from './iiif.js';
+import { triggerRevalidation } from './revalidate.js';
+// Removed createIIIFManifest as it is now dynamic
 
 
 // when a file is created in firestore,
@@ -29,7 +30,8 @@ export const fileCreated = functions
       'ATPROTO_IDENTIFIER',
       'ATPROTO_PASSWORD',
       'FILEBASE_ACCESS_TOKEN',
-      'FILEBASE_SECRET_KEY'
+      'FILEBASE_SECRET_KEY',
+      'NIIIFTY_REVALIDATE_SECRET'
     ],
   })
   .firestore.document('files/{fileId}')
@@ -81,16 +83,9 @@ export const fileCreated = functions
       // upload the generated files to GCS
       await uploadFilesToGCS(tempDir, fileId);
 
-      // 3. Phase 2: Generate IPFS-optimized manifest (with CID placeholders)
-      // We overwrite the GCS manifest in the temp folder before uploading to Filebase
-      const ipfsBaseUrl = getProxyUrl('__CID__', '');
-      await createIIIFManifest(path.join(tempDir, 'iiif'), {
-        ...metadata,
-        ...processedProps,
-        manifestId: ipfsBaseUrl
-      });
-
       // upload the generated files to filebase
+      // Note: We no longer generate a static manifest here. 
+      // The proxies will generate it on-the-fly using the CID returned below.
       const cid = await uploadTempFilesToFilebase(tempDir);
       console.log(`Successfully uploaded IIIF manifest to IPFS with CID: ${cid}`);
 
@@ -127,7 +122,8 @@ export const fileUpdated = functions
       'ATPROTO_IDENTIFIER',
       'ATPROTO_PASSWORD',
       'FILEBASE_ACCESS_TOKEN',
-      'FILEBASE_SECRET_KEY'
+      'FILEBASE_SECRET_KEY',
+      'NIIIFTY_REVALIDATE_SECRET'
     ],
   })
   .firestore.document('files/{fileId}')
@@ -167,9 +163,14 @@ export const fileUpdated = functions
       return null;
     }
 
-    // the original uploaded file cannot be changed, only the metadata associated with it.
     // update any derivatives (like iiif manifests) that include the metadata
     const updatedProps: any = (await updateMetadataDerivatives(fileId, metadata)) || {};
+
+    // Dynamic Manifest Architecture: Trigger cache revalidation in the proxies
+    await triggerRevalidation('ipfs'); // Purge all IPFS manifests (can be refined to specific CID)
+    await triggerRevalidation('gcs');  // Purge all GCS manifests
+    if (metadata.cid) await triggerRevalidation(metadata.cid);
+    await triggerRevalidation(fileId);
 
     // NIIIFTY 3: Manual Broadcast to ATProtocol
     if (
@@ -242,3 +243,4 @@ export const fileDeleted = functions
     console.log(`Finished deleting ${files.length} files in ${fileId}/`);
     return null;
   });
+

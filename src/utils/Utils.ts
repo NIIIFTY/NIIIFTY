@@ -47,20 +47,17 @@ export const getFileUrl = (
   name: string,
   ipnsName?: string,
 ) => {
-  if (fs === 'GCS') {
-    const firebaseConfig = config.environments[config.environment].firebaseConfig;
-    if (useFirebaseEmulators) {
-      return `http://${firebaseEmulatorConfig.storage.host}:${firebaseEmulatorConfig.storage.port}/v0/b/${firebaseConfig.storageBucket}/o/${encodeURIComponent(`${fsID}/${name}`)}?alt=media`;
-    }
-    return `https://${firebaseConfig.storageBucket}.storage.googleapis.com/${fsID}/${name}`;
+  let baseUrl = '';
+  if (typeof window !== 'undefined') {
+    baseUrl = window.location.origin;
   } else {
-    let baseUrl = '';
-    if (typeof window !== 'undefined') {
-      baseUrl = window.location.origin;
-    } else {
-      const env = config.environments[config.environment];
-      baseUrl = process.env.NODE_ENV === 'development' ? config.localhost.replace(/\/$/, '') : env.site;
-    }
+    const env = config.environments[config.environment];
+    baseUrl = process.env.NODE_ENV === 'development' ? config.localhost.replace(/\/$/, '') : env.site;
+  }
+
+  if (fs === 'GCS') {
+    return `${baseUrl}/api/gcs/${fsID}/${name}`;
+  } else {
     return `${baseUrl}/api/ipfs/${fsID}/${name}`;
   }
 };

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useUserStore } from '@/store/user-store';
 import { useTranslation } from 'react-i18next';
 import { LoadingMessage } from '../LoadingMessage';
+import Spinner from '../Spinner';
 import { remove, useAuthoringFile } from '@/hooks/useFile';
 import { AuthoringFile, FileSystem, LicenseURL, MIMETYPES } from '@/utils/Types';
 import { useMounted } from '@/hooks/useMounted';
@@ -103,6 +104,7 @@ export function EditFile({ id }: { id: string }) {
   const [manifestId, setManifestId] = useState<string>('');
   const [ipnsName, setIpnsName] = useState<string>('');
   const [atDid, setAtDid] = useState<string>('');
+  const [isProcessed, setIsProcessed] = useState<boolean>(true); // Default to true to avoid flash
   const [isPublishRequested, setIsPublishRequested] = useState<boolean>(false);
 
   const form = useForm<FileFormData>({
@@ -146,6 +148,7 @@ export function EditFile({ id }: { id: string }) {
       if (file.atDid) {
         setAtDid(file.atDid);
       }
+      setIsProcessed(!!file.processed);
       setIsPublishRequested(!!file.atprotoPublishRequested);
     },
     onError: () => {
@@ -440,8 +443,23 @@ export function EditFile({ id }: { id: string }) {
     };
 
     return (
-      <>
-        {/* Removed Metatags as dynamic metadata is handled by page.tsx */}
+      <div className="relative">
+        {!isProcessed && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center rounded-xl bg-zinc-950/60 backdrop-blur-sm transition-all duration-500">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-10 text-center shadow-2xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
+                <Spinner />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-semibold tracking-tight text-white">Processing Asset</h3>
+                <p className="max-w-[200px] text-sm text-zinc-400">
+                  NIIIFTY is preparing your IIIF manifest and derivatives...
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit) as any} className="space-y-8">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -597,7 +615,7 @@ export function EditFile({ id }: { id: string }) {
                 {/* Metadata Builder */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label>Metadata (Key-Value Pairs)</Label>
+                    <Label>Metadata</Label>
                     <Button
                       type="button"
                       variant="outline"
@@ -646,7 +664,7 @@ export function EditFile({ id }: { id: string }) {
 
             <Formats />
 
-            <div className="flex flex-row items-center justify-start space-x-4 border-t border-zinc-800 pt-8">
+            <div className="flex flex-row items-center justify-end space-x-4 border-t border-zinc-800 pt-8">
               <Button type="submit" size="lg">
                 {t('update')}
               </Button>
@@ -654,7 +672,6 @@ export function EditFile({ id }: { id: string }) {
                 type="button"
                 variant="destructive"
                 size="lg"
-                className="ml-auto"
                 onClick={async () => {
                   if (
                     window.confirm(
@@ -673,7 +690,7 @@ export function EditFile({ id }: { id: string }) {
             </div>
           </form>
         </Form>
-      </>
+      </div>
     );
   } else {
     return <LoadingMessage />;
