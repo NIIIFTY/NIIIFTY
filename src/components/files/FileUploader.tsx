@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { maxFileSize } from '@/utils/Config';
 
-type FileExtended = FileWithPath & { preview: string; errorMessage: string };
+type FileExtended = FileWithPath & { preview?: string; errorMessage?: string; id?: string };
 
 export function FileUploader() {
   const [files, setFiles] = useState<FileExtended[]>([]);
@@ -41,14 +41,18 @@ export function FileUploader() {
     maxFiles: 10,
     maxSize: maxFileSize,
     multiple: true,
-    onDrop: (files, rejections) => {
+    onDrop: (acceptedFiles, rejections) => {
       let validatedeFiles: FileExtended[] = [];
 
-      files.forEach((file: FileWithPath) => {
+      acceptedFiles.forEach((file: FileWithPath) => {
+        const id = doc(collection(db, 'files')).id;
+        const extendedFile = file as FileExtended;
+        extendedFile.id = id;
+
         if (!isFileAccepted(file)) {
-          (file as FileExtended).errorMessage = t('fileTypeNotSupported');
+          extendedFile.errorMessage = t('fileTypeNotSupported');
         }
-        validatedeFiles.push(file as FileExtended);
+        validatedeFiles.push(extendedFile);
       });
 
       rejections.forEach((rejection) => {
@@ -127,18 +131,32 @@ export function FileUploader() {
   const FileItems = () => (
     <>
       {files.map((file: FileExtended) => (
-        <tr key={file.path}>
+        <tr
+          key={file.path || file.id}
+          className="group cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+          onClick={() => {
+            if (file.id) {
+              window.location.href = `/admin/${file.id}`;
+            }
+          }}
+        >
           <td
-            className={cx('hidden h-20 w-20 pr-4 sm:table-cell', file.errorMessage ? 'text-red-500' : 'text-gray-400')}
+            className={cx('hidden h-20 w-20 pr-4 sm:table-cell', file.errorMessage ? 'text-red-500' : 'text-zinc-500')}
           >
-            <Thumbnail file={file} />
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 lg:h-20 lg:w-24">
+              <Thumbnail file={file} />
+            </div>
           </td>
-          <td className="max-w-[60vw] overflow-hidden text-ellipsis whitespace-nowrap">
-            <span className="text-sm font-bold">{file.path}</span>
+          <td className="max-w-[60vw] overflow-hidden text-ellipsis whitespace-nowrap py-4">
+            <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {file.path || file.name}
+            </span>
             <br />
-            <span className="text-sm text-gray-400">{formatBytes(file.size, 1)}</span>
+            <span className="text-xs text-zinc-500 uppercase tracking-tight">{formatBytes(file.size, 1)}</span>
           </td>
-          <td className="overflow-hidden whitespace-nowrap">{!file.errorMessage && <FileUpload file={file} />}</td>
+          <td className="overflow-hidden whitespace-nowrap py-4 text-right pr-4">
+            {!file.errorMessage && <FileUpload file={file} />}
+          </td>
         </tr>
       ))}
     </>
@@ -210,7 +228,7 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
     if (uploadTaskRef.current) return;
 
     const uid: string = user.uid;
-    const id = doc(collection(db, 'files')).id;
+    const id = file.id || doc(collection(db, 'files')).id;
     const label: string = path.basename(file.name, path.extname(file.name));
 
     let extension = file.type ? file.type.split('/')[1] : (file.name.split('.').pop() as string);

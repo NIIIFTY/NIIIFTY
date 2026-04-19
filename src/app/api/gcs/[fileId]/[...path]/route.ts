@@ -98,7 +98,7 @@ export async function GET(
 
     if (!proxyResponse.ok) {
       if (proxyResponse.status === 404) {
-        return new NextResponse(JSON.stringify({ error: 'Asset not found on GCS' }), {
+        return new NextResponse(JSON.stringify({ error: 'File not found on GCS' }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' },
         });

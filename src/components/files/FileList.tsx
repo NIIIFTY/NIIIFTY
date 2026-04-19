@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { remove } from '@/hooks/useFile';
 import { usePaginatedFiles } from '@/hooks/usePaginatedFiles';
 import { getFileUrl } from '@/utils/Utils';
-import Spinner from '@/components/Spinner';
+import { Spinner } from '@/components/ui/spinner';
 import { useMounted } from '@/hooks/useMounted';
 import { AuthoringFile } from '@/utils/Types';
 

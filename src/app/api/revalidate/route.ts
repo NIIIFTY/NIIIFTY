@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: 'Missing tag' }, { status: 400 });
   }
 
-  revalidateTag(tag);
+  revalidateTag(tag, 'default');
   
   console.log(`[Revalidate] Purged cache for tag: ${tag}`);
 

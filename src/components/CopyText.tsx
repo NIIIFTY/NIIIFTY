@@ -1,21 +1,13 @@
 import { useState, useRef } from "react";
-import classNames from "classnames";
-import { copyText } from "@/utils/Utils";
+import { cn, copyText } from "@/utils/Utils";
+import { Check, Copy } from "lucide-react";
 
 const CopyText = ({ id, text }: { id: string; text: string }) => {
   const [copied, setCopied] = useState(false);
-
-  const inputClasses = classNames(
-    "border-b border-gray-300 bg-transparent py-2 pl-4 font-light text-gray-600 ring-blue-500 focus:outline-none focus:ring-1 w-9/12 dark:text-white dark:border-gray-500"
-  );
-  const buttonClasses = classNames(
-    "transition duration-300 bg-black hover:bg-white hover:text-black text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring rounded-l-none w-3/12 shadow-md dark:bg-white dark:text-black dark:hover:text-gray-500"
-  );
-
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <>
+    <div className="flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 transition-colors focus-within:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900/50 dark:focus-within:border-zinc-700">
       <input
         ref={inputRef}
         id={id}
@@ -23,7 +15,7 @@ const CopyText = ({ id, text }: { id: string; text: string }) => {
         type="text"
         value={text}
         readOnly
-        className={inputClasses}
+        className="h-full flex-1 bg-transparent px-3 text-xs font-medium text-zinc-600 outline-none dark:text-zinc-300"
         onClick={() => {
           inputRef.current?.focus();
           inputRef.current?.select();
@@ -32,23 +24,25 @@ const CopyText = ({ id, text }: { id: string; text: string }) => {
       <button
         type="button"
         aria-label={copied ? "Copied" : "Copy"}
-        className={buttonClasses}
+        className={cn(
+          "flex h-full w-10 items-center justify-center border-l border-zinc-200 transition-colors hover:bg-zinc-100 dark:border-zinc-800 dark:hover:bg-zinc-800",
+          copied ? "text-emerald-500" : "text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
+        )}
         onClick={() => {
           copyText(text);
           setCopied(true);
           inputRef.current?.focus();
           inputRef.current?.select();
           setTimeout(() => {
-            // avoid state change on unmounted component
             if (inputRef.current) {
               setCopied(false);
             }
           }, 2000);
         }}
       >
-        {copied ? "Copied" : "Copy"}
+        {copied ? <Check size={14} /> : <Copy size={14} />}
       </button>
-    </>
+    </div>
   );
 };
 

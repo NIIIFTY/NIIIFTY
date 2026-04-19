@@ -101,7 +101,7 @@ export async function GET(
 
     if (!proxyResponse.ok) {
       if (proxyResponse.status === 404) {
-        return new NextResponse(JSON.stringify({ error: 'Asset not found on IPFS' }), {
+        return new NextResponse(JSON.stringify({ error: 'File not found on IPFS' }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' },
         });

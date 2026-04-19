@@ -13,14 +13,14 @@ export type Tab<TabName> = {
 const Tabs = ({ tabs, onChange }: { tabs: Tab<TabName>[]; onChange: (current: number) => void }) => {
   return (
     <div>
-      <div className="lg:hidden">
+      <div className="xl:hidden">
         <label htmlFor="tabs" className="sr-only">
           Select a tab
         </label>
         <select
           id="tabs"
           name="tabs"
-          className="block w-full border-gray-300 py-2 pr-10 pl-3 text-gray-600 focus:border-blue-500 focus:ring-blue-500 focus:outline-none dark:border-gray-500 dark:bg-black dark:text-white"
+          className="block w-full border-zinc-200 py-2 pr-10 pl-3 text-zinc-600 focus:border-zinc-500 focus:ring-zinc-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
           defaultValue={tabs.find((tab) => tab.current)?.name}
           onChange={(event: React.FormEvent<HTMLSelectElement>) => {
             const index: number = tabs.findIndex((tab) => tab.name === event.currentTarget.value);
@@ -34,9 +34,9 @@ const Tabs = ({ tabs, onChange }: { tabs: Tab<TabName>[]; onChange: (current: nu
             ))}
         </select>
       </div>
-      <div className="hidden lg:block">
-        <div className="border-b border-gray-500">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+      <div className="hidden xl:block">
+        <div className="border-b border-zinc-200 dark:border-zinc-800">
+          <nav className="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
             {tabs
               .filter((tab) => !tab.disabled)
               .map((tab) => (
@@ -49,9 +49,9 @@ const Tabs = ({ tabs, onChange }: { tabs: Tab<TabName>[]; onChange: (current: nu
                   }}
                   className={classNames(
                     tab.current
-                      ? 'border-blue-500 text-blue-600 hover:text-blue-600 dark:border-white dark:text-white dark:hover:text-white'
-                      : 'border-transparent text-gray-600 hover:border-gray-700 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-300 dark:hover:text-gray-300',
-                    'border-b-2 px-1 pb-2 text-sm font-medium whitespace-nowrap no-underline select-none',
+                      ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
+                      : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300',
+                    'border-b-2 px-1 pb-3 text-xs font-semibold whitespace-nowrap no-underline select-none transition-colors',
                   )}
                   aria-current={tab.current ? 'page' : undefined}
                 >
