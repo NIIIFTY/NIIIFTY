@@ -117,3 +117,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.layout-container {
+  @apply container mx-auto flex w-full max-w-7xl flex-wrap px-8;
+}

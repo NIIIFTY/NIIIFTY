@@ -23,101 +23,106 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
       <>
         {files.length > 0 && (
           <>
-            <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                  <th scope="col" className="w-16 py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-100 lg:w-32">
-                    {/* Thumbnail column */}
-                  </th>
-                  <th
-                    scope="col"
-                    className="py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-100"
-                  >
-                    <>{t('title')}</>
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-6 py-3.5 text-left text-sm font-semibold text-zinc-900 lg:table-cell dark:text-zinc-100"
-                  >
-                    <>{t('type')}</>
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-6 py-3.5 text-left text-sm font-semibold text-zinc-900 xl:table-cell dark:text-zinc-100"
-                  >
-                    <>{t('modified')}</>
-                  </th>
-                  <th scope="col" className="relative py-3.5 pr-4 pl-3 text-zinc-900 sm:pr-6">
-                    <span className="sr-only">
-                      <>{t('actions')}</>
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {files.map((file: AuthoringFile) => (
-                  <tr
-                    key={file.id}
-                    className="group cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
-                    onClick={() => onSelectFile(file.id!)}
-                  >
-                    <td className="w-16 py-4 pr-3 pl-4 lg:w-32">
-                      <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 lg:h-20 lg:w-24">
-                        {file.processed ? (
-                          <img 
-                            src={getFileUrl('GCS', file.id!, 'thumb.jpg')} 
-                            alt={file.label}
-                            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center text-zinc-500">
-                            <Spinner />
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="max-w-[45vw] overflow-hidden py-4 pr-3 pl-4 text-sm font-medium text-ellipsis whitespace-nowrap text-zinc-900 dark:text-zinc-100">
-                      <div className="flex flex-col">
-                        <span className="font-semibold">{file.label}</span>
-                        <span className="text-xs text-zinc-500 lg:hidden">
-                          {file.type.split('/')[1]} • {new Date(file.modified as any).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="hidden px-6 py-4 text-sm whitespace-nowrap text-zinc-500 lg:table-cell uppercase tracking-tight">
-                      {file.type.split('/')[1]}
-                    </td>
-                    <td className="hidden px-6 py-4 text-sm whitespace-nowrap text-zinc-500 xl:table-cell">
-                      <div className="flex flex-col">
-                        <span>{new Date(file.modified as any).toLocaleDateString()}</span>
-                        <span className="text-xs opacity-60">{new Date(file.modified as any).toLocaleTimeString()}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 pr-4 pl-3 text-right text-sm font-medium sm:pr-6">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent row click
-                          if (
-                            window.confirm(
-                              t('confirmFileDeletion', {
-                                title: file.label,
-                              }),
-                            )
-                          ) {
-                            remove(userAdapter!, file.id!);
-                          }
-                        }}
-                        className="rounded-md px-2 py-1 text-zinc-400 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-500 group-hover:opacity-100"
-                      >
-                        <>{t('delete')}</>
-                      </button>
-                    </td>
+            <div className="mt-8 overflow-hidden shadow ring-1 ring-zinc-200 md:mx-0 md:rounded-lg dark:ring-zinc-800">
+              <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
+                <thead className="bg-zinc-100 dark:bg-zinc-900">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="w-16 py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-100 lg:w-32"
+                    >
+                      {/* Thumbnail column */}
+                    </th>
+                    <th
+                      scope="col"
+                      className="py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-100"
+                    >
+                      <>{t('title')}</>
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-6 py-3.5 text-left text-sm font-semibold text-zinc-900 lg:table-cell dark:text-zinc-100"
+                    >
+                      <>{t('type')}</>
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-6 py-3.5 text-left text-sm font-semibold text-zinc-900 xl:table-cell dark:text-zinc-100"
+                    >
+                      <>{t('modified')}</>
+                    </th>
+                    <th scope="col" className="relative py-3.5 pr-4 pl-3 text-zinc-900 sm:pr-6">
+                      <span className="sr-only">
+                        <>{t('actions')}</>
+                      </span>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-transparent">
+                  {files.map((file: AuthoringFile) => (
+                    <tr
+                      key={file.id}
+                      className="group cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+                      onClick={() => onSelectFile(file.id!)}
+                    >
+                      <td className="w-16 py-4 pr-3 pl-4 lg:w-32">
+                        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 lg:h-20 lg:w-24">
+                          {file.processed ? (
+                            <img
+                              src={getFileUrl('GCS', file.id!, 'thumb.jpg')}
+                              alt={file.label}
+                              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center text-zinc-500">
+                              <Spinner />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="max-w-[45vw] overflow-hidden py-4 pr-3 pl-4 text-sm font-medium text-ellipsis whitespace-nowrap text-zinc-900 dark:text-zinc-100">
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{file.label}</span>
+                          <span className="text-xs text-zinc-500 lg:hidden">
+                            {file.type.split('/')[1]} • {new Date(file.modified as any).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="hidden px-6 py-4 text-sm whitespace-nowrap text-zinc-500 lg:table-cell uppercase tracking-tight">
+                        {file.type.split('/')[1]}
+                      </td>
+                      <td className="hidden px-6 py-4 text-sm whitespace-nowrap text-zinc-500 xl:table-cell">
+                        <div className="flex flex-col">
+                          <span>{new Date(file.modified as any).toLocaleDateString()}</span>
+                          <span className="text-xs opacity-60">
+                            {new Date(file.modified as any).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-4 pr-4 pl-3 text-right text-sm font-medium sm:pr-6">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent row click
+                            if (
+                              window.confirm(
+                                t('confirmFileDeletion', {
+                                  title: file.label,
+                                }),
+                              )
+                            ) {
+                              remove(userAdapter!, file.id!);
+                            }
+                          }}
+                          className="rounded-md px-2 py-1 text-zinc-400 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-500 group-hover:opacity-100"
+                        >
+                          <>{t('delete')}</>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="mt-6 w-full text-sm">
               {loading && <>{t('loading')}</>}
               {!loading && !allFilesLoaded && (
