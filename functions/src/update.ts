@@ -1,5 +1,5 @@
 import { gcsBucket } from './gcs.js';
-import { getIIIFManifestJson } from './iiif.js';
+import { getIIIFManifestJson, createIIIFManifest } from './iiif.js';
 import path from 'path';
 import { uploadTempFilesToFilebase } from './filebase.js';
 import { createTempDir, createDir, deleteDir } from './fs.js';
@@ -9,8 +9,8 @@ import fs from 'fs';
 export default async function updateMetadataDerivatives(fileId, metadata) {
   console.log(`updating derivatives for ${fileId}`);
 
-  // Use the __CID__ placeholder for manifest links; the IPFS proxy will rewrite this to the actual CID.
-  const id = getProxyUrl('__CID__', '');
+  // 1. Generate the GCS-compatible manifest version
+  const gcsBaseUrl = getProxyUrl(fileId, '', 'gcs');
 
   // 1. Download all current derivative files from GCS to a temp directory
   const tempDir = createTempDir();
@@ -27,8 +27,8 @@ export default async function updateMetadataDerivatives(fileId, metadata) {
     }),
   );
 
-  // 2. Generate new iiif manifest JSON based on updated metadata
-  const iiifManifestJSON = getIIIFManifestJson(id, metadata);
+  // 2. Generate new iiif manifest JSON based on updated metadata (GCS version)
+  const iiifManifestJSON = getIIIFManifestJson(gcsBaseUrl, metadata);
 
   // 3. Write it to tempDir/iiif/index.json, overwriting the old one locally
   const localIndexJson = path.join(tempDir, 'iiif/index.json');
@@ -46,12 +46,20 @@ export default async function updateMetadataDerivatives(fileId, metadata) {
     },
   });
 
-  // 5. Re-Upload entire tempDir (with updated manifest) to Storacha to generate a new CID
+  // 5. Phase 2: Generate IPFS-optimized manifest (with CID placeholders)
+  // We overwrite the GCS manifest in the local temp folder before uploading to Filebase
+  const ipfsBaseUrl = getProxyUrl('__CID__', '');
+  await createIIIFManifest(path.join(tempDir, 'iiif'), {
+    ...metadata,
+    manifestId: ipfsBaseUrl
+  });
+
+  // 6. Re-Upload entire tempDir (with updated IPFS manifest) to Filebase to generate a new CID
   const newCid = await uploadTempFilesToFilebase(tempDir);
 
   // 6. CID-based manifests don't require IPNS publishing. 
   // The manifestId in Firestore already points to the pinning proxy.
-  console.log(`Updated exhibit pointing to /ipfs/${newCid}`);
+  console.log(`Updated IIIF manifest pointing to /ipfs/${newCid}`);
 
   // 7. Cleanup
   deleteDir(tempDir);

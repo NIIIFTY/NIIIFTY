@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { adminDb } from '@/lib/firebase/server';
+import { useFirebaseEmulators, firebaseEmulatorConfig } from '@/lib/config';
+
+// Robust Emulator Fix: Ensure host variables are set in the worker context
+if (useFirebaseEmulators && !process.env.FIRESTORE_EMULATOR_HOST) {
+  process.env.FIRESTORE_EMULATOR_HOST = `${firebaseEmulatorConfig.firestore.host}:${firebaseEmulatorConfig.firestore.port}`;
+  process.env.FIREBASE_STORAGE_EMULATOR_HOST = `${firebaseEmulatorConfig.storage.host}:${firebaseEmulatorConfig.storage.port}`;
+  console.log(`[API IPFS] Fail-safe Emulator Injection: Firestore (${process.env.FIRESTORE_EMULATOR_HOST}), Storage (${process.env.FIREBASE_STORAGE_EMULATOR_HOST})`);
+}
 
 // Authorization Guard: Verifies if the CID is officially managed by NIIIFTY
 const verifyCid = unstable_cache(

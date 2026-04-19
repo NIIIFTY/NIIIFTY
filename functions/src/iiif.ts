@@ -5,9 +5,9 @@ import fs from 'fs';
 import { createDir, deleteFile } from './fs.js';
 import extract from 'extract-zip';
 
-// returns iiif manifest json for a given file
-export function getIIIFManifestJson(path, metadata) {
-  const id = `${path}/iiif`;
+export function getIIIFManifestJson(basePath, metadata) {
+  const cleanBase = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+  const id = `${cleanBase}/iiif`;
   const manifestId = `${id}/index.json`;
   const canvasId = `${manifestId}/canvas/0`;
   const annotationPageId = `${manifestId}/canvas/0/annotationpage/0`;

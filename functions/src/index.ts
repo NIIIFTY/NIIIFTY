@@ -14,6 +14,7 @@ import updateMetadataDerivatives from './update.js';
 import { GCS_URL } from './constants.js';
 import { getProxyUrl } from './ipns/index.js';
 import { authenticateAgent, publishIIIFRecord } from './atproto/index.js';
+import { createIIIFManifest } from './iiif.js';
 
 
 // when a file is created in firestore,
@@ -50,8 +51,8 @@ export const fileCreated = functions
 
       console.log(`--- started processing ${originalFile.name} (${metadata.type})---`);
 
-      // Use the __CID__ placeholder for manifest links; the IPFS proxy will rewrite this to the actual CID.
-      metadata.manifestId = getProxyUrl('__CID__', 'iiif/index.json');
+      // Use the local GCS proxy for the cloud bucket manifest
+      metadata.manifestId = getProxyUrl(fileId, '', 'gcs');
 
       const tempDir = createTempDir();
       const tempFilePath = path.join(tempDir, path.basename(originalFile.name));
@@ -80,9 +81,18 @@ export const fileCreated = functions
       // upload the generated files to GCS
       await uploadFilesToGCS(tempDir, fileId);
 
+      // 3. Phase 2: Generate IPFS-optimized manifest (with CID placeholders)
+      // We overwrite the GCS manifest in the temp folder before uploading to Filebase
+      const ipfsBaseUrl = getProxyUrl('__CID__', '');
+      await createIIIFManifest(path.join(tempDir, 'iiif'), {
+        ...metadata,
+        ...processedProps,
+        manifestId: ipfsBaseUrl
+      });
+
       // upload the generated files to filebase
       const cid = await uploadTempFilesToFilebase(tempDir);
-      console.log(`Successfully uploaded exhibit to IPFS with CID: ${cid}`);
+      console.log(`Successfully uploaded IIIF manifest to IPFS with CID: ${cid}`);
 
       // delete the original file as it's no longer needed
       await originalFile.delete();
