@@ -12,7 +12,7 @@ import { createTempDir, deleteDir } from './fs.js';
 import { uploadTempFilesToFilebase } from './filebase.js';
 import updateMetadataDerivatives from './update.js';
 import { GCS_URL } from './constants.js';
-import { getProxyUrl } from './ipns/index.js';
+import { getProxyUrl } from './proxy.js';
 import { authenticateAgent, publishIIIFRecord } from './atproto/index.js';
 import { triggerRevalidation } from './revalidate.js';
 // Removed createIIIFManifest as it is now dynamic

@@ -58,13 +58,3 @@ export async function createImageIIIFDerivatives(imageFilePath, metadata) {
       .on('error', reject),
   );
 }
-
-// NOTE: createGLBIIIFDerivatives and createMP4IIIFDerivatives no longer need to do anything
-// since they previously only generated the manifest JSON, which is now dynamic.
-export async function createGLBIIIFDerivatives() {
-  console.log('GLB derivatives (manifest) now handled dynamically by proxy.');
-}
-
-export async function createMP4IIIFDerivatives() {
-  console.log('MP4 derivatives (manifest) now handled dynamically by proxy.');
-}
