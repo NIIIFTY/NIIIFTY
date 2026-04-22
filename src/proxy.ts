@@ -6,7 +6,7 @@ export const config = {
   matcher: ['/:path*'],
 };
 
-const PUBLIC_PATHS = ['/_next/', '/favicon.ico', '/api/ipns/'];
+const PUBLIC_PATHS = ['/_next/', '/favicon.ico', '/api/gcs/', '/api/ipfs/', '/api/auth'];
 
 export default function proxy(req: NextRequest) {
   const url = req.nextUrl;
