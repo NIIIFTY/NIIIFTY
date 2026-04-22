@@ -42,7 +42,7 @@
     "ipfs-car": "^3.1.0",
     "node-fetch": "2.6.6",
     "puppeteer": "18.1.0",
-    "sharp": "0.31.3",
+    "sharp": "0.34.5",
     "url-join": "4.0.1",
     "w3name": "^1.1.3",
     "yn": "5.0.0"
@@ -63,5 +63,17 @@
     "typescript": "^4.9.0"
   },
   "private": true,
-  "main": "lib/index.js"
+  "main": "lib/index.js",
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": [
+        "linux",
+        "darwin"
+      ],
+      "cpu": [
+        "x64",
+        "arm64"
+      ]
+    }
+  }
 }
