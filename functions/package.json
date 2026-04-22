@@ -63,17 +63,5 @@
     "typescript": "^4.9.0"
   },
   "private": true,
-  "main": "lib/index.js",
-  "pnpm": {
-    "supportedArchitectures": {
-      "os": [
-        "linux",
-        "darwin"
-      ],
-      "cpu": [
-        "x64",
-        "arm64"
-      ]
-    }
-  }
+  "main": "lib/index.js"
 }
