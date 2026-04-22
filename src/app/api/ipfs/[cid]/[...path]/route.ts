@@ -116,9 +116,10 @@ export async function GET(
     if (relativePath.endsWith('.json')) {
       const jsonText = await proxyResponse.text();
       
-      // Replace the __CID__ placeholder with the actual CID from the request URL
-      // This allows NIIIFTY to generate absolute, pinned links without knowing the CID beforehand.
-      const rewrittenJsonText = jsonText.replaceAll('__CID__', cid);
+      // Replace placeholders with actual values
+      const rewrittenJsonText = jsonText
+        .replaceAll('__FS__', 'ipfs')
+        .replaceAll('__ID__', cid);
 
       return new NextResponse(rewrittenJsonText, {
         status: 200,

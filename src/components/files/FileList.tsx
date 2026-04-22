@@ -138,6 +138,43 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
               {!loading && allFilesLoaded && <>{t('noMoreFiles')}</>}
             </div>
           </>
+        {files.length === 0 && !loading && (
+          <div className="mt-12 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-zinc-200 py-20 text-center dark:border-zinc-800">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-900">
+              <svg 
+                className="h-8 w-8 text-zinc-400" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={1.5} 
+                  d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" 
+                />
+              </svg>
+            </div>
+            <h3 className="mt-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              {t('noFilesYet') || 'No files uploaded'}
+            </h3>
+            <p className="mt-2 text-sm text-zinc-500">
+              {t('getStartedByUploading') || 'Get started by uploading your first IIIF asset.'}
+            </p>
+            <div className="mt-8">
+              <a 
+                href="/admin/create"
+                className="inline-flex items-center rounded-md bg-zinc-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              >
+                {t('uploadNewFile') || 'Upload New File'}
+              </a>
+            </div>
+          </div>
+        )}
+        {loading && files.length === 0 && (
+          <div className="mt-20 flex justify-center">
+            <Spinner className="h-8 w-8" />
+          </div>
         )}
       </>
     );

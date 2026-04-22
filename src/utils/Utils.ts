@@ -63,7 +63,7 @@ export const getFileUrl = (
 };
 
 export const getThumbnailUrl = (fs: FileSystem, fileId: string) => {
-  return getFileUrl(fs, `thumb.jpg`, fileId);
+  return getFileUrl(fs, fileId, `thumb.jpg`);
 };
 
 export const copyText = (text: string) => {

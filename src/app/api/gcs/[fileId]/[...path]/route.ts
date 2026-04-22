@@ -109,6 +109,25 @@ export async function GET(
       });
     }
 
+    // 4. Dynamic Version Pinning (URL rewriting for JSON manifests)
+    if (relativePath.endsWith('.json')) {
+      const jsonText = await proxyResponse.text();
+      
+      // Replace placeholders with actual values
+      let rewrittenJsonText = jsonText
+        .replaceAll('__FS__', 'gcs')
+        .replaceAll('__ID__', fileId);
+
+      return new NextResponse(rewrittenJsonText, {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
     // Stream binary data natively
     return new NextResponse(proxyResponse.body, {
       status: 200,

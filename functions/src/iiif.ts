@@ -27,8 +27,8 @@ export async function createImageIIIFDerivatives(imageFilePath, metadata) {
   const imgMetadata = await sharp(imageFilePath).metadata();
 
   // The ID here is used for the @id inside info.json for the image tiles.
-  // We use the baseURL passed from the coordinate logic.
-  const id = metadata.manifestId || `${metadata.baseURL}/${metadata.fileId}`;
+  // We use placeholders that will be replaced by the GCS/IPFS proxies at runtime.
+  const id = `https://niiifty.com/api/__FS__/__ID__/iiif`;
 
   console.log(`generating iiif image tiles for service id: ${id}`);
 
