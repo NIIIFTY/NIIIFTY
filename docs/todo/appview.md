@@ -17,11 +17,16 @@ We can build the AppView components using our existing GCP/Firebase infrastructu
 ### 1. The Firehose Consumer (Google Cloud Run + Bun + @atcute/jetstream)
 
 - **What it does:** A persistent background service powered by the **Bun** runtime and the **`@atcute/jetstream`** library. It maintains a 24/7 WebSocket connection to a public **Jetstream** relay. Jetstream drastically reduces bandwidth and CPU overhead by pre-filtering the firehose and outputting lightweight JSON instead of raw CBOR.
-- **Library Choice:** We use `@atcute/jetstream` because it is specifically designed for this architecture. It handles the WebSocket lifecycle, automatic reconnections, and native JSON parsing of the Jetstream envelope with a clean `for await` iteration pattern.
-- **Cursor Management:** Persistently stores the last processed microsecond timestamp in a Firestore `_system/firehose_cursor` document. The `JetstreamSubscription` class natively tracks the `subscription.cursor`, which we save every 5 seconds (debounced) using `{ merge: true }`. On container restart, the cursor is passed to the constructor to resume exactly where it left off, preventing data loss.
-- **Operations:** The consumer parses the commit events (`event.kind === 'commit'`) and processes `create`, `update`, and `delete` operations for Matadisco records. We use `@atcute/lex-cli` to generate types for the `cx.vmx.matadisco` lexicon, ensuring full type safety when indexing the `record.iiif` block.
-- **Deployment:** Deployed as a **Cloud Run Web Service** using the official `oven/bun` Docker image. Since Bun and atcute are both ESM-first and optimized for speed, cold starts and memory usage are minimized. We configure `--max-instances=1` and `--min-instances=1` to ensure a singleton consumer.
-- **Health Checks:** Includes a tiny HTTP server (using Bun's native `Bun.serve`) that returns `200 OK` for GCP health checks. If the WebSocket stream fails or the library hits a fatal error, the process calls `process.exit(1)` to trigger a Cloud Run restart.
+- **Library Choice:** We use `@atcute/jetstream` because it is specifically designed for this architecture. It handles the WebSocket lifecycle, automatic reconnections, and native JSON parsing of the Jetstream envelope.
+- **Lexicon Type Generation:** To ensure type safety when indexing custom records, we use `@atcute/lex-cli` to generate strict TypeScript definitions from our lexicon JSON.
+  ```bash
+  # Generate types for the AppView consumer
+  npx @atcute/lex-cli generate ./lexicons/cx.vmx.matadisco.json -o ./src/atproto/lexicons.ts
+  ```
+- **Cursor Management:** Persistently stores the last processed microsecond timestamp in a Firestore `_system/firehose_cursor` document. On container restart, the cursor is passed to the constructor to resume exactly where it left off, preventing data loss.
+- **Operations:** The consumer parses the commit events (`event.kind === 'commit'`) and processes `create`, `update`, and `delete` operations for `cx.vmx.matadisco` records.
+- **Deployment:** Deployed as a **Cloud Run Web Service** using the official `oven/bun` Docker image. We configure `--max-instances=1` and `--min-instances=1` to ensure a singleton consumer.
+
 
 ### 2. The Indexer Database (Cloud Firestore)
 
