@@ -67,7 +67,7 @@ export async function GET(
     // 2. Pure Dynamic Manifest Interception
     if (relativePath === 'index.json') {
       const protocol = request.headers.get('x-forwarded-proto') || 'http';
-      const host = request.headers.get('host');
+      const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
       const basePath = `${protocol}://${host}/api/gcs/${fileId}`;
       
       const manifest = generateIIIFManifest(basePath, metadata);

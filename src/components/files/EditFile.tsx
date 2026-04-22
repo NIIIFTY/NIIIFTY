@@ -107,7 +107,7 @@ export function EditFile({ id }: { id: string }) {
   const [manifestId, setManifestId] = useState<string>('');
   const [ipnsName, setIpnsName] = useState<string>('');
   const [atDid, setAtDid] = useState<string>('');
-  const [isProcessed, setIsProcessed] = useState<boolean>(true); // Default to true to avoid flash
+  const [isProcessed, setIsProcessed] = useState<boolean>(false); // Default to false to avoid broken image flashes
   const [isPublishRequested, setIsPublishRequested] = useState<boolean>(false);
 
   const form = useForm<FileFormData>({
@@ -218,11 +218,11 @@ export function EditFile({ id }: { id: string }) {
         },
       ];
       
-      const jpg = getFileUrl(fs, fsID, `original.jpg`);
-      const glb = getFileUrl(fs, fsID, `original.glb`);
-      const mp4 = getFileUrl(fs, fsID, `original.mp4`);
-      const dash = getFileUrl(fs, fsID, `manifest.mpd`);
-      const hls = getFileUrl(fs, fsID, `playlist.m3u8`);
+      const jpg = getFileUrl(fs, fsID, `optimized.jpg`);
+      const glb = getFileUrl(fs, fsID, `optimized.glb`);
+      const mp4 = getFileUrl(fs, fsID, `optimized.mp4`);
+      const dash = getFileUrl(fs, fsID, `dash/optimized.mpd`);
+      const hls = getFileUrl(fs, fsID, `hls/optimized.m3u8`);
       const iiifManifest = getFileUrl(fs, fsID, `index.json`);
 
       return (
@@ -233,18 +233,27 @@ export function EditFile({ id }: { id: string }) {
               <Info size={16} />
               <h3 className="text-sm font-semibold uppercase tracking-wider">{t('preview')}</h3>
             </div>
-            <div className="group relative overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
-              <a href={getFileUrl(fs, fsID, `thumb.jpg`)} target="_blank" rel="noreferrer" className="block aspect-square w-full">
-                <img 
-                  src={getFileUrl(fs, fsID, `thumb.jpg`)} 
-                  alt={label} 
-                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                />
-              </a>
-              <div className="absolute inset-x-0 bottom-0 flex justify-center gap-4 bg-zinc-900/80 p-3 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-                <a href={getFileUrl(fs, fsID, `regular.jpg`)} target="_blank" className="text-xs font-medium text-white hover:underline">{t('regular')}</a>
-                <a href={getFileUrl(fs, fsID, `small.jpg`)} target="_blank" className="text-xs font-medium text-white hover:underline">{t('small')}</a>
-              </div>
+            <div className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+              {isProcessed ? (
+                <>
+                  <a href={getFileUrl(fs, fsID, `thumb.jpg`)} target="_blank" rel="noreferrer" className="block aspect-square w-full">
+                    <img 
+                      src={getFileUrl(fs, fsID, `thumb.jpg`)} 
+                      alt={label} 
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  </a>
+                  <div className="absolute inset-x-0 bottom-0 flex justify-center gap-4 bg-zinc-900/80 p-3 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                    <a href={getFileUrl(fs, fsID, `regular.jpg`)} target="_blank" className="text-xs font-medium text-white hover:underline">{t('regular')}</a>
+                    <a href={getFileUrl(fs, fsID, `small.jpg`)} target="_blank" className="text-xs font-medium text-white hover:underline">{t('small')}</a>
+                  </div>
+                </>
+              ) : (
+                <div className="flex aspect-square w-full flex-col items-center justify-center gap-4">
+                  <Spinner className="h-8 w-8 text-zinc-400" />
+                  <p className="text-[10px] font-medium uppercase tracking-widest text-zinc-400">Generating Assets</p>
+                </div>
+              )}
             </div>
             
             <div className="space-y-4">
