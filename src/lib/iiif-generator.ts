@@ -11,7 +11,7 @@ export function generateIIIFManifest(basePath: string, metadata: NiiiftyFile) {
   const cleanBase = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
   
   // Canonical IDs
-  const manifestId = `${cleanBase}/iiif/index.json`;
+  const manifestId = `${cleanBase}/index.json`;
   const canvasId = `${manifestId}/canvas/0`;
   const annotationPageId = `${manifestId}/canvas/0/annotationpage/0`;
   const annotationId = `${manifestId}/canvas/0/annotation/0`;

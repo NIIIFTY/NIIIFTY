@@ -223,7 +223,7 @@ export function EditFile({ id }: { id: string }) {
       const mp4 = getFileUrl(fs, fsID, `original.mp4`);
       const dash = getFileUrl(fs, fsID, `manifest.mpd`);
       const hls = getFileUrl(fs, fsID, `playlist.m3u8`);
-      const iiifManifest = getFileUrl(fs, fsID, `manifest.json`);
+      const iiifManifest = getFileUrl(fs, fsID, `index.json`);
 
       return (
         <div className="space-y-8">

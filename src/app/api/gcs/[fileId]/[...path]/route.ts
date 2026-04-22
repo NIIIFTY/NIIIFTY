@@ -65,7 +65,7 @@ export async function GET(
     }
 
     // 2. Pure Dynamic Manifest Interception
-    if (relativePath === 'iiif/index.json') {
+    if (relativePath === 'index.json') {
       const protocol = request.headers.get('x-forwarded-proto') || 'http';
       const host = request.headers.get('host');
       const basePath = `${protocol}://${host}/api/gcs/${fileId}`;
