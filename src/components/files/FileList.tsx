@@ -138,6 +138,7 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
               {!loading && allFilesLoaded && <>{t('noMoreFiles')}</>}
             </div>
           </>
+        )}
         {files.length === 0 && !loading && (
           <div className="mt-12 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-zinc-200 py-20 text-center dark:border-zinc-800">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-900">
