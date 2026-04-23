@@ -7,7 +7,8 @@
     "build:functions": "pnpm --prefix functions build",
     "start": "next start",
     "deploy": "pnpm build:functions && firebase deploy --only firestore,storage,functions",
-    "emulate": "pnpm build:functions && firebase emulators:start"
+    "emulate": "pnpm build:functions && firebase emulators:start",
+    "atproto:delete": "node scripts/delete-atproto-record.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "4.5.2",
@@ -46,12 +47,14 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@atproto/api": "^0.19.11",
     "@tailwindcss/postcss": "^4",
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "autoprefixer": "^10.4.7",
+    "dotenv": "^17.4.2",
     "eslint-config-next": "15.5.6",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",

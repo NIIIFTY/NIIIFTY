@@ -14,7 +14,7 @@ export default function CreateFilePage() {
       signedInContent={
         <Section>
           <div className="w-full">
-             <div className="mb-12 border-b border-zinc-200 pb-8 dark:border-zinc-800">
+             <div className="mb-12">
                <H1 variant="small">Upload Files</H1>
                <p className="mt-2 text-sm text-zinc-500">Drag and drop files to add them to your NIIIFTY library.</p>
              </div>

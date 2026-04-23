@@ -407,7 +407,7 @@ export function EditFile({ id }: { id: string }) {
         <div className="relative w-full">
 
 
-          <header className="mb-12 flex flex-col items-start justify-between gap-4 border-b border-zinc-200 pb-8 dark:border-zinc-800 xl:flex-row xl:items-center">
+          <header className="mb-12 flex flex-col items-start justify-between gap-4 xl:flex-row xl:items-center">
             <div className="space-y-1">
               <H1 variant="small" className="font-bold">{label}</H1>
               <div className="flex items-center gap-4 text-xs text-zinc-500 uppercase tracking-widest">
