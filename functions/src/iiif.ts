@@ -28,9 +28,10 @@ export async function createImageIIIFDerivatives(imageFilePath, metadata) {
 
   // The ID here is used for the @id inside info.json for the image tiles.
   // We use placeholders that will be replaced by the GCS/IPFS proxies at runtime.
-  const id = `https://niiifty.com/api/__FS__/__ID__/iiif`;
+  // We provide the parent path, and sharp will append the basename 'iiif' to it.
+  const id = `https://niiifty.com/api/__FS__/__ID__`;
 
-  console.log(`generating iiif image tiles for service id: ${id}`);
+  console.log(`generating iiif image tiles for service id: ${id}/iiif`);
 
   const readStream = fs.createReadStream(imageFilePath);
   const writeStream = fs.createWriteStream(zipFile);
