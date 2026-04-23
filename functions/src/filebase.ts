@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
@@ -6,7 +6,7 @@ import * as path from 'path';
 
 const execAsync = promisify(exec);
 
-export async function uploadTempFilesToFilebase(tempDirPath: string): Promise<string> {
+export async function uploadTempFilesToFilebase(tempDirPath: string, fileId: string): Promise<string> {
   const s3Client = new S3Client({
     endpoint: 'https://s3.filebase.com',
     region: 'us-east-1',
@@ -16,7 +16,7 @@ export async function uploadTempFilesToFilebase(tempDirPath: string): Promise<st
     },
   });
 
-  const carFileName = `${path.basename(tempDirPath)}.car`;
+  const carFileName = `${fileId}.car`;
   // Place the car buffer directly adjacent to the temp directory
   const outCarPath = path.join(path.dirname(tempDirPath), carFileName);
 
@@ -58,6 +58,31 @@ export async function uploadTempFilesToFilebase(tempDirPath: string): Promise<st
     return Array.isArray(cid) ? cid[0] : cid;
   } catch (err: any) {
     console.error('FILEBASE UPLOAD ERROR:', err.message);
+    throw err;
+  }
+}
+
+export async function deleteFilebaseFiles(fileId: string): Promise<void> {
+  const s3Client = new S3Client({
+    endpoint: 'https://s3.filebase.com',
+    region: 'us-east-1',
+    credentials: {
+      accessKeyId: process.env.FILEBASE_ACCESS_TOKEN || 'placeholder',
+      secretAccessKey: process.env.FILEBASE_SECRET_KEY || 'placeholder',
+    },
+  });
+
+  try {
+    console.log(`Deleting ${fileId}.car from Filebase S3...`);
+    const command = new DeleteObjectCommand({
+      Bucket: 'niiifty',
+      Key: `${fileId}.car`,
+    });
+    
+    await s3Client.send(command);
+    console.log(`Successfully deleted ${fileId}.car from Filebase.`);
+  } catch (err: any) {
+    console.error('FILEBASE DELETION ERROR:', err.message);
     throw err;
   }
 }

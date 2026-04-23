@@ -9,11 +9,11 @@ import processImage from './image.js';
 import processGLB from './glb.js';
 import processMP4 from './mp4.js';
 import { createTempDir, deleteDir } from './fs.js';
-import { uploadTempFilesToFilebase } from './filebase.js';
+import { uploadTempFilesToFilebase, deleteFilebaseFiles } from './filebase.js';
 import updateMetadataDerivatives from './update.js';
 import { GCS_URL } from './constants.js';
 import { getProxyUrl } from './proxy.js';
-import { authenticateAgent, publishIIIFRecord } from './atproto/index.js';
+import { authenticateAgent, publishIIIFRecord, deleteIIIFRecord } from './atproto/index.js';
 import { triggerRevalidation } from './revalidate.js';
 // Removed createIIIFManifest as it is now dynamic
 
@@ -86,7 +86,7 @@ export const fileCreated = functions
       // upload the generated files to filebase
       // Note: We no longer generate a static manifest here. 
       // The proxies will generate it on-the-fly using the CID returned below.
-      const cid = await uploadTempFilesToFilebase(tempDir);
+      const cid = await uploadTempFilesToFilebase(tempDir, fileId);
       console.log(`Successfully uploaded IIIF manifest to IPFS with CID: ${cid}`);
 
       // delete the original file as it's no longer needed
@@ -226,10 +226,46 @@ export const fileDeleted = functions
   .runWith({
     timeoutSeconds: 300,
     memory: '1GB',
+    secrets: [
+      'ATPROTO_SERVICE',
+      'ATPROTO_IDENTIFIER',
+      'ATPROTO_PASSWORD',
+      'FILEBASE_ACCESS_TOKEN',
+      'FILEBASE_SECRET_KEY',
+    ],
   })
   .firestore.document('files/{fileId}')
-  .onDelete(async (_snap, context) => {
+  .onDelete(async (snap, context) => {
     const fileId = context.params.fileId;
+    const metadata = snap.data();
+
+    if (metadata.atDid) {
+      try {
+        console.log(`Attempting to delete AT Protocol record for ${fileId}...`);
+        if (process.env.ATPROTO_SERVICE && process.env.ATPROTO_IDENTIFIER && process.env.ATPROTO_PASSWORD) {
+          const agent = await authenticateAgent(
+            process.env.ATPROTO_SERVICE,
+            process.env.ATPROTO_IDENTIFIER,
+            process.env.ATPROTO_PASSWORD,
+          );
+          await deleteIIIFRecord(agent, fileId, metadata.atDid);
+          console.log(`Successfully deleted AT Protocol record for ${fileId}`);
+        } else {
+          console.error('AT Protocol secrets missing. Cannot delete record.');
+        }
+      } catch (e) {
+        console.error(`Failed to delete AT Protocol record for ${fileId}:`, e);
+      }
+    }
+
+    if (metadata.cid) {
+      try {
+        console.log(`Attempting to delete Filebase record for ${fileId}...`);
+        await deleteFilebaseFiles(fileId);
+      } catch (e) {
+        console.error(`Failed to delete Filebase record for ${fileId}:`, e);
+      }
+    }
 
     // Get a list of all the files in the folder
     const [files] = await gcsBucket.getFiles({

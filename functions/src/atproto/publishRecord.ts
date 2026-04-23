@@ -71,3 +71,28 @@ export async function publishIIIFRecord(
 
   return { uri: response.data.uri, cid: response.data.cid };
 }
+
+/**
+ * Deletes a record from the AT Protocol representing a IIIF Manifest.
+ *
+ * @param {AtpAgent} agent - The authenticated AtpAgent instance.
+ * @param {string} rkey - The deterministic record key (e.g., the fileId).
+ * @param {string} repo - The DID of the repository (defaults to agent's session DID).
+ * @returns {Promise<void>}
+ */
+export async function deleteIIIFRecord(
+  agent: AtpAgent,
+  rkey: string,
+  repo?: string
+): Promise<void> {
+  const targetRepo = repo || agent.session?.did;
+  if (!targetRepo) {
+    throw new Error('AT Protocol Agent lacks an active session DID and no repo DID was provided. Authentication failed.');
+  }
+
+  await agent.com.atproto.repo.deleteRecord({
+    repo: targetRepo,
+    collection: 'cx.vmx.matadisco',
+    rkey: rkey,
+  });
+}
