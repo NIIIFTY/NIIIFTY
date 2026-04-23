@@ -162,14 +162,16 @@ export function EditFile({ id }: { id: string }) {
   const isMounted = useMounted();
   const label = watch('label') || '';
 
-  const onSubmit = async (data: FileFormData) => {
+  const performSave = async (data: FileFormData, additionalFields: Partial<AuthoringFile> = {}) => {
+    if (!update) return;
+
     // Convert entries back to dictionary
     const metadata: Record<string, string> = {};
     data.metadataEntries.forEach(entry => {
       metadata[entry.key] = entry.value;
     });
 
-    await update!(
+    await update(
       userAdapter!,
       id as string,
       {
@@ -179,23 +181,22 @@ export function EditFile({ id }: { id: string }) {
         rights: data.rights as LicenseURL,
         tags: data.tags,
         metadata: metadata,
+        ...additionalFields
       } as AuthoringFile,
     );
+  };
+
+  const onSubmit = async (data: FileFormData) => {
+    await performSave(data);
     window.location.href = '/admin/';
   };
 
   const onPublishAtproto = async () => {
-    if (!update) return;
+    // Validate form before publishing
+    const isValid = await form.trigger();
+    if (!isValid) return;
     
-    // Trigger the manual publish flag in Firestore
-    await update(
-      userAdapter!,
-      id as string,
-      {
-        atprotoPublishRequested: true
-      } as AuthoringFile
-    );
-    // The UI will re-render via useAuthoringFile listener and show "Broadcasting..."
+    await performSave(form.getValues(), { atprotoPublishRequested: true });
   };
 
   if (user) {
