@@ -7,6 +7,8 @@ import { getFileUrl } from '@/utils/Utils';
 import { Spinner } from '@/components/ui/spinner';
 import { useMounted } from '@/hooks/useMounted';
 import { AuthoringFile } from '@/utils/Types';
+import UploadFilesButton from '@/components/files/UploadFilesButton';
+
 
 export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => void }) => {
   const { user, userAdapter } = useUserStore();
@@ -163,12 +165,7 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
               {t('getStartedByUploading') || 'Get started by uploading your first IIIF asset.'}
             </p>
             <div className="mt-8">
-              <a 
-                href="/admin/create"
-                className="inline-flex items-center rounded-md bg-zinc-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              >
-                {t('uploadNewFile') || 'Upload New File'}
-              </a>
+              <UploadFilesButton.Small href="/admin/create" />
             </div>
           </div>
         )}
