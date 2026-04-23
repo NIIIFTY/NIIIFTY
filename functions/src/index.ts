@@ -151,7 +151,7 @@ export const fileUpdated = functions
     // if the only things that changed were backend properties (like cid), ignore to prevent infinite loops
     // UNLESS a manual AT Protocol publish was requested
     if (
-      !metadata.atprotoPublishRequested &&
+      !metadata.broadcasting &&
       previousValue.label === metadata.label &&
       previousValue.summary === metadata.summary &&
       previousValue.rights === metadata.rights &&
@@ -174,7 +174,7 @@ export const fileUpdated = functions
 
     // NIIIFTY 3: Manual Broadcast to ATProtocol
     if (
-      metadata.atprotoPublishRequested &&
+      metadata.broadcasting &&
       metadata.cid &&
       process.env.ATPROTO_SERVICE &&
       process.env.ATPROTO_IDENTIFIER &&
@@ -188,7 +188,7 @@ export const fileUpdated = functions
         );
         
         // Use deterministic pinning URL for the AT Protocol resource
-        const pinnedUrl = getProxyUrl(metadata.cid, 'iiif/index.json');
+        const pinnedUrl = getProxyUrl(metadata.cid, 'index.json');
 
         await publishIIIFRecord(agent, fileId, {
           id: pinnedUrl,
@@ -203,13 +203,13 @@ export const fileUpdated = functions
         });
 
         updatedProps.atDid = agent.session.did;
-        updatedProps.atprotoPublishRequested = false;
+        updatedProps.broadcasting = false;
         
         console.log(`Successfully manual-broadcasted ${fileId} to AT Protocol`);
       } catch (e) {
         console.error(`Failed to manual-broadcast to AT Protocol:`, e);
         // Reset the flag even on failure to prevent infinite loops, or handle error state
-        updatedProps.atprotoPublishRequested = false;
+        updatedProps.broadcasting = false;
       }
     }
 

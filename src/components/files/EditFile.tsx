@@ -108,7 +108,7 @@ export function EditFile({ id }: { id: string }) {
   const [ipnsName, setIpnsName] = useState<string>('');
   const [atDid, setAtDid] = useState<string>('');
   const [isProcessed, setIsProcessed] = useState<boolean>(false); // Default to false to avoid broken image flashes
-  const [isPublishRequested, setIsPublishRequested] = useState<boolean>(false);
+  const [broadcasting, setIsBroadcasting] = useState<boolean>(false);
 
   const form = useForm<FileFormData>({
     resolver: zodResolver(fileSchema) as any,
@@ -152,7 +152,7 @@ export function EditFile({ id }: { id: string }) {
         setAtDid(file.atDid);
       }
       setIsProcessed(!!file.processed);
-      setIsPublishRequested(!!file.atprotoPublishRequested);
+      setIsBroadcasting(!!file.broadcasting);
     },
     onError: () => {
       setPageError('fileNotFound');
@@ -196,7 +196,7 @@ export function EditFile({ id }: { id: string }) {
     const isValid = await form.trigger();
     if (!isValid) return;
     
-    await performSave(form.getValues(), { atprotoPublishRequested: true });
+    await performSave(form.getValues(), { broadcasting: true });
   };
 
   if (user) {
@@ -372,10 +372,10 @@ export function EditFile({ id }: { id: string }) {
                   variant={atDid ? "outline" : "default"}
                   size="sm"
                   onClick={onPublishAtproto}
-                  disabled={isPublishRequested || !isProcessed}
+                  disabled={broadcasting || !isProcessed}
                   className="font-semibold"
                 >
-                  {isPublishRequested ? "Broadcasting..." : atDid ? "Update" : "Publish"}
+                  {broadcasting ? "Broadcasting..." : atDid ? "Update" : "Publish"}
                 </Button>
               </div>
 
@@ -388,7 +388,7 @@ export function EditFile({ id }: { id: string }) {
                     </div>
                   </div>
                   <a 
-                    href={`https://atproto-browser.vercel.app/${atDid}/at://${atDid}/cx.vmx.matadisco/${id}`}
+                    href={`https://atproto-browser.vercel.app/at/${atDid}/cx.vmx.matadisco/${id}`}
                     target="_blank"
                     className="flex w-full items-center justify-center rounded-lg bg-white py-2 text-xs font-medium border border-zinc-200 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
                   >
