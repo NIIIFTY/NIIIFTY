@@ -188,7 +188,7 @@ export const fileUpdated = functions
         );
         
         // Use deterministic pinning URL for the AT Protocol resource
-        const pinnedUrl = getProxyUrl(metadata.cid, 'index.json');
+        const pinnedUrl = getProxyUrl(metadata.cid, 'iiif/index.json');
 
         await publishIIIFRecord(agent, fileId, {
           id: pinnedUrl,
