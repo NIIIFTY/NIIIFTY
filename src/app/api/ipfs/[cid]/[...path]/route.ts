@@ -13,8 +13,8 @@ if (useFirebaseEmulators && !process.env.FIRESTORE_EMULATOR_HOST) {
 }
 
 // Authorization Guard: Verifies if the CID is officially managed by NIIIFTY
-const verifyCid = unstable_cache(
-  async (cid: string): Promise<NiiiftyFile | null> => {
+const verifyCid = (cid: string) => unstable_cache(
+  async () => {
     try {
       const querySnapshot = await adminDb
         .collection('files')
@@ -31,12 +31,12 @@ const verifyCid = unstable_cache(
       throw error;
     }
   },
-  ['ipfs-verification'],
+  ['ipfs-verification', cid],
   { 
-    revalidate: 3600, // Cache for 1 hour
-    tags: ['ipfs', 'files'] 
+    revalidate: 86400, // Cache for 24 hours
+    tags: ['ipfs', 'files', `cid-${cid}`] 
   }
-);
+)();
 
 export async function GET(
   request: Request,
@@ -82,7 +82,7 @@ export async function GET(
       return new NextResponse(JSON.stringify(manifest, null, 2), {
         status: 200,
         headers: {
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         }
@@ -124,7 +124,7 @@ export async function GET(
       return new NextResponse(rewrittenJsonText, {
         status: 200,
         headers: {
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         }
@@ -135,7 +135,7 @@ export async function GET(
     return new NextResponse(proxyResponse.body, {
       status: 200,
       headers: {
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
         'Content-Type': proxyResponse.headers.get('content-type') || 'application/octet-stream',
         'Access-Control-Allow-Origin': '*',
       }

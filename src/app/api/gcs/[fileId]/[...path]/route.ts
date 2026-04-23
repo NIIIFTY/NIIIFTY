@@ -13,23 +13,23 @@ if (useFirebaseEmulators && !process.env.FIRESTORE_EMULATOR_HOST) {
 }
 
 // Authorization Guard: Verifies if the FileID is officially managed by NIIIFTY
-const verifyFileId = unstable_cache(
-  async (fileId: string): Promise<NiiiftyFile | null> => {
+const verifyFileId = (fileId: string) => unstable_cache(
+  async () => {
     try {
       const doc = await adminDb.collection('files').doc(fileId).get();
       if (!doc.exists) return null;
       return { fileId: doc.id, ...doc.data() } as NiiiftyFile;
     } catch (error: any) {
-      console.error('Firestore GCS Verification Guard Error Detail:', error);
+      console.error('Firestore Verification Guard Error Detail:', error);
       throw error;
     }
   },
-  ['gcs-verification'],
+  ['gcs-verification', fileId],
   { 
-    revalidate: 3600, 
-    tags: ['gcs', 'files'] // The specific fileId tag will be added via the cache key automatically in some Next.js versions, but we should be explicit if we use revalidateTag(fileId)
+    revalidate: 86400, // Cache for 24 hours
+    tags: ['gcs', 'files', `file-${fileId}`] 
   }
-);
+)();
 
 export async function GET(
   request: Request,
@@ -75,7 +75,7 @@ export async function GET(
       return new NextResponse(JSON.stringify(manifest, null, 2), {
         status: 200,
         headers: {
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         }
@@ -121,7 +121,7 @@ export async function GET(
       return new NextResponse(rewrittenJsonText, {
         status: 200,
         headers: {
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         }
@@ -132,7 +132,7 @@ export async function GET(
     return new NextResponse(proxyResponse.body, {
       status: 200,
       headers: {
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
         'Content-Type': proxyResponse.headers.get('content-type') || 'application/octet-stream',
         'Access-Control-Allow-Origin': '*',
       }

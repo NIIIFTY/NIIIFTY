@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, Info, Globe, HardDrive, FileText, Tags } from 'lucide-react';
+import { X, Plus, Info, Globe, HardDrive, FileText, Tags, ExternalLink } from 'lucide-react';
 import { BlueskyIcon } from '../icons/Bluesky';
 import Section from '../Section';
 import H1 from '../H1';
@@ -291,52 +291,56 @@ export function EditFile({ id }: { id: string }) {
                 setFS(name);
                 setFSID(name === 'GCS' ? id : cid);
               }}
+              disabled={!isProcessed}
             />
 
             <div className="mt-8 space-y-6">
               {(type === MIMETYPES.JPG || type === MIMETYPES.PNG || type === MIMETYPES.TIF || type === MIMETYPES.TIFF) && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('JPG')}</Label>
-                  <CopyText id="jpg" text={jpg} />
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('JPG')}</Label>
+                    {isProcessed && (
+                      <a href={jpg} target="_blank" rel="noreferrer" className="text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
+                  <CopyText id="jpg" text={jpg} disabled={!isProcessed} />
                 </div>
               )}
               {type === MIMETYPES.GLB && (
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('glb')}</Label>
-                  <CopyText id="glb" text={glb} />
+                  <CopyText id="glb" text={glb} disabled={!isProcessed} />
                 </div>
               )}
               {type === MIMETYPES.MP4 && (
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('mp4')}</Label>
-                    <CopyText id="mp4" text={mp4} />
+                    <CopyText id="mp4" text={mp4} disabled={!isProcessed} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('dash')}</Label>
-                    <CopyText id="dash" text={dash} />
+                    <CopyText id="dash" text={dash} disabled={!isProcessed} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('hls')}</Label>
-                    <CopyText id="hls" text={hls} />
+                    <CopyText id="hls" text={hls} disabled={!isProcessed} />
                   </div>
                 </div>
               )}
 
               <div className="space-y-2 pt-4">
-                <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('iiifManifest')}</Label>
-                <div className="relative group">
-                  <CopyText id="iiif" text={iiifManifest} />
-                  <a
-                    href={`https://www.universalviewer.dev/#?iiifManifestId=${iiifManifest}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg transition-transform hover:scale-110 dark:bg-zinc-100 dark:text-zinc-900"
-                    title={t('viewOnUVLink')}
-                  >
-                    <Globe size={12} />
-                  </a>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('iiifManifest')}</Label>
+                  {isProcessed && (
+                    <a href={`https://www.universalviewer.dev/#?iiifManifestId=${iiifManifest}`} target="_blank" rel="noreferrer" className="text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100" title={t('viewOnUVLink')}>
+                      <ExternalLink size={12} />
+                    </a>
+                  )}
                 </div>
+                <CopyText id="iiif" text={iiifManifest} disabled={!isProcessed} />
               </div>
             </div>
           </div>
@@ -587,7 +591,7 @@ export function EditFile({ id }: { id: string }) {
                       <div className="space-y-6">
                         <div className="flex items-center justify-between">
                           <Label className="text-zinc-600 dark:text-zinc-400">Custom Metadata Fields</Label>
-                          <Button type="button" variant="outline" size="sm" onClick={() => append({ key: '', value: '' })} className="h-8 border-dashed">
+                          <Button type="button" variant="outline" size="sm" onClick={() => append({ key: '', value: '' })} className="h-8">
                             <Plus size={14} className="mr-2" />
                             Add Field
                           </Button>

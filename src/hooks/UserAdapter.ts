@@ -9,6 +9,7 @@ import {
 import { File } from "@/utils/Types";
 import packageJSON from "../../package.json";
 import { User } from "firebase/auth";
+import { revalidateFile } from "@/app/actions/revalidate";
 
 export class UserAdapter {
   user: User;
@@ -43,6 +44,13 @@ export class UserAdapter {
       modified: timestamp(),
       softwareVersion: packageJSON.version,
     });
+
+    // Trigger cache revalidation on the server
+    try {
+      await revalidateFile(id, values.cid);
+    } catch (e) {
+      console.warn('[UserAdapter] Revalidation trigger failed (non-fatal):', e);
+    }
   }
 
   async removeFile(id: string) {

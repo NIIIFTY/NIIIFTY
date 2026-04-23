@@ -2,12 +2,15 @@ import { useState, useRef } from "react";
 import { cn, copyText } from "@/utils/Utils";
 import { Check, Copy } from "lucide-react";
 
-const CopyText = ({ id, text }: { id: string; text: string }) => {
+const CopyText = ({ id, text, disabled }: { id: string; text: string; disabled?: boolean }) => {
   const [copied, setCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 transition-colors focus-within:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900/50 dark:focus-within:border-zinc-700">
+    <div className={cn(
+      "flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 transition-colors focus-within:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900/50 dark:focus-within:border-zinc-700",
+      disabled && "opacity-50 grayscale pointer-events-none"
+    )}>
       <input
         ref={inputRef}
         id={id}
@@ -15,10 +18,13 @@ const CopyText = ({ id, text }: { id: string; text: string }) => {
         type="text"
         value={text}
         readOnly
+        disabled={disabled}
         className="h-full flex-1 bg-transparent px-3 text-xs font-medium text-zinc-600 outline-none dark:text-zinc-300"
         onClick={() => {
-          inputRef.current?.focus();
-          inputRef.current?.select();
+          if (!disabled) {
+            inputRef.current?.focus();
+            inputRef.current?.select();
+          }
         }}
       />
       <button
