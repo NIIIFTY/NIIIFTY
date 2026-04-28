@@ -16,15 +16,14 @@ export function NavItems() {
 
   return (
     <>
-      {/* {demoSite && !authoringState && (
-        <li>
-          <Link href="/features/">
-            <a className="text-base text-black no-underline transition-colors duration-500 hover:text-gray-600">
-              <>{t("features")}</>
-            </a>
-          </Link>
-        </li>
-      )} */}
+      <li>
+        <Link
+          href="/explore"
+          className="text-base text-black no-underline transition-colors duration-500 hover:text-gray-600 dark:text-white"
+        >
+          {t('explore')}
+        </Link>
+      </li>
       {username && (
         <li>
           <Link

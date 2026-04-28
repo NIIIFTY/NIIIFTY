@@ -24,7 +24,7 @@ import {
 } from 'firebase/analytics';
 
 const firebaseApp: FirebaseApp = initializeApp(firebaseConfig);
-const functions: Functions = getFunctions(firebaseApp, 'europe-west3');
+export const functions: Functions = getFunctions(firebaseApp, 'europe-west1');
 
 // Auth exports
 export const auth = getAuth(firebaseApp);
