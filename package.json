@@ -3,10 +3,14 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm build:functions && next build",
+    "build": "pnpm build:functions && pnpm build:appview && next build",
     "build:functions": "pnpm --prefix functions build",
+    "build:appview": "pnpm --prefix appview build",
     "start": "next start",
-    "deploy": "pnpm build:functions && firebase deploy --only firestore,storage,functions",
+    "deploy": "pnpm deploy:firebase && pnpm deploy:appview",
+    "deploy:firebase": "pnpm build:functions && firebase deploy --only firestore,storage,functions",
+    "deploy:functions": "pnpm build:functions && firebase deploy --only functions",
+    "deploy:appview": "gcloud run deploy matadisco-consumer --source ./appview --region europe-west1 --min-instances 1 --max-instances 1 --set-env-vars GCLOUD_PROJECT=niiifty-bd2e2 --no-allow-unauthenticated",
     "emulate": "pnpm build:functions && firebase emulators:start",
     "atproto:delete": "node scripts/delete-atproto-record.mjs"
   },

@@ -15,8 +15,10 @@ import { GCS_URL } from './constants.js';
 import { getProxyUrl } from './proxy.js';
 import { authenticateAgent, publishIIIFRecord, deleteIIIFRecord } from './atproto/index.js';
 import { triggerRevalidation } from './revalidate.js';
+import { generateFileSummary } from './ai.js';
 // Removed createIIIFManifest as it is now dynamic
 
+export * as appview from './api/appview.js';
 
 // when a file is created in firestore,
 // generate derivatives, and replicate to filebase
@@ -77,6 +79,17 @@ export const fileCreated = functions
         case 'model/gltf-binary': {
           processedProps = await processGLB(tempFilePath, metadata);
           break;
+        }
+      }
+
+      // NIIIFTY AI: Automatically generate a summary if none exists
+      if (!metadata.summary) {
+        const aiSummary = await generateFileSummary(tempFilePath, metadata.type);
+        if (aiSummary) {
+          if (!processedProps) processedProps = {};
+          processedProps.summary = aiSummary;
+          // Also flag it so the UI can show it was AI-generated
+          processedProps.aiGenerated = true;
         }
       }
 

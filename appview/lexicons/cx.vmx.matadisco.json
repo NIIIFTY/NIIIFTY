@@ -1,0 +1,44 @@
+{
+  "lexicon": 1,
+  "id": "cx.vmx.matadisco",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A Matadisco media record, used in NIIIFTY for IIIF metadata publishing.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["resource", "publishedAt"],
+        "properties": {
+          "resource": {
+            "type": "string",
+            "description": "The stable IPNS URL resolving to the manifest (IIIF id)."
+          },
+          "cid": {
+            "type": "string",
+            "description": "Optional immutable CID for IPFS verifiability."
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxLength": 10
+          },
+          "iiif": {
+            "type": "ref",
+            "ref": "io.iiif.metadata"
+          },
+          "preview": {
+            "type": "unknown",
+            "description": "Optional thumbnail preview object."
+          }
+        }
+      }
+    }
+  }
+}

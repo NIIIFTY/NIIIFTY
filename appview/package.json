@@ -1,0 +1,25 @@
+{
+  "name": "appview",
+  "version": "1.0.0",
+  "description": "Jetstream Firehose Consumer and AppView Indexer for NIIIFTY",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --target bun --outdir dist",
+    "deploy": "gcloud run deploy matadisco-consumer --source . --region europe-west1 --min-instances 1 --max-instances 1 --set-env-vars GCLOUD_PROJECT=niiifty-bd2e2 --no-allow-unauthenticated",
+    "generate:lexicons": "lex-cli generate"
+  },
+  "dependencies": {
+    "@atcute/client": "latest",
+    "@atcute/jetstream": "latest",
+    "@atcute/lexicons": "latest",
+    "firebase-admin": "^12.6.0"
+  },
+  "devDependencies": {
+    "@atcute/lex-cli": "latest",
+    "bun-types": "latest",
+    "typescript": "^5.0.0"
+  }
+}

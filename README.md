@@ -86,7 +86,26 @@ To ensure long-term verifiability of exhibits, we implemented a **deterministic 
 ### 3. Serverless AppView
 
 - **The Decision**: We built a lightweight, Firebase-native AppView for indexing `cx.vmx.matadisco` records.
-- **The Rationale**: By using **Cloud Run + Bun + Jetstream**, we achieve 90% cost reduction compared to hosting a full AT Protocol Relay, while maintaining deep semantic search capabilities for exhibit manifests.
+- **The Rationale**: By using **Cloud Run + Bun + Jetstream**, we achieve 90% cost reduction compared to hosting a full AT Protocol Relay. We integrate this with **Vertex AI** and **Firestore Vector Search** to provide high-performance semantic discovery without third-party dependencies like Algolia.
+
+## AppView & Semantic Search
+
+NIIIFTY implements a native AT Protocol AppView to index and search exhibits across the network.
+
+### 1. The Jetstream Consumer (`/appview`)
+A persistent **Bun** service running on **Cloud Run** that subscribes to the AT Protocol firehose via **Jetstream**. It filters for `cx.vmx.matadisco` records and indexes them into a `matadisco_index` Firestore collection.
+
+### 2. AI-Powered Indexing
+We use the official **Vector Search with Firestore** extension to generate semantic embeddings.
+- **Provider**: Vertex AI (`europe-west1`)
+- **Model**: `text-embedding-004` (768 dimensions)
+- **Input**: A combined `searchText` field (Label + Summary)
+- **Trigger**: Automatic on Firestore document writes.
+
+### 3. Semantic Search API
+A callable Firebase Cloud Function (`searchAppView`) provides fuzzy, vector-based search.
+- **Logic**: Converts user queries into vectors using Vertex AI and performs a `findNearest` query on Firestore.
+- **Performance**: Entirely regionalized in `europe-west1` to match the `eur3` Firestore location, ensuring sub-100ms search latency.
 
 ## Federation & Discovery
 

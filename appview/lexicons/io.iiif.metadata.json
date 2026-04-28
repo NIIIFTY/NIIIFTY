@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "io.iiif.metadata",
+  "defs": {
+    "main": {
+      "type": "object",
+      "description": "An open IIIF metadata schema extension for AT Protocol payloads.",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "The publishing institution or provider."
+        },
+        "rights": {
+          "type": "string",
+          "description": "The license or rights URI (e.g., Creative Commons)."
+        },
+        "label": {
+          "type": "string",
+          "description": "The title or name of the resource."
+        },
+        "summary": {
+          "type": "string",
+          "description": "A short descriptive text."
+        },
+        "type": {
+          "type": "string",
+          "description": "The IIIF resource type (e.g., Manifest, Collection)."
+        },
+        "metadata": {
+          "type": "unknown",
+          "description": "A dictionary of flattened IIIF key-value metadata pairs."
+        }
+      }
+    }
+  }
+}

@@ -111,7 +111,7 @@ export function EditFile({ id }: { id: string }) {
   const [broadcasting, setIsBroadcasting] = useState<boolean>(false);
 
   const form = useForm<FileFormData>({
-    resolver: zodResolver(fileSchema) as any,
+    resolver: zodResolver(fileSchema as any) as any,
     defaultValues: {
       label: '',
       summary: '',
