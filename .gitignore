@@ -44,3 +44,4 @@ pubsub-debug.log
 .pnpm-store/
 .agent/
 .antigravity/
+.firebase/

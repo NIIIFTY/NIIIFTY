@@ -94,6 +94,7 @@ async function main() {
           searchText: `${iiif.label || ''} ${iiif.summary || ''}`.trim(),
           type: iiif.type || null,
           metadata: iiif.metadata || {},
+          thumbnailUrl: record.preview?.url || null,
         };
 
         try {

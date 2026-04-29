@@ -47,7 +47,6 @@ export function SearchAppView() {
   return (
     <div className="w-full max-w-6xl mx-auto py-8 px-4">
       <div className="flex flex-col items-center mb-12">
-        <h1 className="text-4xl font-black mb-4 tracking-tight">{t('search')}</h1>
         <form onSubmit={handleSearch} className="flex w-full max-w-2xl gap-2">
           <Input
             type="text"
@@ -57,7 +56,7 @@ export function SearchAppView() {
             className="flex-grow text-lg h-12 shadow-sm"
           />
           <Button type="submit" disabled={loading} className="h-12 px-8">
-            {loading ? <Spinner className="w-5 h-5" /> : t('browse')}
+            {loading ? <Spinner className="w-5 h-5" /> : t('search')}
           </Button>
         </form>
       </div>
