@@ -10,8 +10,7 @@ export function useMounted() {
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
   }, []);
 
-  return useCallback(() => mounted, [mounted]);
+  return mounted;
 }

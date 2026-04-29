@@ -200,7 +200,7 @@ export function EditFile({ id }: { id: string }) {
   };
 
   if (user) {
-    if (isMounted() && pageError === 'fileNotFound') {
+    if (isMounted && pageError === 'fileNotFound') {
       return (
         <Alert>
           <>{t('fileNotFound')}</>

@@ -20,7 +20,7 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
 
   const isMounted = useMounted();
 
-  if (isMounted()) {
+  if (isMounted) {
     return (
       <>
         {files.length > 0 && (
