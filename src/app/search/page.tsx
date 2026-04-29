@@ -3,7 +3,7 @@
 import { SearchAppView } from '@/components/SearchAppView';
 import { useMounted } from '@/hooks/useMounted';
 
-export default function ExplorePage() {
+export default function SearchPage() {
   const isMounted = useMounted();
 
   if (!isMounted) return null;

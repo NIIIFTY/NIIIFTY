@@ -74,3 +74,38 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
     throw new HttpsError('internal', `Search operation failed: ${error.message || 'Unknown error'}`);
   }
 });
+
+export const getRecord = onCall({ region: 'europe-west1' }, async (request) => {
+  const { uri } = request.data;
+
+  if (!uri || typeof uri !== 'string') {
+    throw new HttpsError('invalid-argument', 'The function must be called with one argument "uri".');
+  }
+
+  try {
+    const docRef = db.collection('matadisco_index').doc(encodeURIComponent(uri));
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw new HttpsError('not-found', 'Record not found.');
+    }
+
+    const data = doc.data()!;
+    return {
+      record: {
+        id: doc.id,
+        atUri: data.uri || '',
+        label: data.label || 'Untitled',
+        summary: data.summary || '',
+        type: data.type || 'unknown',
+        author: data.did || 'unknown',
+        thumbnailUrl: data.thumbnailUrl || null,
+        ...data
+      }
+    };
+  } catch (error: any) {
+    console.error('Get record error:', error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', `Failed to retrieve record: ${error.message || 'Unknown error'}`);
+  }
+});

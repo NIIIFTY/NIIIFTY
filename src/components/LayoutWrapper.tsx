@@ -82,11 +82,11 @@ const MobileNav = () => {
         <nav className="fixed mt-8 h-full">
           <div className="px-12 py-4">
             <Link
-              href="/explore"
+              href="/search"
               className="text-2xl font-bold tracking-widest text-gray-900 dark:text-gray-100"
               onClick={onToggleNav}
             >
-              {t('explore')}
+              {t('search')}
             </Link>
           </div>
           <div className="px-12 py-4">
@@ -206,8 +206,8 @@ const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
           </div>
           <div className="flex items-center text-base leading-5">
             <div className="hidden sm:block">
-              <Link href="/explore" className="p-1 font-medium text-gray-900 sm:p-4 dark:text-gray-100">
-                {t('explore')}
+              <Link href="/search" className="p-1 font-medium text-gray-900 sm:p-4 dark:text-gray-100">
+                {t('search')}
               </Link>
               <Link href="/admin" className="p-1 font-medium text-gray-900 sm:p-4 dark:text-gray-100">
                 {t('myFiles')}

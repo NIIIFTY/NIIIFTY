@@ -101,7 +101,7 @@ i18n
             'This platform improves the reliability of <1>IIIF</1> content by leveraging the content-addressed immutability and decentralized retrieval properties of <3>IPFS</3>. This makes it ideal for use in third-party applications such as <5>Exhibit</5>. It is built on top of <7>Firebase</7> and <9>web3.storage</9> using <11>Next.js</11> and <13>TailwindCSS</13>.',
           homePara3:
             'NIIIFTY is a project funded by <1>Protocol Labs Dev Grant #504</1> and built by <3>Edward Silverton</3> at <5>Mnemoscene</5>. Please contact <7>Edward</7> for details of how to access this online demo, or refer to the <9>docs</9> to set up your own instance.',
-          explore: 'Explore',
+          search: 'Search',
           searchPlaceholder: 'Search the decentralized index...',
           searching: 'Searching...',
           noResultsFound: 'No results found for your query.',

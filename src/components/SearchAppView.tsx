@@ -47,7 +47,7 @@ export function SearchAppView() {
   return (
     <div className="w-full max-w-6xl mx-auto py-8 px-4">
       <div className="flex flex-col items-center mb-12">
-        <h1 className="text-4xl font-black mb-4 tracking-tight">{t('explore')}</h1>
+        <h1 className="text-4xl font-black mb-4 tracking-tight">{t('search')}</h1>
         <form onSubmit={handleSearch} className="flex w-full max-w-2xl gap-2">
           <Input
             type="text"

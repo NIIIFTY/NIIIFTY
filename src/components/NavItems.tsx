@@ -18,10 +18,10 @@ export function NavItems() {
     <>
       <li>
         <Link
-          href="/explore"
+          href="/search"
           className="text-base text-black no-underline transition-colors duration-500 hover:text-gray-600 dark:text-white"
         >
-          {t('explore')}
+          {t('search')}
         </Link>
       </li>
       {username && (

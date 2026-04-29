@@ -123,4 +123,40 @@ You can view published records and verify their structure using these community 
 - **GCP IAM**: Authorization is enforced via the **Firebase Admin SDK**. The proxy guard ensures only CIDs managed by NIIIFTY are resolvable through the pinning gateway.
 - **Secret Manager**: Private keys never touch disk or logs; they are pulled on-demand from GCP Secret Manager for RPC signature operations.
 
+## Deployment & Maintenance
+
+NIIIFTY is a multi-service architecture spanning several Google Cloud regions.
+
+### 1. Regional Architecture
+*   **App Hosting (Frontend)**: `europe-west4` (Netherlands). Managed via GitHub push.
+*   **Cloud Functions (API)**: `europe-west1` (Belgium).
+*   **Indexer (Cloud Run)**: `europe-west1` (Belgium).
+*   **Firestore/Vertex AI**: `europe-west1` / `eur3`.
+
+### 2. Deployment Commands
+Always specify the project ID explicitly to avoid environment contamination:
+
+```bash
+# 1. Deploy Cloud Functions
+cd functions && pnpm run deploy --project niiifty-bd2e2
+
+# 2. Deploy Jetstream Indexer (Cloud Run)
+pnpm run deploy:appview --project niiifty-bd2e2
+
+# 3. Deploy Frontend (Triggered via Git)
+git push origin main
+```
+
+### 3. Public Access (CORS)
+New 2nd Gen Cloud Functions are **private by default**. If you add a new callable function that needs to be accessed by the frontend, you must make it public:
+
+```bash
+gcloud functions add-iam-policy-binding [FUNCTION_NAME] \
+  --region europe-west1 \
+  --member="allUsers" \
+  --role="roles/cloudfunctions.invoker" \
+  --project niiifty-bd2e2
+```
+*Note: For 2nd Gen functions, this also automatically grants `roles/run.invoker` to the underlying Cloud Run service.*
+
 ---

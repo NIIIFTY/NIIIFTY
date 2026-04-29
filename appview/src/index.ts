@@ -1,7 +1,6 @@
 import { createServer } from 'node:http';
 import { JetstreamSubscription } from '@atcute/jetstream';
 import admin from 'firebase-admin';
-import { CxVmxMatadisco, IoIiifMetadata } from './atproto/index.js'; // Generated types
 
 // Satisfy Cloud Run's health check
 const port = process.env.PORT || 8080;
@@ -72,7 +71,7 @@ async function main() {
 
         // Extract IIIF extension
         const iiif = record.iiif as any;
-        
+
         // If the record has no IIIF block, we skip indexing it
         if (!iiif) {
           console.log(`[SKIPPED] ${uri} - No IIIF metadata found in record.`);
@@ -86,7 +85,7 @@ async function main() {
           cid: commit.cid,
           publishedAt: record.publishedAt,
           tags: record.tags || [],
-          
+
           // Extracted IIIF
           provider: iiif.provider || null,
           rights: iiif.rights || null,
@@ -100,7 +99,7 @@ async function main() {
         try {
           await docRef.set(metadataToSave, { merge: true });
           console.log(`[INDEXED] ${uri}`);
-          
+
           if (time_us) {
             await saveCursor(time_us);
           }
