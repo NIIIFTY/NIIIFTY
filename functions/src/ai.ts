@@ -1,36 +1,66 @@
-import { VertexAI } from '@google-cloud/vertexai';
+import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 
 const project = process.env.GCLOUD_PROJECT || 'niiifty-bd2e2';
-const location = 'europe-west1';
+const location = 'global';
 
-const vertex_ai = new VertexAI({ project, location });
-const model = 'gemini-1.5-flash-002';
-
-// Instantiate the generative model
-const generativeModel = vertex_ai.getGenerativeModel({
-  model: model,
-  generationConfig: {
-    maxOutputTokens: 256,
-    temperature: 0.4,
-  },
+const ai = new GoogleGenAI({ 
+  project, 
+  location, 
+  vertexai: true 
 });
 
-export async function generateFileSummary(filePath: string, mimeType: string): Promise<string | null> {
-  try {
-    console.log(`[AI] Generating summary for ${filePath} (${mimeType})...`);
+export interface FileAIResult {
+  summary: string;
+  metadata: Record<string, string>;
+  tags: string[];
+}
 
-    // Only process images and videos for now
-    if (!mimeType.startsWith('image/') && !mimeType.startsWith('video/')) {
+const responseSchema = {
+  type: 'object',
+  properties: {
+    summary: { 
+      type: 'string',
+      description: 'A concise natural language description of the item.'
+    },
+    metadata: {
+      type: 'object',
+      description: 'Standard metadata aligned with Dublin Core concepts.',
+      properties: {
+        subject: { type: 'string' },
+        type: { type: 'string' },
+        date: { type: 'string' },
+        creator: { type: 'string' },
+        format: { type: 'string' },
+        coverage: { type: 'string' }
+      },
+      additionalProperties: { type: 'string' }
+    },
+    tags: {
+      type: 'array',
+      description: 'A list of 3-5 descriptive tags or keywords for search indexing.',
+      items: { type: 'string' }
+    }
+  },
+  required: ['summary', 'metadata', 'tags']
+};
+
+export async function generateFileSummary(filePath: string, mimeType: string): Promise<FileAIResult | null> {
+  try {
+    console.log(`[AI] Generating enriched summary and tags for ${filePath} (${mimeType})...`);
+
+    // Only process images for now
+    if (!mimeType.startsWith('image/')) {
       return null;
     }
 
     const fileBuffer = fs.readFileSync(filePath);
     const base64Content = fileBuffer.toString('base64');
 
-    const prompt = 'Describe this item for an archival search index in one or two concise sentences. Focus on visual facts, subject matter, and style. Do not use phrases like "This image shows" or "In this photo".';
+    const prompt = 'Analyze this item for an archival search index. Provide a concise natural language summary, a set of relevant metadata pairs, and a few descriptive tags. Focus on visual facts, subject matter, and style. Use standard terminology for metadata keys (e.g., subject, type, date, creator, format). Omit any keys or tags if the value is "unknown" or uncertain.';
 
-    const request = {
+    const result = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
       contents: [
         {
           role: 'user',
@@ -42,18 +72,23 @@ export async function generateFileSummary(filePath: string, mimeType: string): P
                 mimeType: mimeType,
               },
             },
-          ] as any[],
+          ],
         },
       ],
-    };
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: responseSchema,
+      } as any
+    });
 
-    const result = await generativeModel.generateContent(request);
-    const response = result.response;
-    const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
+    const output = result.text;
 
-    if (text) {
-      console.log(`[AI] Generated: ${text.trim()}`);
-      return text.trim();
+    if (output) {
+      const parsed = JSON.parse(output) as FileAIResult;
+      console.log(`[AI] Generated summary: ${parsed.summary}`);
+      console.log(`[AI] Generated metadata: ${JSON.stringify(parsed.metadata)}`);
+      console.log(`[AI] Generated tags: ${JSON.stringify(parsed.tags)}`);
+      return parsed;
     }
 
     return null;

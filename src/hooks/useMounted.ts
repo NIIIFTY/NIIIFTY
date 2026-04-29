@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-// https://usehooks-ts.com/react-hook/use-is-mounted
+/**
+ * Hook to determine if the component is mounted on the client.
+ * Using state ensures a re-render occurs after the initial mount,
+ * allowing components to safely render client-only content.
+ */
 export function useMounted() {
-  const isMounted = useRef(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    isMounted.current = true;
-
-    return () => {
-      isMounted.current = false;
-    };
+    setMounted(true);
+    return () => setMounted(false);
   }, []);
 
-  return useCallback(() => isMounted.current, []);
+  return useCallback(() => mounted, [mounted]);
 }

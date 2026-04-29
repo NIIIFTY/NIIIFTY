@@ -1,5 +1,6 @@
 ---
-trigger: always_on
+trigger: manual
+status: disabled
 ---
 
 ---

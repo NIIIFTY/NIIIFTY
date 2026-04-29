@@ -42,8 +42,6 @@ export const fileCreated = functions
     // get a reference to the uploaded original.[png, jpg, tif, tiff, mp3, mp4, glb] file
     const [files] = await gcsBucket.getFiles({ prefix: `${fileId}/original` });
 
-    let processedProps;
-
     if (files.length) {
       const originalFile = files[0];
 
@@ -64,32 +62,50 @@ export const fileCreated = functions
 
       console.log(`${originalFile.name} downloaded to ${tempFilePath}`);
 
+      let processedProps: any = {};
+
+      // NIIIFTY AI: Automatically generate an enriched summary if none exists
+      if (!metadata.summary) {
+        const aiResult = await generateFileSummary(tempFilePath, metadata.type);
+        if (aiResult) {
+          processedProps.summary = aiResult.summary;
+          // Merge AI-generated metadata, filtering out "unknown"
+          const mergedMetadata = {
+            ...(metadata.metadata || {}),
+            ...aiResult.metadata
+          };
+          processedProps.metadata = Object.fromEntries(
+            Object.entries(mergedMetadata).filter(([_, v]) => v && String(v).toLowerCase() !== 'unknown')
+          );
+
+          // Merge AI-generated tags, filtering out "unknown"
+          processedProps.tags = Array.from(new Set([
+            ...(metadata.tags || []),
+            ...(aiResult.tags || [])
+          ])).filter(t => t && String(t).toLowerCase() !== 'unknown');
+          // Also flag it so the UI can show it was AI-generated
+          processedProps.aiGenerated = true;
+        }
+      }
+
       switch (metadata.type) {
         case 'image/png':
         case 'image/jpeg':
         case 'image/tif':
         case 'image/tiff': {
-          processedProps = await processImage(tempFilePath, metadata);
+          const imageProps = await processImage(tempFilePath, metadata);
+          processedProps = { ...processedProps, ...imageProps };
           break;
         }
         case 'video/mp4': {
-          processedProps = await processMP4(tempFilePath, metadata);
+          const videoProps = await processMP4(tempFilePath, metadata);
+          processedProps = { ...processedProps, ...videoProps };
           break;
         }
         case 'model/gltf-binary': {
-          processedProps = await processGLB(tempFilePath, metadata);
+          const modelProps = await processGLB(tempFilePath, metadata);
+          processedProps = { ...processedProps, ...modelProps };
           break;
-        }
-      }
-
-      // NIIIFTY AI: Automatically generate a summary if none exists
-      if (!metadata.summary) {
-        const aiSummary = await generateFileSummary(tempFilePath, metadata.type);
-        if (aiSummary) {
-          if (!processedProps) processedProps = {};
-          processedProps.summary = aiSummary;
-          // Also flag it so the UI can show it was AI-generated
-          processedProps.aiGenerated = true;
         }
       }
 

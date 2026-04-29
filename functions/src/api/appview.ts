@@ -9,7 +9,7 @@ if (!getApps().length) {
 const db = getFirestore();
 
 // Initialize Vertex AI
-const project = process.env.GCLOUD_PROJECT || 'niiifty';
+const project = process.env.GCLOUD_PROJECT || 'niiifty-bd2e2';
 const location = 'europe-west1';
 
 // In Cloud Functions, ADC (Application Default Credentials) will be used automatically
@@ -25,6 +25,7 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
 
   try {
     // 1. Generate embedding for the query
+    console.log(`Generating embedding for query: "${query}" using model text-embedding-004...`);
     const response = await ai.models.embedContent({
       model: 'text-embedding-004',
       contents: query,
@@ -32,10 +33,14 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
     
     const embedding = response.embeddings?.[0]?.values;
     if (!embedding) {
-      throw new Error('Failed to generate embedding');
+      console.error('AI response missing embedding values:', JSON.stringify(response));
+      throw new Error('Failed to generate embedding: empty response from AI');
     }
     
+    console.log(`Generated embedding (length: ${embedding.length}). Performing vector search in matadisco_index...`);
+    
     // 2. Perform vector search on Firestore
+    // Note: ensure matadisco_index collection has a vector index on 'embedding'
     const snapshot = await db.collection('matadisco_index')
       .findNearest('embedding', FieldValue.vector(embedding), {
         limit: Math.min(limit, 50),
@@ -43,12 +48,29 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
       })
       .get();
       
+    console.log(`Search returned ${snapshot.size} results.`);
+      
     // 3. Return results
-    const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const results = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return { 
+        id: doc.id, 
+        atUri: data.uri || '',
+        label: data.label || 'Untitled',
+        summary: data.summary || '',
+        type: data.type || 'unknown',
+        author: data.did || 'unknown',
+        thumbnailUrl: data.thumbnailUrl || null,
+        ...data 
+      };
+    });
     
     return { results };
-  } catch (error) {
-    console.error('Vector search error:', error);
-    throw new HttpsError('internal', 'An error occurred during the search operation.');
+  } catch (error: any) {
+    console.error('Vector search error detail:', error);
+    if (error.stack) {
+      console.error('Stack trace:', error.stack);
+    }
+    throw new HttpsError('internal', `Search operation failed: ${error.message || 'Unknown error'}`);
   }
 });
