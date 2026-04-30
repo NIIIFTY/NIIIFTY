@@ -92,7 +92,7 @@ async function main() {
           label: iiif.label || null,
           summary: iiif.summary || null,
           searchText: `${iiif.label || ''} ${iiif.summary || ''}`.trim(),
-          type: iiif.type || null,
+          type: iiif.type || iiif.metadata?.type || null,
           metadata: iiif.metadata || {},
           thumbnailUrl: record.preview?.url || null,
         };

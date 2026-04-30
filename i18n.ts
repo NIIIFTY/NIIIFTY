@@ -102,7 +102,7 @@ i18n
           homePara3:
             'NIIIFTY is a project funded by <1>Protocol Labs Dev Grant #504</1> and built by <3>Edward Silverton</3> at <5>Mnemoscene</5>. Please contact <7>Edward</7> for details of how to access this online demo, or refer to the <9>docs</9> to set up your own instance.',
           search: 'Search',
-          searchPlaceholder: 'Search the decentralized index...',
+          searchPlaceholder: 'Search for content...',
           searching: 'Searching...',
           noResultsFound: 'No results found for your query.',
         },

@@ -54,14 +54,26 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
     const results = snapshot.docs.map(doc => {
       const data = doc.data();
       return { 
+        ...data,
         id: doc.id, 
         atUri: data.uri || '',
         label: data.label || 'Untitled',
         summary: data.summary || '',
-        type: data.type || 'unknown',
+        type: ((t: string, format?: string) => {
+          const val = format || t || '';
+          if (!val) return 'FILE';
+          const lower = val.toLowerCase();
+          if (lower.includes('/')) {
+            const ext = lower.split('/')[1];
+            if (ext === 'jpeg') return 'JPG';
+            if (ext === 'gltf-binary') return 'GLB';
+            return ext.toUpperCase();
+          }
+          if (lower === 'still image') return 'JPG';
+          return val.toUpperCase();
+        })(data.type || '', data.metadata?.format),
         author: data.did || 'unknown',
         thumbnailUrl: data.thumbnailUrl || null,
-        ...data 
       };
     });
     
@@ -93,14 +105,26 @@ export const getRecord = onCall({ region: 'europe-west1' }, async (request) => {
     const data = doc.data()!;
     return {
       record: {
+        ...data,
         id: doc.id,
         atUri: data.uri || '',
         label: data.label || 'Untitled',
         summary: data.summary || '',
-        type: data.type || 'unknown',
+        type: ((t: string, format?: string) => {
+          const val = format || t || '';
+          if (!val) return 'FILE';
+          const lower = val.toLowerCase();
+          if (lower.includes('/')) {
+            const ext = lower.split('/')[1];
+            if (ext === 'jpeg') return 'JPG';
+            if (ext === 'gltf-binary') return 'GLB';
+            return ext.toUpperCase();
+          }
+          if (lower === 'still image') return 'JPG';
+          return val.toUpperCase();
+        })(data.type || '', data.metadata?.format),
         author: data.did || 'unknown',
         thumbnailUrl: data.thumbnailUrl || null,
-        ...data
       }
     };
   } catch (error: any) {

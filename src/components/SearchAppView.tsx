@@ -92,7 +92,7 @@ export function SearchAppView() {
                   />
                   <div className="absolute top-3 right-3">
                     <span className="px-2 py-1 bg-black/50 backdrop-blur-md text-[10px] font-bold text-white rounded-full uppercase tracking-widest">
-                      {result.type.split('/')[1] || result.type}
+                      {result.type}
                     </span>
                   </div>
                 </div>

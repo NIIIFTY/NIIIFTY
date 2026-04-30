@@ -8,7 +8,7 @@
     "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "bun build src/index.ts --target bun --outdir dist",
-    "deploy": "gcloud run deploy matadisco-consumer --source . --region europe-west1 --min-instances 1 --max-instances 1 --set-env-vars GCLOUD_PROJECT=niiifty-bd2e2 --no-allow-unauthenticated",
+    "deploy": "gcloud run deploy matadisco-consumer --source . --region europe-west1 --project niiifty-bd2e2 --min-instances 1 --max-instances 1 --set-env-vars GCLOUD_PROJECT=niiifty-bd2e2 --no-allow-unauthenticated",
     "generate:lexicons": "lex-cli generate"
   },
   "dependencies": {
