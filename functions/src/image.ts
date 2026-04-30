@@ -1,7 +1,7 @@
 import resizeImage from './resizeImage.js';
 import { createImageIIIFDerivatives } from './iiif.js';
 import createThumbnails from './thumbnails.js';
-import { deleteFile } from './fs.js';
+import path from 'path';
 
 export default async function processImage(imageFilePath, metadata) {
   // optimise image
@@ -12,8 +12,13 @@ export default async function processImage(imageFilePath, metadata) {
   // generate IIIF manifest and image tiles
   const { width, height } = (await createImageIIIFDerivatives(imageFilePath, metadata)) as any;
 
-  // delete the original image as it's already on GCS and will otherwise be uploaded again
-  deleteFile(imageFilePath);
+  // We do not delete the original image here anymore; processAsset handles cleanup after AI.
 
-  return { width, height };
+  const optimizedPath = path.join(path.dirname(imageFilePath), 'optimized.jpg');
+
+  return { 
+    width, 
+    height,
+    aiInput: { path: optimizedPath, mimeType: 'image/jpeg' }
+  };
 }

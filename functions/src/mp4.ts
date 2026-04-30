@@ -4,13 +4,13 @@ import path from "path";
 import ffprobe from "ffprobe";
 import ffprobeStatic from "ffprobe-static";
 import createThumbnails from "./thumbnails.js";
-import { deleteFile, createDir } from "./fs.js";
+import { createDir } from "./fs.js";
 
 export default async function processMP4(mp4FilePath, metadata) {
   // optimise mp4
   await optimizeMP4(mp4FilePath);
 
-  await createThumbs(mp4FilePath);
+  const frameFilePath = await createThumbs(mp4FilePath);
   console.log("mp4 thumbnails generated");
 
   const duration = await getDuration(mp4FilePath);
@@ -22,10 +22,12 @@ export default async function processMP4(mp4FilePath, metadata) {
   // set the duration on metadata (this will be updated in the db when processing completes)
   metadata.duration = duration;
 
-  // delete the original mp4 as it's already on GCS and will otherwise be uploaded again
-  deleteFile(mp4FilePath);
+  // We do not delete the original mp4 here anymore; processAsset handles cleanup after AI.
 
-  return { duration };
+  return { 
+    duration,
+    aiInput: { path: frameFilePath, mimeType: 'image/jpeg', cleanup: true }
+  };
 }
 
 async function optimizeMP4(mp4FilePath) {
@@ -71,8 +73,8 @@ async function createThumbs(mp4) {
 
   await createThumbnails(frameFilePath);
 
-  // delete the temp frame file.
-  deleteFile(frameFilePath);
+  // We DO NOT delete the temp frame file here, it will be used for AI and deleted later.
+  return frameFilePath;
 }
 
 async function getDuration(mp4) {

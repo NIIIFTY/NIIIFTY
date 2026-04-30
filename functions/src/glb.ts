@@ -17,7 +17,7 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import createThumbnails from './thumbnails.js';
 import { REGULAR_WIDTH } from './constants.js';
-import { deleteFile } from './fs.js';
+
 import express from 'express';
 import cors from 'cors';
 import net from 'net';
@@ -30,13 +30,12 @@ export default async function processGLB(glbFilePath, metadata) {
 
   await createThumbnails(screenshotPath);
 
-  // delete screenshot
-  deleteFile(screenshotPath);
+  // We do not delete the screenshot or the original glb here anymore; 
+  // processAsset handles cleanup after AI.
 
-  // delete the original glb as it's already on GCS and will otherwise be uploaded again
-  deleteFile(glbFilePath);
-
-  return {};
+  return {
+    aiInput: { path: screenshotPath, mimeType: 'image/jpeg', cleanup: true }
+  };
 }
 
 async function optimizeGLB(glbFilePath) {

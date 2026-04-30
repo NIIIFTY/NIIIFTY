@@ -9,7 +9,7 @@ import { gcsBucket, uploadFilesToGCS, deleteGCSFiles } from './gcs.js';
 import processImage from './image.js';
 import processGLB from './glb.js';
 import processMP4 from './mp4.js';
-import { createTempDir, deleteDir } from './fs.js';
+import { createTempDir, deleteDir, deleteFile } from './fs.js';
 import { uploadTempFilesToFilebase, deleteFilebaseFiles } from './filebase.js';
 import updateMetadataDerivatives from './update.js';
 import { GCS_URL } from './constants.js';
@@ -47,9 +47,38 @@ async function processAsset(fileId: string, metadata: any, docRef: FirebaseFires
 
     let processedProps: any = {};
 
-    // NIIIFTY AI: Automatically generate an enriched summary if none exists
-    if (!metadata.summary) {
-      const aiResult = await generateFileSummary(tempFilePath, metadata.type);
+    let aiInput: { path: string; mimeType: string; cleanup?: boolean } | undefined;
+
+    switch (metadata.type) {
+      case 'image/png':
+      case 'image/jpeg':
+      case 'image/tif':
+      case 'image/tiff': {
+        const imageProps = await processImage(tempFilePath, metadata);
+        aiInput = imageProps.aiInput;
+        delete imageProps.aiInput;
+        processedProps = { ...processedProps, ...imageProps };
+        break;
+      }
+      case 'video/mp4': {
+        const videoProps = await processMP4(tempFilePath, metadata);
+        aiInput = videoProps.aiInput;
+        delete videoProps.aiInput;
+        processedProps = { ...processedProps, ...videoProps };
+        break;
+      }
+      case 'model/gltf-binary': {
+        const modelProps = await processGLB(tempFilePath, metadata);
+        aiInput = modelProps.aiInput;
+        delete modelProps.aiInput;
+        processedProps = { ...processedProps, ...modelProps };
+        break;
+      }
+    }
+
+    // NIIIFTY AI: Automatically generate an enriched summary using the optimized derivative
+    if (!metadata.summary && aiInput) {
+      const aiResult = await generateFileSummary(aiInput.path, aiInput.mimeType);
       if (aiResult) {
         processedProps.summary = aiResult.summary;
         // Merge AI-generated metadata, filtering out "unknown"
@@ -71,25 +100,20 @@ async function processAsset(fileId: string, metadata: any, docRef: FirebaseFires
       }
     }
 
-    switch (metadata.type) {
-      case 'image/png':
-      case 'image/jpeg':
-      case 'image/tif':
-      case 'image/tiff': {
-        const imageProps = await processImage(tempFilePath, metadata);
-        processedProps = { ...processedProps, ...imageProps };
-        break;
+    // Clean up temporary AI input files (like video frames or 3D screenshots) that shouldn't be uploaded
+    if (aiInput && aiInput.cleanup) {
+      try {
+        deleteFile(aiInput.path);
+      } catch (e) {
+        console.error('Failed to cleanup aiInput file:', e);
       }
-      case 'video/mp4': {
-        const videoProps = await processMP4(tempFilePath, metadata);
-        processedProps = { ...processedProps, ...videoProps };
-        break;
-      }
-      case 'model/gltf-binary': {
-        const modelProps = await processGLB(tempFilePath, metadata);
-        processedProps = { ...processedProps, ...modelProps };
-        break;
-      }
+    }
+
+    // Clean up the original downloaded file now that processing and AI are complete
+    try {
+      deleteFile(tempFilePath);
+    } catch (e) {
+      console.error('Failed to cleanup original downloaded file:', e);
     }
 
     // upload the generated files to GCS
