@@ -28,6 +28,7 @@ import { BlueskyIcon } from '../icons/Bluesky';
 import H1 from '../H1';
 import { DetailLayout } from './layout/DetailLayout';
 import { DetailCard } from './layout/DetailCard';
+import { DistributionCard } from './DistributionCard';
 
 const fileSchema = z.object({
   label: z
@@ -271,72 +272,17 @@ export function EditFile({ id }: { id: string }) {
             </div>
           </DetailCard>
 
-          {/* Distribution */}
-          <DetailCard title="Distribution" icon={HardDrive} size="md">
-            <Tabs
-              tabs={tabs.map((tab) => ({
-                name: tab.name,
-                label: tab.label,
-                current: tab.name === fs,
-              }))}
-              onChange={(current: number) => {
-                const name: FileSystem = tabs[current].name;
-                setFS(name);
-                setFSID(name === 'GCS' ? id : cid);
-              }}
-              disabled={!isProcessed}
-            />
-
-            <div className="mt-8 space-y-6">
-              {(type === MIMETYPES.JPG || type === MIMETYPES.PNG || type === MIMETYPES.TIF || type === MIMETYPES.TIFF) && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('JPG')}</Label>
-                    {isProcessed && (
-                      <a href={jpg} target="_blank" rel="noreferrer" className="text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
-                        <ExternalLink size={12} />
-                      </a>
-                    )}
-                  </div>
-                  <CopyText id="jpg" text={jpg} disabled={!isProcessed} />
-                </div>
-              )}
-              {type === MIMETYPES.GLB && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('glb')}</Label>
-                  <CopyText id="glb" text={glb} disabled={!isProcessed} />
-                </div>
-              )}
-              {type === MIMETYPES.MP4 && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('mp4')}</Label>
-                    <CopyText id="mp4" text={mp4} disabled={!isProcessed} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('dash')}</Label>
-                    <CopyText id="dash" text={dash} disabled={!isProcessed} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('hls')}</Label>
-                    <CopyText id="hls" text={hls} disabled={!isProcessed} />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2 pt-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('iiifManifest')}</Label>
-                  {isProcessed && (
-                    <a href={`https://www.universalviewer.dev/#?iiifManifestId=${iiifManifest}`} target="_blank" rel="noreferrer" className="text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100" title={t('viewOnUVLink')}>
-                      <ExternalLink size={12} />
-                    </a>
-                  )}
-                </div>
-                <CopyText id="iiif" text={iiifManifest} disabled={!isProcessed} />
-              </div>
-            </div>
-          </DetailCard>
+          <DistributionCard 
+            fs={fs} 
+            setFS={(newFs) => {
+              setFS(newFs);
+              setFSID(newFs === 'GCS' ? id : cid);
+            }} 
+            id={id} 
+            cid={cid} 
+            type={type} 
+            isProcessed={isProcessed} 
+          />
 
           <DetailCard title="Bluesky / Matadisco" icon={BlueskyIcon} size="md">
             <div className="space-y-6">
@@ -423,7 +369,7 @@ export function EditFile({ id }: { id: string }) {
                     target="_blank"
                     className="flex w-full items-center justify-center rounded-lg bg-white py-2 text-xs font-medium border border-zinc-200 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
                   >
-                    View on PDS Explorer
+                    View on AtProto Browser
                   </a>
                 </div>
               )}

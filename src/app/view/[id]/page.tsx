@@ -7,7 +7,7 @@ import { functions } from '@/lib/firebase';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, ExternalLink, Info, Tag, User, FileText, Tags, HardDrive } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Info, Tag, User, FileText, Tags, HardDrive, Globe } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { useMounted } from '@/hooks/useMounted';
@@ -16,6 +16,10 @@ import { DetailLayout } from '@/components/files/layout/DetailLayout';
 import { DetailCard } from '@/components/files/layout/DetailCard';
 import { DetailField } from '@/components/files/layout/DetailField';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/utils/Utils';
+import { FileSystem } from '@/utils/Types';
+import { BlueskyIcon } from '@/components/icons/Bluesky';
+import { DistributionCard } from '@/components/files/DistributionCard';
 
 interface RecordData {
   id: string;
@@ -31,6 +35,7 @@ interface RecordData {
   metadata?: Record<string, string>;
   publishedAt?: string;
   handle?: string;
+  cid?: string;
 }
 
 export default function ViewPage() {
@@ -40,6 +45,7 @@ export default function ViewPage() {
   const [loading, setLoading] = useState(true);
   const [record, setRecord] = useState<RecordData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fs, setFS] = useState<FileSystem>('GCS');
 
   useEffect(() => {
     if (!id || !isMounted) return;
@@ -241,35 +247,34 @@ export default function ViewPage() {
          </div>
       </DetailCard>
 
-      {/* Distribution Card */}
-      <DetailCard title="Distribution" icon={HardDrive} size="md">
-         <div className="space-y-6">
-           <div className="space-y-2">
-             <div className="flex items-center justify-between">
-               <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">AT Protocol Identifier</Label>
-               <a href={`https://atproto-browser.vercel.app/at/${record.author}/cx.vmx.matadisco/${record.rkey}`} target="_blank" rel="noreferrer" className="text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
-                 <ExternalLink size={12} />
-               </a>
-             </div>
-             <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-md p-2 border border-zinc-200 dark:border-zinc-800">
-               <code className="text-[10px] text-zinc-500 break-all">{record.atUri}</code>
-             </div>
-           </div>
+      <DistributionCard 
+        fs={fs} 
+        setFS={setFS} 
+        id={record.id} 
+        cid={record.cid || record.rkey} 
+        type={record.type} 
+        isProcessed={true} 
+      />
 
-           {iiifManifestUrl && (
-             <div className="space-y-2 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-               <div className="flex items-center justify-between">
-                 <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">IIIF Manifest</Label>
-                 <a href={uvUrl} target="_blank" rel="noreferrer" className="text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100" title={t('viewOnUVLink')}>
-                   <ExternalLink size={12} />
-                 </a>
-               </div>
-               <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-md p-2 border border-zinc-200 dark:border-zinc-800">
-                 <code className="text-[10px] text-zinc-500 break-all">{iiifManifestUrl}</code>
-               </div>
-             </div>
-           )}
-         </div>
+      <DetailCard title="Bluesky / Matadisco" icon={BlueskyIcon} size="md">
+        <div className="space-y-6">
+
+          <div className="space-y-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/80">
+            <div>
+              <Label className="text-[10px] uppercase tracking-wider text-zinc-500">AT Protocol URI</Label>
+              <div className="mt-1 flex items-center gap-2 overflow-hidden">
+                <code className="truncate text-[10px] text-zinc-500">{record.atUri}</code>
+              </div>
+            </div>
+            <a 
+              href={`https://atproto-browser.vercel.app/at/${record.author}/cx.vmx.matadisco/${record.rkey}`}
+              target="_blank"
+              className="flex w-full items-center justify-center rounded-lg bg-white py-2 text-xs font-medium border border-zinc-200 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+            >
+              View on AtProto Browser
+            </a>
+          </div>
+        </div>
       </DetailCard>
     </>
   );
