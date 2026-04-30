@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import Link from '@/components/Link';
+import { useFirebaseEmulators } from '@/lib/config';
 
 interface SearchResult {
   id: string;
@@ -60,6 +61,26 @@ export function SearchAppView() {
           </Button>
         </form>
       </div>
+      
+      {!loading && !hasSearched && useFirebaseEmulators && (
+        <div className="flex flex-col items-center justify-center mb-12">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-6 max-w-2xl w-full text-center">
+            <h3 className="text-blue-800 dark:text-blue-300 font-bold mb-3">🛠 Local Mock Search Active</h3>
+            <p className="text-blue-600 dark:text-blue-400 text-sm mb-4">
+              You are running the local emulator. Vector search is disabled.
+              Try searching for these mock keywords:
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <button onClick={() => { setQuery('cyberpunk'); handleSearch(); }} className="px-3 py-1 bg-white dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors">Cyberpunk</button>
+              <button onClick={() => { setQuery('helmet'); handleSearch(); }} className="px-3 py-1 bg-white dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors">Helmet</button>
+              <button onClick={() => { setQuery('camera'); handleSearch(); }} className="px-3 py-1 bg-white dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors">Camera</button>
+              <button onClick={() => { setQuery('vintage'); handleSearch(); }} className="px-3 py-1 bg-white dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors">Vintage</button>
+              <button onClick={() => { setQuery('neon'); handleSearch(); }} className="px-3 py-1 bg-white dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors">Neon</button>
+              <button onClick={() => { setQuery('cityscape'); handleSearch(); }} className="px-3 py-1 bg-white dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors">Cityscape</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div className="flex justify-center items-center py-20">

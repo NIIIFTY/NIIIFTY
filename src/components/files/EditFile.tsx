@@ -269,7 +269,7 @@ export function EditFile({ id }: { id: string }) {
             </div>
           </DetailCard>
 
-          {/* Distribution & Technicals */}
+          {/* Distribution */}
           <DetailCard title="Distribution" icon={HardDrive} size="md">
             <Tabs
               tabs={tabs.map((tab) => ({

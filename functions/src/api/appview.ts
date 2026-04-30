@@ -24,31 +24,50 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
   }
 
   try {
-    // 1. Generate embedding for the query
-    console.log(`Generating embedding for query: "${query}" using model text-embedding-004...`);
-    const response = await ai.models.embedContent({
-      model: 'text-embedding-004',
-      contents: query,
-    });
+    let snapshot;
     
-    const embedding = response.embeddings?.[0]?.values;
-    if (!embedding) {
-      console.error('AI response missing embedding values:', JSON.stringify(response));
-      throw new Error('Failed to generate embedding: empty response from AI');
-    }
-    
-    console.log(`Generated embedding (length: ${embedding.length}). Performing vector search in matadisco_index...`);
-    
-    // 2. Perform vector search on Firestore
-    // Note: ensure matadisco_index collection has a vector index on 'embedding'
-    const snapshot = await db.collection('matadisco_index')
-      .findNearest('embedding', FieldValue.vector(embedding), {
-        limit: Math.min(limit, 50),
-        distanceMeasure: 'COSINE'
-      })
-      .get();
+    if (process.env.FUNCTIONS_EMULATOR === 'true') {
+      console.log(`[EMULATOR] Bypassing Vertex AI vector search. Performing local text search for "${query}"...`);
+      snapshot = await db.collection('matadisco_index').get();
+      // Filter in memory for local emulation
+      const lowerQuery = query.toLowerCase();
+      const filteredDocs = snapshot.docs.filter(doc => {
+        const data = doc.data();
+        return (data.label && data.label.toLowerCase().includes(lowerQuery)) ||
+               (data.summary && data.summary.toLowerCase().includes(lowerQuery)) ||
+               (data.tags && data.tags.some((t: string) => t.toLowerCase().includes(lowerQuery)));
+      }).slice(0, Math.min(limit, 50));
       
-    console.log(`Search returned ${snapshot.size} results.`);
+      console.log(`[EMULATOR] Local text search returned ${filteredDocs.length} results.`);
+      // Re-map to match snapshot structure expected below
+      snapshot = { size: filteredDocs.length, docs: filteredDocs } as any;
+    } else {
+      // 1. Generate embedding for the query
+      console.log(`Generating embedding for query: "${query}" using model text-embedding-004...`);
+      const response = await ai.models.embedContent({
+        model: 'text-embedding-004',
+        contents: query,
+      });
+      
+      const embedding = response.embeddings?.[0]?.values;
+      if (!embedding) {
+        console.error('AI response missing embedding values:', JSON.stringify(response));
+        throw new Error('Failed to generate embedding: empty response from AI');
+      }
+      
+      console.log(`Generated embedding (length: ${embedding.length}). Performing vector search in matadisco_index...`);
+      
+      // 2. Perform vector search on Firestore
+      // Note: ensure matadisco_index collection has a vector index on 'embedding'
+      snapshot = await db.collection('matadisco_index')
+        .findNearest('embedding', FieldValue.vector(embedding), {
+          limit: Math.min(limit, 50),
+          distanceMeasure: 'COSINE'
+        })
+        .get();
+        
+      console.log(`Search returned ${snapshot.size} results.`);
+    }
       
     // 3. Return results
     const results = snapshot.docs.map(doc => {

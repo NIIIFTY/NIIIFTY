@@ -30,6 +30,26 @@ async function saveCursor(cursor: number) {
   await db.doc(CURSOR_DOC).set({ cursor }, { merge: true });
 }
 
+const handleCache = new Map<string, string>();
+
+async function resolveHandle(did: string): Promise<string | null> {
+  if (handleCache.has(did)) return handleCache.get(did)!;
+  
+  try {
+    const res = await fetch(`https://plc.directory/${did}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const handle = json.alsoKnownAs?.[0]?.replace('at://', '');
+    if (handle) {
+      handleCache.set(did, handle);
+      return handle;
+    }
+  } catch (e) {
+    console.error(`[WARN] Failed to resolve handle for ${did}:`, e);
+  }
+  return null;
+}
+
 async function main() {
   console.log('Starting NIIIFTY AppView consumer...');
   let count = 0;
@@ -78,6 +98,8 @@ async function main() {
           continue;
         }
 
+        const handle = await resolveHandle(did);
+
         const metadataToSave = {
           uri,
           did,
@@ -85,6 +107,7 @@ async function main() {
           cid: commit.cid,
           publishedAt: record.publishedAt,
           tags: record.tags || [],
+          handle: handle || null,
 
           // Extracted IIIF
           provider: iiif.provider || null,

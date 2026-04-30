@@ -202,43 +202,47 @@ export const fileUpdated = functions
     await triggerRevalidation(fileId);
 
     // NIIIFTY 3: Manual Broadcast to ATProtocol
-    if (
-      metadata.broadcasting &&
-      metadata.cid &&
-      process.env.ATPROTO_SERVICE &&
-      process.env.ATPROTO_IDENTIFIER &&
-      process.env.ATPROTO_PASSWORD
-    ) {
-      try {
-        const agent = await authenticateAgent(
-          process.env.ATPROTO_SERVICE,
-          process.env.ATPROTO_IDENTIFIER,
-          process.env.ATPROTO_PASSWORD,
-        );
-        
-        // Use deterministic pinning URL for the AT Protocol resource
-        const pinnedUrl = getProxyUrl(metadata.cid, 'iiif/index.json');
-
-        await publishIIIFRecord(agent, fileId, {
-          id: pinnedUrl,
-          thumbnail: getProxyUrl(metadata.cid, 'thumb.jpg'),
-          cid: metadata.cid,
-          label: metadata.label,
-          summary: metadata.summary,
-          provider: metadata.provider,
-          rights: metadata.rights,
-          tags: metadata.tags,
-          metadata: metadata.metadata,
-        });
-
-        updatedProps.atDid = agent.session.did;
+    if (metadata.broadcasting && metadata.cid) {
+      if (process.env.FUNCTIONS_EMULATOR === 'true') {
+        console.log(`[EMULATOR] Bypassing AT Protocol network. Mocking successful broadcast for ${fileId}...`);
+        updatedProps.atDid = `did:plc:local-emulator-mock-${Date.now()}`;
         updatedProps.broadcasting = false;
-        
-        console.log(`Successfully manual-broadcasted ${fileId} to AT Protocol`);
-      } catch (e) {
-        console.error(`Failed to manual-broadcast to AT Protocol:`, e);
-        // Reset the flag even on failure to prevent infinite loops, or handle error state
-        updatedProps.broadcasting = false;
+      } else if (
+        process.env.ATPROTO_SERVICE &&
+        process.env.ATPROTO_IDENTIFIER &&
+        process.env.ATPROTO_PASSWORD
+      ) {
+        try {
+          const agent = await authenticateAgent(
+            process.env.ATPROTO_SERVICE,
+            process.env.ATPROTO_IDENTIFIER,
+            process.env.ATPROTO_PASSWORD,
+          );
+          
+          // Use deterministic pinning URL for the AT Protocol resource
+          const pinnedUrl = getProxyUrl(metadata.cid, 'iiif/index.json');
+
+          await publishIIIFRecord(agent, fileId, {
+            id: pinnedUrl,
+            thumbnail: getProxyUrl(metadata.cid, 'thumb.jpg'),
+            cid: metadata.cid,
+            label: metadata.label,
+            summary: metadata.summary,
+            provider: metadata.provider,
+            rights: metadata.rights,
+            tags: metadata.tags,
+            metadata: metadata.metadata,
+          });
+
+          updatedProps.atDid = agent.session.did;
+          updatedProps.broadcasting = false;
+          
+          console.log(`Successfully manual-broadcasted ${fileId} to AT Protocol`);
+        } catch (e) {
+          console.error(`Failed to manual-broadcast to AT Protocol:`, e);
+          // Reset the flag even on failure to prevent infinite loops, or handle error state
+          updatedProps.broadcasting = false;
+        }
       }
     }
 

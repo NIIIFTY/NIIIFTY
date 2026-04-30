@@ -30,6 +30,7 @@ interface RecordData {
   tags?: string[];
   metadata?: Record<string, string>;
   publishedAt?: string;
+  handle?: string;
 }
 
 export default function ViewPage() {
@@ -147,20 +148,16 @@ export default function ViewPage() {
 
           <div className="space-y-6">
             <Label className="text-zinc-600 dark:text-zinc-400">Custom Metadata Fields</Label>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
               {record.metadata && Object.keys(record.metadata).length > 0 ? (
                 Object.entries(record.metadata).map(([key, value]) => (
-                  <div key={key} className="flex gap-3">
-                    <div className="flex-1 bg-zinc-50 dark:bg-zinc-900/30 px-3 py-2 rounded-md border border-zinc-200 dark:border-zinc-800 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                      {key}
-                    </div>
-                    <div className="flex-1 bg-zinc-50 dark:bg-zinc-900/30 px-3 py-2 rounded-md border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-700 dark:text-zinc-300">
-                      {value}
-                    </div>
+                  <div key={key} className="flex flex-col space-y-1">
+                    <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold">{key}</span>
+                    <span className="text-sm text-zinc-900 dark:text-zinc-100 font-medium">{value}</span>
                   </div>
                 ))
               ) : (
-                <div className="flex items-center justify-center rounded-xl bg-zinc-50 py-10 dark:bg-zinc-900/30">
+                <div className="col-span-full flex items-center justify-center rounded-xl bg-zinc-50 py-10 dark:bg-zinc-900/30">
                    <p className="text-xs text-zinc-400 uppercase tracking-widest italic font-medium">No custom metadata</p>
                 </div>
               )}
@@ -224,15 +221,29 @@ export default function ViewPage() {
            <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
              <User className="w-5 h-5 text-zinc-500" />
            </div>
-           <div className="overflow-hidden">
-             <p className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">@{record.author.split('.')[0]}</p>
-             <p className="text-xs text-zinc-500 truncate">{record.author}</p>
+           <div className="overflow-hidden flex-grow">
+             <p className="font-bold text-zinc-900 dark:text-zinc-100 truncate">
+               {record.handle ? `@${record.handle}` : `@${record.author.split('.')[0]}`}
+             </p>
+             <p className="text-[10px] text-zinc-500 truncate font-mono mt-0.5">{record.author}</p>
+             
+             {record.handle && !record.handle.includes('mock') && (
+               <a 
+                 href={`https://bsky.app/profile/${record.handle}`} 
+                 target="_blank" 
+                 rel="noreferrer"
+                 className="inline-flex items-center mt-2 text-[10px] font-bold text-blue-600 hover:text-blue-500 uppercase tracking-widest"
+               >
+                 View on Bluesky
+                 <ExternalLink className="ml-1 h-2.5 w-2.5" />
+               </a>
+             )}
            </div>
          </div>
       </DetailCard>
 
-      {/* Distribution & Technicals Card */}
-      <DetailCard title="Distribution & Technicals" icon={HardDrive} size="md">
+      {/* Distribution Card */}
+      <DetailCard title="Distribution" icon={HardDrive} size="md">
          <div className="space-y-6">
            <div className="space-y-2">
              <div className="flex items-center justify-between">
@@ -250,7 +261,7 @@ export default function ViewPage() {
              <div className="space-y-2 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                <div className="flex items-center justify-between">
                  <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">IIIF Manifest</Label>
-                 <a href={iiifManifestUrl} target="_blank" rel="noreferrer" className="text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
+                 <a href={uvUrl} target="_blank" rel="noreferrer" className="text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100" title={t('viewOnUVLink')}>
                    <ExternalLink size={12} />
                  </a>
                </div>
