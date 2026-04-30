@@ -72,6 +72,7 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
     // 3. Return results
     const results = snapshot.docs.map(doc => {
       const data = doc.data();
+
       return { 
         ...data,
         id: doc.id, 
@@ -92,6 +93,7 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
           return val.toUpperCase();
         })(data.type || '', data.metadata?.format),
         author: data.did || 'unknown',
+        handle: data.handle || null,
         thumbnailUrl: data.thumbnailUrl || null,
       };
     });
@@ -122,6 +124,7 @@ export const getRecord = onCall({ region: 'europe-west1' }, async (request) => {
     }
 
     const data = doc.data()!;
+
     return {
       record: {
         ...data,
@@ -143,6 +146,7 @@ export const getRecord = onCall({ region: 'europe-west1' }, async (request) => {
           return val.toUpperCase();
         })(data.type || '', data.metadata?.format),
         author: data.did || 'unknown',
+        handle: data.handle || null,
         thumbnailUrl: data.thumbnailUrl || null,
       }
     };

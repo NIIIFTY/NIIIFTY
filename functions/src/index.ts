@@ -22,6 +22,102 @@ export * as appview from './api/appview.js';
 
 // when a file is created in firestore,
 // generate derivatives, and replicate to filebase
+async function processAsset(fileId: string, metadata: any, docRef: FirebaseFirestore.DocumentReference) {
+  // get a reference to the uploaded original.[png, jpg, tif, tiff, mp3, mp4, glb] file
+  const [files] = await gcsBucket.getFiles({ prefix: `${fileId}/original` });
+
+  if (files.length) {
+    const originalFile = files[0];
+
+    console.log(`--- started processing ${originalFile.name} (${metadata.type})---`);
+
+    // Use the local GCS proxy for the cloud bucket manifest
+    metadata.manifestId = getProxyUrl(fileId, '', 'gcs');
+
+    const tempDir = createTempDir();
+    const tempFilePath = path.join(tempDir, path.basename(originalFile.name));
+    await originalFile.download({ destination: tempFilePath });
+
+    console.log(`${originalFile.name} downloaded to ${tempFilePath}`);
+
+    let processedProps: any = {};
+
+    // NIIIFTY AI: Automatically generate an enriched summary if none exists
+    if (!metadata.summary) {
+      const aiResult = await generateFileSummary(tempFilePath, metadata.type);
+      if (aiResult) {
+        processedProps.summary = aiResult.summary;
+        // Merge AI-generated metadata, filtering out "unknown"
+        const mergedMetadata = {
+          ...(metadata.metadata || {}),
+          ...aiResult.metadata
+        };
+        processedProps.metadata = Object.fromEntries(
+          Object.entries(mergedMetadata).filter(([_, v]) => v && String(v).toLowerCase() !== 'unknown')
+        );
+
+        // Merge AI-generated tags, filtering out "unknown"
+        processedProps.tags = Array.from(new Set([
+          ...(metadata.tags || []),
+          ...(aiResult.tags || [])
+        ])).filter(t => t && String(t).toLowerCase() !== 'unknown');
+        // Also flag it so the UI can show it was AI-generated
+        processedProps.aiGenerated = true;
+      }
+    }
+
+    switch (metadata.type) {
+      case 'image/png':
+      case 'image/jpeg':
+      case 'image/tif':
+      case 'image/tiff': {
+        const imageProps = await processImage(tempFilePath, metadata);
+        processedProps = { ...processedProps, ...imageProps };
+        break;
+      }
+      case 'video/mp4': {
+        const videoProps = await processMP4(tempFilePath, metadata);
+        processedProps = { ...processedProps, ...videoProps };
+        break;
+      }
+      case 'model/gltf-binary': {
+        const modelProps = await processGLB(tempFilePath, metadata);
+        processedProps = { ...processedProps, ...modelProps };
+        break;
+      }
+    }
+
+    // upload the generated files to GCS
+    await uploadFilesToGCS(tempDir, fileId);
+
+    // upload the generated files to filebase
+    // Note: We no longer generate a static manifest here. 
+    // The proxies will generate it on-the-fly using the CID returned below.
+    const cid = await uploadTempFilesToFilebase(tempDir, fileId);
+    console.log(`Successfully uploaded IIIF manifest to IPFS with CID: ${cid}`);
+
+    // delete the original file as it's no longer needed
+    await originalFile.delete();
+
+    // delete the temp directory as it's no longer needed
+    deleteDir(tempDir);
+
+    console.log(`--- finished processing ${originalFile.name} (${metadata.type})---`);
+
+    // update associated firestore record
+    await docRef.set(
+      {
+        ...processedProps,
+        cid,
+        processed: true,
+      },
+      { merge: true },
+    );
+  } else {
+    console.error(`No original file found in GCS for ${fileId}/original!`);
+  }
+}
+
 export const fileCreated = functions
   .region('europe-west1')
   .runWith({
@@ -39,104 +135,18 @@ export const fileCreated = functions
   .firestore.document('files/{fileId}')
   .onCreate(async (snap, context) => {
     const fileId = context.params.fileId;
-    // get a reference to the uploaded original.[png, jpg, tif, tiff, mp3, mp4, glb] file
-    const [files] = await gcsBucket.getFiles({ prefix: `${fileId}/original` });
+    const metadata: any = {
+      fileId,
+      baseURL: GCS_URL,
+      ...snap.data(),
+    };
 
-    if (files.length) {
-      const originalFile = files[0];
-
-      const metadata: any = {
-        fileId,
-        baseURL: GCS_URL,
-        ...snap.data(),
-      };
-
-      console.log(`--- started processing ${originalFile.name} (${metadata.type})---`);
-
-      // Use the local GCS proxy for the cloud bucket manifest
-      metadata.manifestId = getProxyUrl(fileId, '', 'gcs');
-
-      const tempDir = createTempDir();
-      const tempFilePath = path.join(tempDir, path.basename(originalFile.name));
-      await originalFile.download({ destination: tempFilePath });
-
-      console.log(`${originalFile.name} downloaded to ${tempFilePath}`);
-
-      let processedProps: any = {};
-
-      // NIIIFTY AI: Automatically generate an enriched summary if none exists
-      if (!metadata.summary) {
-        const aiResult = await generateFileSummary(tempFilePath, metadata.type);
-        if (aiResult) {
-          processedProps.summary = aiResult.summary;
-          // Merge AI-generated metadata, filtering out "unknown"
-          const mergedMetadata = {
-            ...(metadata.metadata || {}),
-            ...aiResult.metadata
-          };
-          processedProps.metadata = Object.fromEntries(
-            Object.entries(mergedMetadata).filter(([_, v]) => v && String(v).toLowerCase() !== 'unknown')
-          );
-
-          // Merge AI-generated tags, filtering out "unknown"
-          processedProps.tags = Array.from(new Set([
-            ...(metadata.tags || []),
-            ...(aiResult.tags || [])
-          ])).filter(t => t && String(t).toLowerCase() !== 'unknown');
-          // Also flag it so the UI can show it was AI-generated
-          processedProps.aiGenerated = true;
-        }
-      }
-
-      switch (metadata.type) {
-        case 'image/png':
-        case 'image/jpeg':
-        case 'image/tif':
-        case 'image/tiff': {
-          const imageProps = await processImage(tempFilePath, metadata);
-          processedProps = { ...processedProps, ...imageProps };
-          break;
-        }
-        case 'video/mp4': {
-          const videoProps = await processMP4(tempFilePath, metadata);
-          processedProps = { ...processedProps, ...videoProps };
-          break;
-        }
-        case 'model/gltf-binary': {
-          const modelProps = await processGLB(tempFilePath, metadata);
-          processedProps = { ...processedProps, ...modelProps };
-          break;
-        }
-      }
-
-      // upload the generated files to GCS
-      await uploadFilesToGCS(tempDir, fileId);
-
-      // upload the generated files to filebase
-      // Note: We no longer generate a static manifest here. 
-      // The proxies will generate it on-the-fly using the CID returned below.
-      const cid = await uploadTempFilesToFilebase(tempDir, fileId);
-      console.log(`Successfully uploaded IIIF manifest to IPFS with CID: ${cid}`);
-
-      // delete the original file as it's no longer needed
-      await originalFile.delete();
-
-      // delete the temp directory as it's no longer needed
-      deleteDir(tempDir);
-
-      console.log(`--- finished processing ${originalFile.name} (${metadata.type})---`);
-
-      // update associated firestore record
-      await snap.ref.set(
-        {
-          ...processedProps,
-          cid,
-          processed: true,
-        },
-        { merge: true },
-      );
+    if (metadata.status === 'uploading') {
+      console.log('File is still uploading to GCS, delaying processing until status is complete');
       return null;
     }
+
+    await processAsset(fileId, metadata, snap.ref);
     return null;
   });
 
@@ -160,10 +170,18 @@ export const fileUpdated = functions
     const previousValue = change.before.data();
     const fileId = context.params.fileId;
     // Get an object representing the document
-    const metadata = change.after.data();
+    const metadata: any = {
+      fileId,
+      baseURL: GCS_URL,
+      ...change.after.data(),
+    };
 
-    // console.log("previous value", previousValue);
-    // console.log("new value", metadata);
+    // if the file just finished uploading to GCS, process it!
+    if (previousValue.status === 'uploading' && metadata.status === 'complete') {
+      console.log('File upload to GCS complete, starting processing...');
+      await processAsset(fileId, metadata, change.after.ref);
+      return null;
+    }
 
     // if the file has not been processed, ignore
     if (!metadata.processed) {

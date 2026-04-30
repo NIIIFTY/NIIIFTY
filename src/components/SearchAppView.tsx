@@ -17,6 +17,7 @@ interface SearchResult {
   summary: string;
   type: string;
   author: string;
+  handle?: string;
   thumbnailUrl?: string;
 }
 
@@ -132,7 +133,9 @@ export function SearchAppView() {
                 <div className="mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                   <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Author</span>
-                    <span className="text-xs font-medium dark:text-zinc-300">@{result.author.split('.')[0]}</span>
+                    <span className="text-xs font-medium dark:text-zinc-300 truncate max-w-[150px]">
+                      {result.handle ? `@${result.handle}` : `@${result.author.split('.')[0]}`}
+                    </span>
                   </div>
                   <Link 
                     href={`/view/${result.id}`} 
