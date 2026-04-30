@@ -183,8 +183,8 @@ export const fileCreated = functions
 export const fileUpdated = functions
   .region('europe-west1')
   .runWith({
-    timeoutSeconds: 300,
-    memory: '1GB',
+    timeoutSeconds: 540, // Match fileCreated
+    memory: '2GB', // Match fileCreated
     secrets: [
       'ATPROTO_SERVICE',
       'ATPROTO_IDENTIFIER',

@@ -317,7 +317,7 @@ export function EditFile({ id }: { id: string }) {
                         ? 'Your resource is live on the AT Protocol network and discoverable via Search AppView.' 
                         : atDid 
                         ? 'Broadcasting complete. Waiting for the global search indexer to pick up the record (usually 30-60s).' 
-                        : 'Publishing will broadcast this IIIF manifest to the federated network for global discovery.'}
+                        : 'Publish this file to the federated network for global discovery.'}
                     </p>
                   </div>
                 </div>
@@ -340,11 +340,12 @@ export function EditFile({ id }: { id: string }) {
                   type="button"
                   variant={atDid ? "outline" : "default"}
                   size="sm"
-                  disabled={broadcasting}
+                  disabled={broadcasting || !isProcessed}
                   onClick={onPublishAtproto}
                   className={cn(
                     "flex-1 h-11 text-xs font-bold tracking-tight rounded-xl transition-all duration-300",
-                    !atDid && "bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-lg shadow-zinc-900/10"
+                    !atDid && "bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-lg shadow-zinc-900/10",
+                    !isProcessed && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   {broadcasting ? (

@@ -59,6 +59,7 @@ export async function generateFileSummary(filePath: string, mimeType: string): P
 
     const prompt = 'Analyze this item for an archival search index. Provide a concise natural language summary, a set of relevant metadata pairs, and a few descriptive tags. Focus on visual facts, subject matter, and style. Use standard terminology for metadata keys (e.g., subject, type, date, creator, format). Omit any keys or tags if the value is "unknown" or uncertain.';
 
+    const startTime = Date.now();
     const result = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: [
@@ -78,14 +79,18 @@ export async function generateFileSummary(filePath: string, mimeType: string): P
       config: {
         responseMimeType: 'application/json',
         responseSchema: responseSchema,
+        thinkingConfig: {
+          thinkingLevel: 'low'
+        }
       } as any
     });
+    const duration = Date.now() - startTime;
 
     const output = result.text;
 
     if (output) {
       const parsed = JSON.parse(output) as FileAIResult;
-      console.log(`[AI] Generated summary: ${parsed.summary}`);
+      console.log(`[AI] Generated summary in ${duration}ms: ${parsed.summary}`);
       console.log(`[AI] Generated metadata: ${JSON.stringify(parsed.metadata)}`);
       console.log(`[AI] Generated tags: ${JSON.stringify(parsed.tags)}`);
       return parsed;
