@@ -240,22 +240,35 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
     const fileName = `${id}/original.${extension}`;
     const storageRef = ref(storage, fileName);
 
-    const task = uploadBytesResumable(storageRef, file);
-    // @ts-ignore
-    uploadTaskRef.current = task;
+    const startUpload = async () => {
+      // 1. Reserve the document in Firestore first to satisfy storage security rules
+      await add(userAdapter!, id, { uid, type, label, status: 'uploading' } as any);
 
-    task.on(
-      'state_changed',
-      (snapshot) => {
-        const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        setProgress(pct);
-      },
-      (error) => console.error(error),
-      async () => {
-        setUploadComplete(true);
-        await add(userAdapter!, id, { uid, type, label });
-      },
-    );
+      // 2. Start the physical file upload
+      const task = uploadBytesResumable(storageRef, file);
+      // @ts-ignore
+      uploadTaskRef.current = task;
+
+      task.on(
+        'state_changed',
+        (snapshot) => {
+          const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          setProgress(pct);
+        },
+        async (error) => {
+          console.error(error);
+          // Mark as error if upload fails
+          await userAdapter!.updateFile(id, { status: 'error' } as any);
+        },
+        async () => {
+          setUploadComplete(true);
+          // Mark as complete, Cloud Functions will take over for processing
+          await userAdapter!.updateFile(id, { status: 'complete' } as any);
+        },
+      );
+    };
+
+    startUpload();
   }, [file, user, userAdapter]);
 
   return (

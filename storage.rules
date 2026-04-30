@@ -6,14 +6,11 @@ service firebase.storage {
       // Public read access for assets
       allow read: if true;
       
-      // Allow creation if the corresponding Firestore document doesn't exist yet (new upload flow),
-      // OR if it does exist, the user must be the owner.
-      // Must be non-anonymous authenticated user.
+      // Allow creation only if the corresponding Firestore document already exists,
+      // and the user is the owner of that document.
       allow create: if request.auth != null && 
-                       request.auth.token.firebase.sign_in_provider != 'anonymous' && (
-        !firestore.exists(/databases/(default)/documents/files/$(fileId)) ||
-        firestore.get(/databases/(default)/documents/files/$(fileId)).data.uid == request.auth.uid
-      );
+                       request.auth.token.firebase.sign_in_provider != 'anonymous' &&
+                       firestore.get(/databases/(default)/documents/files/$(fileId)).data.uid == request.auth.uid;
       
       // Prevent updating or deleting existing files unless they own the corresponding firestore doc
       allow update, delete: if request.auth != null && 

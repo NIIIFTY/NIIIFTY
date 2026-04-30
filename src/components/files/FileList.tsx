@@ -69,7 +69,13 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
                     >
                       <td className="w-16 py-4 pr-3 pl-4 lg:w-32">
                         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 lg:h-20 lg:w-24">
-                          {file.processed ? (
+                          {file.status === 'error' ? (
+                            <div className="flex flex-col items-center justify-center text-red-500" title={t('uploadFailed') || 'Upload Failed'}>
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 lg:h-8 lg:w-8 opacity-70">
+                                <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          ) : file.processed ? (
                             <img
                               src={getFileUrl('GCS', file.id!, 'thumb.jpg')}
                               alt={file.label}

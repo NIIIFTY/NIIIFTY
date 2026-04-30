@@ -39,6 +39,7 @@ export interface File {
   metadata?: Record<string, string>; // IIIF exact-match metadata dictionary
   atDid?: string; // The AT Protocol DID of the repository
   broadcasting?: boolean; // Flag to trigger manual publishing via Cloud Functions
+  status?: 'uploading' | 'error' | 'complete'; // Track upload state to handle orphans
 }
 
 export type FileProps = {
