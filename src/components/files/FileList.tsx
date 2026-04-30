@@ -8,7 +8,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useMounted } from '@/hooks/useMounted';
 import { AuthoringFile } from '@/utils/Types';
 import UploadFilesButton from '@/components/files/UploadFilesButton';
-
+import { FileIndexBadge } from './FileIndexBadge';
 
 export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => void }) => {
   const { user, userAdapter } = useUserStore();
@@ -89,8 +89,11 @@ export const FileList = ({ onSelectFile }: { onSelectFile: (fileId: string) => v
                         </div>
                       </td>
                       <td className="max-w-[45vw] overflow-hidden py-4 pr-3 pl-4 text-sm font-medium text-ellipsis whitespace-nowrap text-zinc-900 dark:text-zinc-100">
-                        <div className="flex flex-col">
-                          <span className="font-semibold">{file.label}</span>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center">
+                            <span className="font-semibold">{file.label}</span>
+                            <FileIndexBadge id={file.id} />
+                          </div>
                           <span className="text-xs text-zinc-500 lg:hidden">
                             {file.type.split('/')[1]} • {new Date(file.modified as any).toLocaleDateString()}
                           </span>

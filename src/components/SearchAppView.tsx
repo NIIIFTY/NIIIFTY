@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
 import { Input } from '@/components/ui/input';
@@ -23,20 +24,24 @@ interface SearchResult {
 
 export function SearchAppView() {
   const { t } = useTranslation();
-  const [query, setQuery] = useState('');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  const [query, setQuery] = useState(searchParams.get('q') || '');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const initialSearchDone = useRef(false);
 
-  const handleSearch = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!query.trim()) return;
-
+  const executeSearch = async (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
+    
     setLoading(true);
     setHasSearched(true);
     try {
       const searchFn = httpsCallable(functions, 'appview-searchAppView');
-      const response = await searchFn({ query, limit: 12 });
+      const response = await searchFn({ query: searchQuery, limit: 12 });
       const data = response.data as { results: SearchResult[] };
       setResults(data.results || []);
     } catch (error) {
@@ -44,6 +49,27 @@ export function SearchAppView() {
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    // Only execute automatically on initial load if query exists
+    const q = searchParams.get('q');
+    if (q && !initialSearchDone.current) {
+      initialSearchDone.current = true;
+      executeSearch(q);
+    }
+  }, [searchParams]);
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!query.trim()) return;
+
+    // Update URL quietly so back button works
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('q', query);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    
+    executeSearch(query);
   };
 
   return (

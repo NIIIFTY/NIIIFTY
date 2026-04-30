@@ -8,6 +8,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { remove, useAuthoringFile } from '@/hooks/useFile';
 import { AuthoringFile, FileSystem, LicenseURL, MIMETYPES } from '@/utils/Types';
 import { useMounted } from '@/hooks/useMounted';
+import { useIndexStatus } from '@/hooks/useIndexStatus';
 import Alert from '../Alert';
 import { getFileUrl, cn } from '@/utils/Utils';
 import CopyText from '../CopyText';
@@ -22,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, Info, Globe, HardDrive, FileText, Tags, ExternalLink } from 'lucide-react';
+import { X, Plus, Info, Globe, HardDrive, FileText, Tags, ExternalLink, CheckCircle2, Search, Loader2 } from 'lucide-react';
 import { BlueskyIcon } from '../icons/Bluesky';
 import H1 from '../H1';
 import { DetailLayout } from './layout/DetailLayout';
@@ -161,6 +162,7 @@ export function EditFile({ id }: { id: string }) {
   });
 
   const isMounted = useMounted();
+  const { isIndexed } = useIndexStatus(atDid ? id : undefined);
   const label = watch('label') || '';
 
   const performSave = async (data: FileFormData, additionalFields: Partial<AuthoringFile> = {}) => {
@@ -336,30 +338,75 @@ export function EditFile({ id }: { id: string }) {
             </div>
           </DetailCard>
 
-          {/* Federated Network Status */}
           <DetailCard title="Bluesky / Matadisco" icon={BlueskyIcon} size="md">
-            <p className="text-xs text-zinc-400 mb-6">Publish this manifest to the federated network.</p>
-
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                {atDid ? (
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1">
-                    Live
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-zinc-500/10 text-zinc-500 border-zinc-500/20 px-3 py-1">
-                    Draft
-                  </Badge>
+              <div className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+                <div className="flex items-center gap-4">
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-500 ${
+                    isIndexed ? 'bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20' : 
+                    atDid ? 'bg-blue-500/10 text-blue-500 ring-1 ring-blue-500/20' : 
+                    'bg-zinc-100 text-zinc-400 dark:bg-zinc-800'
+                  }`}>
+                    {isIndexed ? (
+                      <CheckCircle2 size={24} strokeWidth={1.5} className="animate-in zoom-in duration-300" />
+                    ) : atDid ? (
+                      <Loader2 size={24} strokeWidth={1.5} className="animate-spin" />
+                    ) : (
+                      <BlueskyIcon className="h-6 w-6 opacity-50" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                        {isIndexed ? 'Fully Indexed' : atDid ? 'Indexing...' : 'Not Published'}
+                      </h4>
+                      {isIndexed && (
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] uppercase tracking-wider font-bold h-5 px-2">
+                          Live
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
+                      {isIndexed 
+                        ? 'Your resource is live on the AT Protocol network and discoverable via Search AppView.' 
+                        : atDid 
+                        ? 'Broadcasting complete. Waiting for the global search indexer to pick up the record (usually 30-60s).' 
+                        : 'Publishing will broadcast this IIIF manifest to the federated network for global discovery.'}
+                    </p>
+                  </div>
+                </div>
+                
+                {isIndexed && (
+                  <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                     <a 
+                       href={`/search?q=${id}`} 
+                       className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                     >
+                       <Search size={12} strokeWidth={2.5} />
+                       View in Search AppView
+                     </a>
+                  </div>
                 )}
+              </div>
+
+              <div className="flex items-center gap-3">
                 <Button 
                   type="button"
                   variant={atDid ? "outline" : "default"}
                   size="sm"
+                  disabled={broadcasting}
                   onClick={onPublishAtproto}
-                  disabled={broadcasting || !isProcessed}
-                  className="font-semibold"
+                  className={cn(
+                    "flex-1 h-11 text-xs font-bold tracking-tight rounded-xl transition-all duration-300",
+                    !atDid && "bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-lg shadow-zinc-900/10"
+                  )}
                 >
-                  {broadcasting ? "Broadcasting..." : atDid ? "Update" : "Publish"}
+                  {broadcasting ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 size={14} className="animate-spin" />
+                      Broadcasting...
+                    </span>
+                  ) : atDid ? 'Update on Network' : 'Publish to Network'}
                 </Button>
               </div>
 
@@ -376,7 +423,7 @@ export function EditFile({ id }: { id: string }) {
                     target="_blank"
                     className="flex w-full items-center justify-center rounded-lg bg-white py-2 text-xs font-medium border border-zinc-200 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
                   >
-                    View on Explorer
+                    View on PDS Explorer
                   </a>
                 </div>
               )}

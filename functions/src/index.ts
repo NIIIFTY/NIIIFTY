@@ -3,6 +3,7 @@
 // todo: upgrade to functions v2 when out of beta
 // https://firebase.google.com/docs/functions/beta/get-started
 import * as functions from 'firebase-functions/v1';
+import admin from 'firebase-admin';
 import path from 'path';
 import { gcsBucket, uploadFilesToGCS, deleteGCSFiles } from './gcs.js';
 import processImage from './image.js';
@@ -16,7 +17,11 @@ import { getProxyUrl } from './proxy.js';
 import { authenticateAgent, publishIIIFRecord, deleteIIIFRecord } from './atproto/index.js';
 import { triggerRevalidation } from './revalidate.js';
 import { generateFileSummary } from './ai.js';
-// Removed createIIIFManifest as it is now dynamic
+
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+const db = admin.firestore();
 
 export * as appview from './api/appview.js';
 
@@ -223,8 +228,32 @@ export const fileUpdated = functions
     if (metadata.broadcasting && metadata.cid) {
       if (process.env.FUNCTIONS_EMULATOR === 'true') {
         console.log(`[EMULATOR] Bypassing AT Protocol network. Mocking successful broadcast for ${fileId}...`);
-        updatedProps.atDid = `did:plc:local-emulator-mock-${Date.now()}`;
+        const atDid = `did:plc:local-emulator-mock-${Date.now()}`;
+        updatedProps.atDid = atDid;
         updatedProps.broadcasting = false;
+
+        // NIIIFTY 3: Mock the indexing process as well in the emulator
+        // This writes directly to the collection that useIndexStatus.ts and searchAppView observe
+        console.log(`[EMULATOR] Mocking AppView indexing for ${fileId}...`);
+        const uri = `at://${atDid}/cx.vmx.matadisco/${fileId}`;
+        await db.collection('matadisco_index').doc(encodeURIComponent(uri)).set({
+          uri,
+          did: atDid,
+          rkey: fileId,
+          cid: metadata.cid,
+          publishedAt: new Date().toISOString(),
+          tags: metadata.tags || [],
+          handle: 'emulator.test',
+          provider: metadata.provider || null,
+          rights: metadata.rights || null,
+          label: metadata.label || null,
+          summary: metadata.summary || null,
+          searchText: `${metadata.label || ''} ${metadata.summary || ''}`.trim(),
+          type: metadata.type || null,
+          metadata: metadata.metadata || {},
+          thumbnailUrl: getProxyUrl(metadata.cid, 'thumb.jpg'),
+        });
+        console.log(`[EMULATOR] Mock indexing complete for ${uri}`);
       } else if (
         process.env.ATPROTO_SERVICE &&
         process.env.ATPROTO_IDENTIFIER &&
@@ -293,7 +322,12 @@ export const fileDeleted = functions
     if (metadata.atDid) {
       try {
         console.log(`Attempting to delete AT Protocol record for ${fileId}...`);
-        if (process.env.ATPROTO_SERVICE && process.env.ATPROTO_IDENTIFIER && process.env.ATPROTO_PASSWORD) {
+        if (process.env.FUNCTIONS_EMULATOR === 'true') {
+          console.log(`[EMULATOR] Mocking AppView index deletion for ${fileId}...`);
+          const uri = `at://${metadata.atDid}/cx.vmx.matadisco/${fileId}`;
+          await db.collection('matadisco_index').doc(encodeURIComponent(uri)).delete();
+          console.log(`[EMULATOR] Mock deletion complete for ${uri}`);
+        } else if (process.env.ATPROTO_SERVICE && process.env.ATPROTO_IDENTIFIER && process.env.ATPROTO_PASSWORD) {
           const agent = await authenticateAgent(
             process.env.ATPROTO_SERVICE,
             process.env.ATPROTO_IDENTIFIER,

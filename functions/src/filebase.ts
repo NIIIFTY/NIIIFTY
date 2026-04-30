@@ -14,6 +14,7 @@ export async function uploadTempFilesToFilebase(tempDirPath: string, fileId: str
       accessKeyId: process.env.FILEBASE_ACCESS_TOKEN || 'placeholder',
       secretAccessKey: process.env.FILEBASE_SECRET_KEY || 'placeholder',
     },
+    forcePathStyle: true,
   });
 
   const carFileName = `${fileId}.car`;
@@ -24,24 +25,41 @@ export async function uploadTempFilesToFilebase(tempDirPath: string, fileId: str
     // Pack the directory into a CAR file using ipfs-car CLI
     // This utilizes the stream encoder but guarantees the root CID is injected into the CAR header.
     console.log(`Packing ${tempDirPath} to ${outCarPath}`);
-    const { stdout } = await execAsync(`npx ipfs-car pack "${tempDirPath}" --output "${outCarPath}"`);
+    const { stdout, stderr } = await execAsync(`npx ipfs-car pack "${tempDirPath}" --output "${outCarPath}"`);
+    if (stderr) console.warn('IPFS-CAR Warning/Error:', stderr);
+    
     const cidFromPack = stdout.trim();
+    console.log(`IPFS-CAR stdout: ${cidFromPack}`);
+
+    if (!fs.existsSync(outCarPath)) {
+      throw new Error(`CAR file was not created at ${outCarPath}`);
+    }
+
+    const stats = fs.statSync(outCarPath);
+    console.log(`CAR file size: ${stats.size} bytes`);
+
+    if (stats.size === 0) {
+      throw new Error(`CAR file is empty at ${outCarPath}`);
+    }
 
     // Read the packed CAR file from disk into memory buffer limits
     const carBuffer = fs.readFileSync(outCarPath);
 
     // Upload to Filebase S3 API
-    console.log(`Uploading ${carFileName} to Filebase S3...`);
+    console.log(`Uploading ${carFileName} to Filebase S3 (Bucket: niiifty)...`);
     const command = new PutObjectCommand({
-      Bucket: 'niiifty', // The standard global container bucket
+      Bucket: 'niiifty',
       Key: carFileName,
       Body: carBuffer,
+      ContentType: 'application/vnd.ipld.car',
       Metadata: {
         import: 'car',
       },
     });
 
+    console.log('Sending PutObjectCommand to Filebase...');
     const response = await s3Client.send(command);
+    console.log('Filebase response received.');
 
     // Filebase returns the pinned IPFS CID in the x-amz-meta-cid header
     const cid = (response.$metadata as any).httpResponse?.headers?.['x-amz-meta-cid'] || cidFromPack;
@@ -57,7 +75,7 @@ export async function uploadTempFilesToFilebase(tempDirPath: string, fileId: str
 
     return Array.isArray(cid) ? cid[0] : cid;
   } catch (err: any) {
-    console.error('FILEBASE UPLOAD ERROR:', err.message);
+    console.error('FILEBASE UPLOAD ERROR:', err);
     throw err;
   }
 }

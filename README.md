@@ -88,6 +88,11 @@ To ensure long-term verifiability of exhibits, we implemented a **deterministic 
 - **The Decision**: We built a lightweight, Firebase-native AppView for indexing `cx.vmx.matadisco` records.
 - **The Rationale**: By using **Cloud Run + Bun + Jetstream**, we achieve 90% cost reduction compared to hosting a full AT Protocol Relay. We integrate this with **Vertex AI** and **Firestore Vector Search** to provide high-performance semantic discovery without third-party dependencies like Algolia.
 
+### 4. Separation of Concerns (PDS vs AppView)
+
+- **The Decision**: The AppView indexing service (`matadisco-consumer`) is strictly decoupled from the primary NIIIFTY database (PDS).
+- **The Rationale**: To adhere to true decentralized architecture, the AppView only consumes public records from the AT Protocol Firehose and writes them to the `matadisco_index` collection. It has zero knowledge of the private `files` collection used for authoring. For the admin dashboard to show if an asset is "Indexed", the UI acts as a pure client—querying the `matadisco_index` collection directly rather than relying on internal database callbacks.
+
 ## AppView & Semantic Search
 
 NIIIFTY implements a native AT Protocol AppView to index and search exhibits across the network.

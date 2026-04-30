@@ -221,24 +221,23 @@ export default function ViewPage() {
            <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
              <User className="w-5 h-5 text-zinc-500" />
            </div>
-           <div className="overflow-hidden flex-grow">
-             <p className="font-bold text-zinc-900 dark:text-zinc-100 truncate">
-               {record.handle ? `@${record.handle}` : `@${record.author.split('.')[0]}`}
-             </p>
-             <p className="text-[10px] text-zinc-500 truncate font-mono mt-0.5">{record.author}</p>
-             
-             {record.handle && !record.handle.includes('mock') && (
-               <a 
-                 href={`https://bsky.app/profile/${record.handle}`} 
-                 target="_blank" 
-                 rel="noreferrer"
-                 className="inline-flex items-center mt-2 text-[10px] font-bold text-blue-600 hover:text-blue-500 uppercase tracking-widest"
-               >
-                 View on Bluesky
-                 <ExternalLink className="ml-1 h-2.5 w-2.5" />
-               </a>
-             )}
-           </div>
+            <div className="overflow-hidden flex-grow">
+              {record.handle && !record.handle.includes('mock') ? (
+                <a 
+                  href={`https://bsky.app/profile/${record.handle}`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="font-bold text-zinc-900 dark:text-zinc-100 truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  @{record.handle}
+                </a>
+              ) : (
+                <p className="font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                  {record.handle ? `@${record.handle}` : `@${record.author.split('.')[0]}`}
+                </p>
+              )}
+              <p className="text-[10px] text-zinc-500 truncate font-mono mt-0.5">{record.author}</p>
+            </div>
          </div>
       </DetailCard>
 
