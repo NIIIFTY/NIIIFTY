@@ -1,124 +1,47 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+    
+    // 1. Files Collection
+    match /files/{fileId} {
+      // Anyone can view files (required for public view route)
+      allow read: if true;
+      // Authenticated (non-anonymous) users can create files, but must set themselves as the owner
+      allow create: if request.auth != null && 
+                       request.auth.token.firebase.sign_in_provider != 'anonymous' &&
+                       request.resource.data.uid == request.auth.uid;
+      // Only the owner can update or delete their file
+      allow update, delete: if request.auth != null && 
+                            request.auth.token.firebase.sign_in_provider != 'anonymous' &&
+                            resource.data.uid == request.auth.uid;
+    }
 
-      // Required for collection group queries
-      // match /exhibits/{exhibitId} {
-      // 	allow read;
-      // }
+    // 2. Vector Search Index (AppView)
+    match /matadisco_index/{docId} {
+      // Anyone can query the index for search
+      allow read: if true;
+      // Explicitly block client writes. This collection should ONLY be written to
+      // by the Jetstream consumer/Cloud Functions via the Admin SDK.
+      allow write: if false; 
+    }
 
-      allow read, write: if request.auth != null;
+    // 3. User Profiles
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null && 
+                                       request.auth.token.firebase.sign_in_provider != 'anonymous' &&
+                                       request.auth.uid == userId;
+    }
 
-      match /exhibits/{exhibitId} {
-        // listing exhibits is forbidden
-        // must have been given access to the edit id to get this far
-        allow read;
-        allow get;
-        // allow get: if true; 
-        // creating is only permitted for authenticated users 
-        allow create: if request.auth != null;
-        // updating is only permitted for authenticated users 
-        allow update: if request.auth != null;
-        // reading annotations is allowed if you've got the edit id
-        match /annotations/{annotationId} {
-          allow read;
-        }
-        match /annotations/{annotationId} {
-          allow create, update, delete: if request.auth != null;
-        }
-        match /items/{itemId} {
-          allow create, read, update, delete: if request.auth != null;
-        }
-      }
-      
-      match /users/{userId} {
-      	allow read;
-        allow create: if isValidUser(userId);
-      }
-      
-      match /usernames/{username} {
-      	allow read;
-        allow create: if isValidUsername(username);
-      }
-      
-      match /users/{userId}/exhibits/{exhibitId} {
-      	allow read;
-        allow create: if canCreateExhibit(userId); 
-        allow update: if canUpdateExhibit(userId);
-        allow delete: if request.auth.uid == userId;
-      }
-
-      // Users
-
-      function isAnonymous() {
-        return request.auth.token.firebase.sign_in_provider == 'anonymous';
-      }
-
-      function isValidUser(userId) {
-        let isOwner = request.auth.uid == userId;
-      	let username = request.resource.data.username;
-        let usernameExists = existsAfter(/databases/$(database)/documents/usernames/$(username));
-
-        return isAnonymous() ? isOwner : isOwner && usernameExists;        
-      }
-
-      // old anonymous version
-      // function isValidUser(userId) {
-      //   let isOwner = request.auth.uid == userId;
-      //   return isOwner;
-      // }
-      
-      function isValidUsername(username) {
-		    let isOwner = request.auth.uid == request.resource.data.uid;
-        let isValidLength = username.size() >= 1 && username.size() <= 64;
-        let isValidUserDoc = getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username == username;
-        
-        return isOwner && isValidLength && isValidUserDoc;     
-      }
-
-      // Exhibits
-      
-      function canCreateExhibit(userId) {
-        let isOwner = request.auth.uid == userId;
-        let isNow = request.time == request.resource.data.createdAt;
-        let isValidContent = request.resource.data.content.size() < 20000;
-        let username = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username;
-        let usernameMatches = username == request.resource.data.username;
-
-      	return isOwner && isNow && isValidContent && usernameMatches;
-      }
-      
-      function canUpdateExhibit(userId) {
-        let isOwner = request.auth.uid == userId;
-      	let isNow = request.time == request.resource.data.updatedAt;
-        let isValidContent = request.resource.data.content.size() < 20000;
-        let doesNotUpdateForbidden = !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uid', 'username']);
-        
-        return isOwner && isNow && isValidContent && doesNotUpdateForbidden;
-      }
-
-      // old anonymous rules
-
-      // match /users/{userId} {
-      //   allow read;
-      //   allow create: if isValidUser(userId);
-      // }
-      // match /exhibits/{exhibitId} {
-      //   // listing exhibits is forbidden
-      //   // must have been given access to the edit id to get this far
-      //   allow get: if true; 
-      //   // creating is only permitted for authenticated users 
-      //   allow create: if request.auth != null;
-      //   // updating is only permitted for authenticated users 
-      //   allow update: if request.auth != null;
-      //   match /annotations/{annotationId} {
-      //     allow create, read, update, delete: if request.auth != null;
-      //   }
-      //   match /items/{itemId} {
-      //     allow create, read, update, delete: if request.auth != null;
-      //   }
-      // }
+    // 4. Usernames Registry
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if request.auth != null && 
+                       request.auth.token.firebase.sign_in_provider != 'anonymous' &&
+                       request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && 
+                            request.auth.token.firebase.sign_in_provider != 'anonymous' &&
+                            resource.data.uid == request.auth.uid;
     }
   }
 }

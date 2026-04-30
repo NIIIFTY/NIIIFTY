@@ -42,6 +42,5 @@ database-debug.log
 firestore-debug.log
 pubsub-debug.log
 .pnpm-store/
-.agent/
 .antigravity/
 .firebase/

@@ -24,8 +24,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Info, Globe, HardDrive, FileText, Tags, ExternalLink } from 'lucide-react';
 import { BlueskyIcon } from '../icons/Bluesky';
-import Section from '../Section';
 import H1 from '../H1';
+import { DetailLayout } from './layout/DetailLayout';
+import { DetailCard } from './layout/DetailCard';
 
 const fileSchema = z.object({
   label: z
@@ -227,13 +228,9 @@ export function EditFile({ id }: { id: string }) {
       const iiifManifest = getFileUrl(fs, fsID, `iiif/index.json`);
 
       return (
-        <div className="space-y-8">
+        <>
           {/* Header Card for Preview */}
-          <div className="flex flex-col gap-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-            <div className="flex items-center gap-3 text-zinc-500">
-              <Info size={16} />
-              <h3 className="text-sm font-semibold uppercase tracking-wider">{t('preview')}</h3>
-            </div>
+          <DetailCard title={t('preview')} icon={Info} size="md" className="!gap-6">
             <div className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
               {isProcessed ? (
                 <>
@@ -270,17 +267,10 @@ export function EditFile({ id }: { id: string }) {
                  )}
               </div>
             </div>
-          </div>
+          </DetailCard>
 
           {/* Distribution & Technicals */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-3 text-zinc-500">
-                <HardDrive size={16} />
-                <h3 className="text-sm font-semibold uppercase tracking-wider">Distribution</h3>
-              </div>
-            </div>
-
+          <DetailCard title="Distribution" icon={HardDrive} size="md">
             <Tabs
               tabs={tabs.map((tab) => ({
                 name: tab.name,
@@ -344,17 +334,11 @@ export function EditFile({ id }: { id: string }) {
                 <CopyText id="iiif" text={iiifManifest} disabled={!isProcessed} />
               </div>
             </div>
-          </div>
+          </DetailCard>
 
           {/* Federated Network Status */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-            <div className="mb-6 flex flex-col gap-3">
-              <div className="flex items-center gap-3 text-zinc-500">
-                <BlueskyIcon size={16} />
-                <h3 className="text-sm font-semibold uppercase tracking-wider">Bluesky / Matadisco</h3>
-              </div>
-              <p className="text-xs text-zinc-400">Publish this manifest to the federated network.</p>
-            </div>
+          <DetailCard title="Bluesky / Matadisco" icon={BlueskyIcon} size="md">
+            <p className="text-xs text-zinc-400 mb-6">Publish this manifest to the federated network.</p>
 
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -397,242 +381,228 @@ export function EditFile({ id }: { id: string }) {
                 </div>
               )}
             </div>
-          </div>
-        </div>
+          </DetailCard>
+        </>
       );
     };
 
-    return (
-      <Section>
-        <div className="relative w-full">
-
-
-          <header className="mb-12 flex flex-col items-start justify-between gap-4 xl:flex-row xl:items-center">
-            <div className="space-y-1">
-              <H1 variant="small" className="font-bold">{label}</H1>
-              <div className="flex items-center gap-4 text-xs text-zinc-500 uppercase tracking-widest">
-                <div className="flex items-center gap-2">
-                  <span>File ID:</span>
-                  <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono normal-case tracking-normal dark:bg-zinc-800">{id}</code>
-                </div>
-                {!isProcessed && (
-                  <div className="flex items-center gap-2 text-blue-500 font-bold animate-pulse">
-                    <Spinner className="h-3 w-3" />
-                    <span>Processing...</span>
-                  </div>
-                )}
+    const header = (
+      <header className="mb-12 flex flex-col items-start justify-between gap-4 xl:flex-row xl:items-center">
+        <div className="space-y-1">
+          <H1 variant="small" className="font-bold">{label}</H1>
+          <div className="flex items-center gap-4 text-xs text-zinc-500 uppercase tracking-widest">
+            <div className="flex items-center gap-2">
+              <span>File ID:</span>
+              <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono normal-case tracking-normal dark:bg-zinc-800">{id}</code>
+            </div>
+            {!isProcessed && (
+              <div className="flex items-center gap-2 text-blue-500 font-bold animate-pulse">
+                <Spinner className="h-3 w-3" />
+                <span>Processing...</span>
               </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={async () => {
-                  if (window.confirm(t('confirmFileDeletion', { title: label }))) {
-                    await remove(userAdapter!, id);
-                    window.location.href = '/admin/';
-                  }
-                }}
-                disabled={!isProcessed}
-                className="font-semibold"
-              >
-                {t('delete')}
-              </Button>
-              <Button type="submit" form="edit-file-form" size="sm" disabled={!isProcessed} className="font-semibold">
-                {t('update')}
-              </Button>
-            </div>
-          </header>
-
-          <div className="grid grid-cols-1 gap-12 xl:grid-cols-12">
-            {/* Main Content Column */}
-            <div className="xl:col-span-7">
-              <Form {...form}>
-                <form id="edit-file-form" onSubmit={handleSubmit(onSubmit) as any} className="space-y-12">
-                  <fieldset disabled={!isProcessed} className="space-y-12">
-                  {/* General Info Card */}
-                  <div className="space-y-8 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <div className="flex items-center gap-3 text-zinc-500">
-                      <FileText size={16} />
-                      <h3 className="text-sm font-semibold uppercase tracking-wider">General Information</h3>
-                    </div>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <FormField<FileFormData>
-                        control={control as any}
-                        name="label"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel className="text-zinc-600 dark:text-zinc-400">Label <span className="text-destructive">*</span></FormLabel>
-                            <FormControl>
-                              <Input {...field} value={field.value as string} placeholder="Enter label" className="ring-offset-background" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField<FileFormData>
-                        control={control as any}
-                        name="summary"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel className="text-zinc-600 dark:text-zinc-400">Summary</FormLabel>
-                            <FormControl>
-                              <Textarea {...field} value={field.value as string} placeholder="Enter summary" className="min-h-[120px]" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField<FileFormData>
-                        control={control as any}
-                        name="provider"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-zinc-600 dark:text-zinc-400">Provider</FormLabel>
-                            <FormControl>
-                              <Input {...field} value={field.value as string} placeholder="NIIIFTY" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField<FileFormData>
-                        control={control as any}
-                        name="rights"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel className="text-zinc-600 dark:text-zinc-400">Rights (License)</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value as string} value={field.value as string}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a license" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {licenses.map((l) => (
-                                  <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Metadata & Taxonomies Card */}
-                  <div className="space-y-8 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <div className="flex items-center gap-3 text-zinc-500">
-                      <Tags size={16} />
-                      <h3 className="text-sm font-semibold uppercase tracking-wider">Metadata & Tags</h3>
-                    </div>
-                    <div className="space-y-10">
-                      <FormField<FileFormData>
-                        control={control as any}
-                        name="tags"
-                        render={({ field }) => {
-                          const tags = field.value as string[];
-                          return (
-                            <FormItem>
-                              <FormLabel className="text-zinc-600 dark:text-zinc-400">Tags</FormLabel>
-                              <div className="space-y-4">
-                                <Input
-                                  placeholder="Type and press enter to add tags"
-                                  disabled={!isProcessed}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      const input = e.target as HTMLInputElement;
-                                      const value = input.value.trim();
-                                      if (value && !tags.includes(value)) {
-                                        field.onChange([...tags, value]);
-                                        input.value = '';
-                                      }
-                                    }
-                                  }}
-                                />
-                                <div className="flex flex-wrap gap-2">
-                                  {tags.map((tag) => (
-                                    <Badge
-                                      key={tag}
-                                      variant={tag === 'iiif' ? 'secondary' : 'default'}
-                                      className={cn(
-                                        "flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase tracking-tight transition-colors",
-                                        (tag === 'iiif' || !isProcessed) && "opacity-50 cursor-not-allowed" 
-                                      )}
-                                    >
-                                      {tag}
-                                      {tag !== 'iiif' && (
-                                        <X 
-                                          size={12} 
-                                          className={cn("cursor-pointer hover:text-red-500", !isProcessed && "pointer-events-none")} 
-                                          onClick={() => {
-                                            if (isProcessed) {
-                                              field.onChange(tags.filter((t) => t !== tag));
-                                            }
-                                          }} 
-                                        />
-                                      )}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          );
-                        }}
-                      />
-
-                      <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-zinc-600 dark:text-zinc-400">Custom Metadata Fields</Label>
-                          <Button type="button" variant="outline" size="sm" onClick={() => append({ key: '', value: '' })} className="h-8">
-                            <Plus size={14} className="mr-2" />
-                            Add Field
-                          </Button>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          {fields.map((field, index) => (
-                            <div key={field.id} className="flex gap-3">
-                              <div className="flex-1">
-                                <Input {...form.register(`metadataEntries.${index}.key` as const)} placeholder="Key" className="bg-zinc-50 dark:bg-transparent" />
-                              </div>
-                              <div className="flex-1">
-                                <Input {...form.register(`metadataEntries.${index}.value` as const)} placeholder="Value" className="bg-zinc-50 dark:bg-transparent" />
-                              </div>
-                              <Button type="button" variant="ghost" size="icon" onClick={() => removeEntry(index)} className="h-10 w-10 text-zinc-400 hover:text-red-500">
-                                <X size={16} />
-                              </Button>
-                            </div>
-                          ))}
-                          {fields.length === 0 && (
-                            <div className="flex items-center justify-center rounded-xl bg-zinc-50 py-10 dark:bg-zinc-900/30">
-                               <p className="text-xs text-zinc-400 uppercase tracking-widest italic font-medium">No custom metadata</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  </fieldset>
-                </form>
-              </Form>
-            </div>
-
-            {/* Sidebar Column */}
-            <aside className="xl:col-span-5 space-y-8">
-              <Formats />
-            </aside>
+            )}
           </div>
         </div>
-      </Section>
+        
+        <div className="flex items-center gap-4">
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={async () => {
+              if (window.confirm(t('confirmFileDeletion', { title: label }))) {
+                await remove(userAdapter!, id);
+                window.location.href = '/admin/';
+              }
+            }}
+            disabled={!isProcessed}
+            className="font-semibold"
+          >
+            {t('delete')}
+          </Button>
+          <Button type="submit" form="edit-file-form" size="sm" disabled={!isProcessed} className="font-semibold">
+            {t('update')}
+          </Button>
+        </div>
+      </header>
+    );
+
+    const mainContent = (
+      <Form {...form}>
+        <form id="edit-file-form" onSubmit={handleSubmit(onSubmit) as any}>
+          <fieldset disabled={!isProcessed} className="space-y-12">
+          {/* General Info Card */}
+          <DetailCard title="General Information" icon={FileText} size="lg">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <FormField<FileFormData>
+                control={control as any}
+                name="label"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel className="text-zinc-600 dark:text-zinc-400">Label <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value as string} placeholder="Enter label" className="ring-offset-background" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField<FileFormData>
+                control={control as any}
+                name="summary"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel className="text-zinc-600 dark:text-zinc-400">Summary</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} value={field.value as string} placeholder="Enter summary" className="min-h-[120px]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField<FileFormData>
+                control={control as any}
+                name="provider"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-zinc-600 dark:text-zinc-400">Provider</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value as string} placeholder="NIIIFTY" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField<FileFormData>
+                control={control as any}
+                name="rights"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel className="text-zinc-600 dark:text-zinc-400">Rights (License)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value as string} value={field.value as string}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a license" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {licenses.map((l) => (
+                          <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </DetailCard>
+
+          {/* Metadata & Taxonomies Card */}
+          <DetailCard title="Metadata & Tags" icon={Tags} size="lg">
+            <div className="space-y-10">
+              <FormField<FileFormData>
+                control={control as any}
+                name="tags"
+                render={({ field }) => {
+                  const tags = field.value as string[];
+                  return (
+                    <FormItem>
+                      <FormLabel className="text-zinc-600 dark:text-zinc-400">Tags</FormLabel>
+                      <div className="space-y-4">
+                        <Input
+                          placeholder="Type and press enter to add tags"
+                          disabled={!isProcessed}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const input = e.target as HTMLInputElement;
+                              const value = input.value.trim();
+                              if (value && !tags.includes(value)) {
+                                field.onChange([...tags, value]);
+                                input.value = '';
+                              }
+                            }
+                          }}
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          {tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant={tag === 'iiif' ? 'secondary' : 'default'}
+                              className={cn(
+                                "flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase tracking-tight transition-colors",
+                                (tag === 'iiif' || !isProcessed) && "opacity-50 cursor-not-allowed" 
+                              )}
+                            >
+                              {tag}
+                              {tag !== 'iiif' && (
+                                <X 
+                                  size={12} 
+                                  className={cn("cursor-pointer hover:text-red-500", !isProcessed && "pointer-events-none")} 
+                                  onClick={() => {
+                                    if (isProcessed) {
+                                      field.onChange(tags.filter((t) => t !== tag));
+                                    }
+                                  }} 
+                                />
+                              )}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <Label className="text-zinc-600 dark:text-zinc-400">Custom Metadata Fields</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={() => append({ key: '', value: '' })} className="h-8">
+                    <Plus size={14} className="mr-2" />
+                    Add Field
+                  </Button>
+                </div>
+                
+                <div className="space-y-3">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex gap-3">
+                      <div className="flex-1">
+                        <Input {...form.register(`metadataEntries.${index}.key` as const)} placeholder="Key" className="bg-zinc-50 dark:bg-transparent" />
+                      </div>
+                      <div className="flex-1">
+                        <Input {...form.register(`metadataEntries.${index}.value` as const)} placeholder="Value" className="bg-zinc-50 dark:bg-transparent" />
+                      </div>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeEntry(index)} className="h-10 w-10 text-zinc-400 hover:text-red-500">
+                        <X size={16} />
+                      </Button>
+                    </div>
+                  ))}
+                  {fields.length === 0 && (
+                    <div className="flex items-center justify-center rounded-xl bg-zinc-50 py-10 dark:bg-zinc-900/30">
+                       <p className="text-xs text-zinc-400 uppercase tracking-widest italic font-medium">No custom metadata</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </DetailCard>
+          </fieldset>
+        </form>
+      </Form>
+    );
+
+    return (
+      <DetailLayout 
+        header={header}
+        mainContent={mainContent}
+        sidebarContent={<Formats />}
+      />
     );
   } else {
     return <LoadingMessage />;
