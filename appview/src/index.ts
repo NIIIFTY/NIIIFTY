@@ -104,7 +104,7 @@ async function main() {
           uri,
           did,
           rkey,
-          cid: commit.cid,
+          cid: record.cid || commit.cid,
           publishedAt: record.publishedAt,
           tags: record.tags || [],
           handle: handle || null,
