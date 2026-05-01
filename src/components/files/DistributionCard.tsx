@@ -94,7 +94,7 @@ export function DistributionCard({ fs, setFS, id, cid, type, isProcessed }: Dist
           </div>
         )}
 
-        <div className="space-y-2 pt-4">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-medium text-zinc-500 uppercase tracking-tight">{t('iiifManifest')}</Label>
             {isProcessed && (
