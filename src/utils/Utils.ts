@@ -23,6 +23,19 @@ export const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
+export const formatMimeType = (type: string | undefined | null): string => {
+  if (!type) return 'FILE';
+  const lower = type.toLowerCase();
+  if (lower.includes('/')) {
+    const ext = lower.split('/')[1];
+    if (ext === 'jpeg') return 'JPG';
+    if (ext === 'gltf-binary') return 'GLB';
+    return ext.toUpperCase();
+  }
+  if (lower === 'still image') return 'JPG';
+  return type.toUpperCase();
+};
+
 export const slugify = (title: string): string => {
   return slug(title, {
     replacement: '-', // replace spaces with replacement character, defaults to `-`

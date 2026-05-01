@@ -79,19 +79,7 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
         atUri: data.uri || '',
         label: data.label || 'Untitled',
         summary: data.summary || '',
-        type: ((t: string, format?: string) => {
-          const val = format || t || '';
-          if (!val) return 'FILE';
-          const lower = val.toLowerCase();
-          if (lower.includes('/')) {
-            const ext = lower.split('/')[1];
-            if (ext === 'jpeg') return 'JPG';
-            if (ext === 'gltf-binary') return 'GLB';
-            return ext.toUpperCase();
-          }
-          if (lower === 'still image') return 'JPG';
-          return val.toUpperCase();
-        })(data.type || '', data.metadata?.format),
+        type: data.type || '',
         author: data.did || 'unknown',
         handle: data.handle || null,
         thumbnailUrl: data.thumbnailUrl || null,
@@ -132,19 +120,7 @@ export const getRecord = onCall({ region: 'europe-west1' }, async (request) => {
         atUri: data.uri || '',
         label: data.label || 'Untitled',
         summary: data.summary || '',
-        type: ((t: string, format?: string) => {
-          const val = format || t || '';
-          if (!val) return 'FILE';
-          const lower = val.toLowerCase();
-          if (lower.includes('/')) {
-            const ext = lower.split('/')[1];
-            if (ext === 'jpeg') return 'JPG';
-            if (ext === 'gltf-binary') return 'GLB';
-            return ext.toUpperCase();
-          }
-          if (lower === 'still image') return 'JPG';
-          return val.toUpperCase();
-        })(data.type || '', data.metadata?.format),
+        type: data.type || '',
         author: data.did || 'unknown',
         handle: data.handle || null,
         thumbnailUrl: data.thumbnailUrl || null,

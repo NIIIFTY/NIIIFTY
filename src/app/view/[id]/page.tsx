@@ -16,7 +16,7 @@ import { DetailLayout } from '@/components/files/layout/DetailLayout';
 import { DetailCard } from '@/components/files/layout/DetailCard';
 import { DetailField } from '@/components/files/layout/DetailField';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/utils/Utils';
+import { cn, getFileUrl, formatMimeType } from '@/utils/Utils';
 import { FileSystem } from '@/utils/Types';
 import { BlueskyIcon } from '@/components/icons/Bluesky';
 import { DistributionCard } from '@/components/files/DistributionCard';
@@ -179,7 +179,7 @@ export default function ViewPage() {
       {/* Preview Card */}
       <DetailCard title={t('preview')} icon={Info} size="md" className="!gap-6" headerAppend={
          <Badge variant="outline" className="uppercase tracking-tight opacity-70">
-           {record.type}
+           {formatMimeType(record.type)}
          </Badge>
       }>
         <div className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 aspect-square">
@@ -190,8 +190,12 @@ export default function ViewPage() {
                 alt={record.label} 
                 className="h-full w-full object-cover transition-transform group-hover:scale-105"
               />
+              <div className="absolute inset-x-0 bottom-0 flex justify-center gap-4 bg-zinc-900/80 p-3 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 z-10">
+                <a href={getFileUrl(fs, fs === 'IPFS' && record.cid ? record.cid : record.rkey, `regular.jpg`)} target="_blank" className="text-xs font-medium text-white hover:underline">{t('regular')}</a>
+                <a href={getFileUrl(fs, fs === 'IPFS' && record.cid ? record.cid : record.rkey, `small.jpg`)} target="_blank" className="text-xs font-medium text-white hover:underline">{t('small')}</a>
+              </div>
               {uvUrl && (
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-sm">
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-sm z-0">
                   <Button asChild size="lg" className="rounded-full shadow-2xl bg-white text-black hover:bg-zinc-100 border-none px-8 py-6 text-lg font-bold">
                     <a href={uvUrl} target="_blank" rel="noreferrer">
                       <ExternalLink className="mr-2 h-6 w-6" />

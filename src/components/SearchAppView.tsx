@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import Link from '@/components/Link';
 import { useFirebaseEmulators } from '@/lib/config';
+import { formatMimeType } from '@/utils/Utils';
 
 interface SearchResult {
   id: string;
@@ -140,13 +141,13 @@ export function SearchAppView() {
                   />
                   <div className="absolute top-3 right-3">
                     <span className="px-2 py-1 bg-black/50 backdrop-blur-md text-[10px] font-bold text-white rounded-full uppercase tracking-widest">
-                      {result.type}
+                      {formatMimeType(result.type)}
                     </span>
                   </div>
                 </div>
               ) : (
                 <div className="aspect-video bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                  <span className="text-zinc-400 font-bold uppercase tracking-widest text-xs">{result.type}</span>
+                  <span className="text-zinc-400 font-bold uppercase tracking-widest text-xs">{formatMimeType(result.type)}</span>
                 </div>
               )}
               
