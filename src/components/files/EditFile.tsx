@@ -314,7 +314,7 @@ export function EditFile({ id }: { id: string }) {
                     </div>
                     <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
                       {isIndexed 
-                        ? 'Your resource is live on the AT Protocol network and discoverable via Search AppView.' 
+                        ? 'Your resource is live on the AT Protocol network and discoverable via Search.' 
                         : atDid 
                         ? 'Broadcasting complete. Waiting for the global search indexer to pick up the record (usually 30-60s).' 
                         : 'Publish this file to the federated network for global discovery.'}
@@ -329,7 +329,7 @@ export function EditFile({ id }: { id: string }) {
                        className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 hover:opacity-80 transition-opacity"
                      >
                        <Search size={12} strokeWidth={2.5} />
-                       View in Search AppView
+                       View in Search
                      </a>
                   </div>
                 )}
@@ -353,7 +353,7 @@ export function EditFile({ id }: { id: string }) {
                       <Loader2 size={14} className="animate-spin" />
                       Broadcasting...
                     </span>
-                  ) : atDid ? 'Update on Network' : 'Publish to Network'}
+                  ) : atDid ? 'Publish Changes' : 'Publish to Network'}
                 </Button>
               </div>
 
@@ -370,7 +370,7 @@ export function EditFile({ id }: { id: string }) {
                     target="_blank"
                     className="flex w-full items-center justify-center rounded-lg bg-white py-2 text-xs font-medium border border-zinc-200 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
                   >
-                    View on AtProto Browser
+                    View on ATProto Browser
                   </a>
                 </div>
               )}

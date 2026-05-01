@@ -28,7 +28,10 @@ const responseSchema = {
       description: 'Standard metadata aligned with Dublin Core concepts.',
       properties: {
         subject: { type: 'string' },
-        type: { type: 'string' },
+        type: { 
+          type: 'string',
+          description: 'The archival type of the item (e.g., Photograph, Drawing). Use a single word if possible.'
+        },
         date: { type: 'string' },
         creator: { type: 'string' },
         format: { type: 'string' },
@@ -57,7 +60,7 @@ export async function generateFileSummary(filePath: string, mimeType: string): P
     const fileBuffer = fs.readFileSync(filePath);
     const base64Content = fileBuffer.toString('base64');
 
-    const prompt = 'Analyze this item for an archival search index. Provide a concise natural language summary, a set of relevant metadata pairs, and a few descriptive tags. Focus on visual facts, subject matter, and style. Use standard terminology for metadata keys (e.g., subject, type, date, creator, format). Omit any keys or tags if the value is "unknown" or uncertain.';
+    const prompt = 'Analyze this item for an archival search index. Provide a concise natural language summary, a set of relevant metadata pairs, and a few descriptive tags. Focus on visual facts, subject matter, and style. For the "type" metadata field, use a single concise term (e.g., "Photograph", "Painting", "Drawing", "Manuscript", "Map"). Use standard terminology for metadata keys (subject, type, date, creator, format). Omit any keys or tags if the value is "unknown" or uncertain.';
 
     const startTime = Date.now();
     const result = await ai.models.generateContent({

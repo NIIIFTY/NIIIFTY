@@ -58,7 +58,10 @@ export async function GET(
         details: authError.code || authError.message || 'Unknown verification error'
       }), {
         status: 403,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       });
     }
 
@@ -67,7 +70,10 @@ export async function GET(
         error: 'Unauthorized: CID not managed by NIIIFTY' 
       }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       });
     }
 
@@ -103,12 +109,18 @@ export async function GET(
       if (proxyResponse.status === 404) {
         return new NextResponse(JSON.stringify({ error: 'File not found on IPFS' }), {
           status: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
         });
       }
       return new NextResponse(JSON.stringify({ error: `IPFS Gateway Error: ${proxyResponse.statusText}` }), {
         status: proxyResponse.status,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       });
     }
 
@@ -145,7 +157,22 @@ export async function GET(
     console.error('IPFS Pinned Resolution Proxy Error:', error);
     return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
     });
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
 }

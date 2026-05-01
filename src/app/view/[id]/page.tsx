@@ -271,7 +271,7 @@ export default function ViewPage() {
               target="_blank"
               className="flex w-full items-center justify-center rounded-lg bg-white py-2 text-xs font-medium border border-zinc-200 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
             >
-              View on AtProto Browser
+              View on ATProto Browser
             </a>
           </div>
         </div>
