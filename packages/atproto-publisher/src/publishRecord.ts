@@ -57,7 +57,7 @@ export async function publishIIIFRecord(
 
   if (payload.thumbnail) {
     recordPayload.preview = {
-      url: payload.thumbnail,
+        url: payload.thumbnail,
       mimeType: 'image/jpeg',
     };
   }

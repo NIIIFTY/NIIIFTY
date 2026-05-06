@@ -1,0 +1,31 @@
+{
+  "name": "@niiifty/atproto-publisher",
+  "version": "1.0.0",
+  "description": "A reusable Node.js module for publishing IIIF records to the AT Protocol (Bluesky)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "iiif",
+    "atprotocol",
+    "bluesky",
+    "ipfs",
+    "niiifty"
+  ],
+  "author": "Mnemoscene",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@atproto/api": "^0.19.11"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

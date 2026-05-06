@@ -2,6 +2,29 @@
 
 **Official Lexicon:** [`cx.vmx.matadisco`](https://lexicon.garden/lexicon/did:plc:3mdq56yhyqq5k6d4guztheaf/cx.vmx.matadisco)
 
+## NIIIFTY 2 Grant Outcomes
+
+This repository contains the infrastructure and deliverables for the **NIIIFTY 2** grant, aimed at solving Stable Identity and Global Discovery for decentralized IIIF content on IPFS.
+
+### 1. AT Protocol Publisher (Global Discovery)
+We built and published the [`@niiifty/atproto-publisher`](https://www.npmjs.com/package/@niiifty/atproto-publisher) module to NPM. This open-source, reusable Node.js package allows any application to construct and publish IIIF metadata records directly to an AT Protocol account. By tapping into the AT Protocol Firehose, we inverted the traditional IIIF "Pull" model (crawlers) into a highly scalable "Push" model, enabling instant, global discoverability.
+
+### 2. Version Pinning Proxy (Stable Identity)
+*Deviation from grant:* Originally, we planned to use Storacha's w3name (IPNS) for mutable pointers, but the service was discontinued. 
+**The Solution:** We transitioned to Filebase for S3-compatible IPFS storage and implemented our own **Version Pinning Proxy**. 
+**The Rationale:** This CID-only architecture removes the operational complexity and rate limits of managed IPNS keys. Manifests use a `__CID__` placeholder, and our high-performance proxy dynamically rewrites these into explicit, pinned links on the fly. This guarantees long-term verifiability without reliance on external naming infrastructure.
+
+### 3. Decentralized "Search Across" AppView
+To demonstrate global discovery, we built a serverless AppView within the NIIIFTY platform.
+- A **Bun-based Jetstream consumer** runs on Cloud Run, subscribing to the firehose and indexing new IIIF records into Firestore.
+- A **Next.js Frontend** provides a dedicated search interface to explore the decentralized network.
+
+### 4. Bonus: AI Auto-Tagging via Gemini
+*Addition to grant:* To maximize the value of the published metadata, we integrated Google's **Gemini 3 Flash** (via the new `@google/genai` SDK) into the upload pipeline. 
+When users upload 2D images, MP4 videos, or 3D GLB models, Gemini automatically analyzes the visual content (or representative thumbnails) to generate rich, descriptive summaries and relevant search tags. This AI-enriched metadata is then bundled into the AT Protocol record, significantly improving the semantic searchability of IIIF assets across the network.
+
+---
+
 ## Local Development
 
 You can run the full NIIIFTY stack locally using `pnpm`.
@@ -28,17 +51,10 @@ NIIIFTY utilizes a serverless, vendor-agnostic architecture centered around **Fi
 To handle high-performance directory uploads with deterministic CIDs, we use the Filebase S3 API with CAR (Content Addressable Archive) support.
 
 1. **Create a Filebase Account**: You can start on the **Free** tier (which allows unlimited IPFS uploads within storage limits).
-2. **Provision an S3 Bucket**: Create a bucket (e.g., `niiifty`) to store exhibit CAR files.
+2. **Provision an S3 Bucket**: Create a bucket (e.g., `niiifty`) to store CAR files.
 3. **Generate S3 Credentials**: Obtain your `Access Key` and `Secret Key`.
 
-### 2. Version Pinning Proxy (Dropping IPNS)
-
-NIIIFTY has moved away from the InterPlanetary Name System (IPNS) to a **CID-only architecture**. This transition was made to reduce operational complexity and eliminate per-name limits/costs associated with managed IPNS providers.
-
-- **The Rationale**: Since NIIIFTY already requires a server-side proxy for high-performance IIIF resolution and on-the-fly CID injection, the overhead of managing IPNS keys and DHT republication offered diminishing returns.
-- **How it works**: Manifests are generated with a stable `__CID__` placeholder. When requested via the IPFS proxy (`/api/ipfs/[cid]`), the proxy dynamically replaces `__CID__` with the actual requested CID, ensuring absolute, pinned links without dedicated naming infrastructure.
-
-### 3. Environment Variables & Secrets
+### 2. Environment Variables & Secrets
 
 Configure the following secrets in your Firebase environment:
 
@@ -66,7 +82,7 @@ Instantly resolves content-addressed data using a dedicated Filebase gateway, en
 
 ### 2. IPFS Pinning Proxy (`/api/ipfs/...`)
 
-To ensure long-term verifiability of exhibits, we implemented a **deterministic version pinning proxy**.
+To ensure long-term verifiability of files, we implemented a **deterministic version pinning proxy**.
 
 - **URL Rewriting**: When fetching IIIF `index.json` manifests, the proxy runs a regex rewriter that transforms all mutable dynamic links into explicit, cid-pinned proxy links.
 - **Immutability**: This guarantees that if a user captures a manifest via the IPFS proxy, it is fixed to a specific content version for all eternity.
@@ -81,7 +97,7 @@ To ensure long-term verifiability of exhibits, we implemented a **deterministic 
 ### 2. Manual Federation Control
 
 - **The Decision**: We moved from automatic broadcasting to a manual "Publish to Bluesky" workflow.
-- **The Rationale**: This allows creators to curate exactly when an exhibit is ready for the federated discovery layer. We use the Firestore `fileId` as the AT Protocol `rkey`, ensuring all updates remain idempotent and stable.
+- **The Rationale**: This allows creators to curate exactly when a file is ready for the federated discovery layer. We use the Firestore `fileId` as the AT Protocol `rkey`, ensuring all updates remain idempotent and stable.
 
 ### 3. Serverless AppView
 
@@ -95,7 +111,7 @@ To ensure long-term verifiability of exhibits, we implemented a **deterministic 
 
 ## AppView & Semantic Search
 
-NIIIFTY implements a native AT Protocol AppView to index and search exhibits across the network.
+NIIIFTY implements a native AT Protocol AppView to index and search files across the network.
 
 ### 1. The Jetstream Consumer (`/appview`)
 A persistent **Bun** service running on **Cloud Run** that subscribes to the AT Protocol firehose via **Jetstream**. It filters for `cx.vmx.matadisco` records and indexes them into a `matadisco_index` Firestore collection.

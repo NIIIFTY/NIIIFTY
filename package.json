@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:all": "pnpm build:functions && pnpm build:appview && pnpm build",
+    "build:packages": "pnpm --prefix packages/atproto-publisher build",
+    "build:all": "pnpm build:packages && pnpm build:functions && pnpm build:appview && pnpm build",
     "build:functions": "pnpm --prefix functions build",
     "build:appview": "(command -v bun >/dev/null && pnpm --prefix appview build) || echo 'Bun not found, skipping appview build'",
     "start": "next start",

@@ -14,7 +14,7 @@ import { uploadTempFilesToFilebase, deleteFilebaseFiles } from './filebase.js';
 import updateMetadataDerivatives from './update.js';
 import { GCS_URL } from './constants.js';
 import { getProxyUrl } from './proxy.js';
-import { authenticateAgent, publishIIIFRecord, deleteIIIFRecord } from './atproto/index.js';
+import { authenticateAgent, publishIIIFRecord, deleteIIIFRecord } from '@niiifty/atproto-publisher';
 import { triggerRevalidation } from './revalidate.js';
 import { generateFileSummary } from './ai.js';
 
