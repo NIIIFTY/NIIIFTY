@@ -17,7 +17,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@niiifty/atproto-publisher": "workspace:*",
+    "@niiifty/atproto-publisher": "^1.0.0",
     "@aws-sdk/client-s3": "^3.1030.0",
     "@gltf-transform/core": "3.0.2",
     "@gltf-transform/extensions": "3.0.2",
