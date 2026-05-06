@@ -205,8 +205,8 @@ export const fileUpdated = functions
       ...change.after.data(),
     };
 
-    // if the file just finished uploading to GCS, process it!
-    if (previousValue.status === 'uploading' && metadata.status === 'complete') {
+    // if the file just finished uploading to GCS or transitioned to complete, process it!
+    if (!metadata.processed && previousValue?.status !== 'complete' && metadata.status === 'complete') {
       console.log('File upload to GCS complete, starting processing...');
       await processAsset(fileId, metadata, change.after.ref);
       return null;
@@ -214,7 +214,7 @@ export const fileUpdated = functions
 
     // if the file has not been processed, ignore
     if (!metadata.processed) {
-      console.log('file has not been processed, skipping');
+      console.log(`file has not been processed, skipping. prevStatus: ${previousValue?.status}, newStatus: ${metadata.status}`);
       return null;
     }
 
