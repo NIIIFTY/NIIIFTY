@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDropzone, FileWithPath } from 'react-dropzone';
+import { useRouter } from 'next/navigation';
 import cx from 'classnames';
 import { formatBytes } from '@/utils/Utils';
 import { db, storage } from '@/utils/Firebase';
@@ -22,6 +23,7 @@ type FileExtended = FileWithPath & { preview?: string; errorMessage?: string; id
 export function FileUploader() {
   const [files, setFiles] = useState<FileExtended[]>([]);
   const { t } = useTranslation();
+  const router = useRouter();
 
   const acceptedFileTypes = [
     'image/jpeg',
@@ -136,7 +138,7 @@ export function FileUploader() {
           className="group cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
           onClick={() => {
             if (file.id) {
-              window.location.href = `/admin/${file.id}`;
+              router.push(`/admin/${file.id}`);
             }
           }}
         >
@@ -241,6 +243,10 @@ const FileUpload = ({ file }: { file: FileExtended }) => {
     const storageRef = ref(storage, fileName);
 
     const startUpload = async () => {
+      // Mark as started immediately to prevent React 18 Strict Mode double-invocation
+      // @ts-ignore
+      uploadTaskRef.current = true;
+
       // 1. Reserve the document in Firestore first to satisfy storage security rules
       await add(userAdapter!, id, { uid, type, label, status: 'uploading' } as any);
 
