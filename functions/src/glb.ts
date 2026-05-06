@@ -47,7 +47,21 @@ async function optimizeGLB(glbFilePath) {
   });
   // .setAllowHTTP(true);
 
-  const document = await io.read(glbFilePath);
+  // Check magic bytes to see if it's a binary glTF (glb)
+  const fd = fs.openSync(glbFilePath, 'r');
+  const magicBuffer = Buffer.alloc(4);
+  fs.readSync(fd, magicBuffer, 0, 4, 0);
+  fs.closeSync(fd);
+
+  const magic = magicBuffer.toString('utf8');
+  let document;
+
+  if (magic === 'glTF') {
+    const buffer = fs.readFileSync(glbFilePath);
+    document = await io.readBinary(new Uint8Array(buffer));
+  } else {
+    document = await io.read(glbFilePath);
+  }
 
   await document.transform(
     dedup(),

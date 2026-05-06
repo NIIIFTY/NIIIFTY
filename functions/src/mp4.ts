@@ -10,11 +10,11 @@ export default async function processMP4(mp4FilePath, metadata) {
   // optimise mp4
   await optimizeMP4(mp4FilePath);
 
-  const frameFilePath = await createThumbs(mp4FilePath);
-  console.log("mp4 thumbnails generated");
-
   const duration = await getDuration(mp4FilePath);
   console.log("mp4 duration", duration);
+
+  const frameFilePath = await createThumbs(mp4FilePath, duration);
+  console.log("mp4 thumbnails generated");
 
   await createStreamingFormats(mp4FilePath);
   console.log("mp4 streaming formats generated");
@@ -57,14 +57,16 @@ function promisifyCommand(command) {
   });
 }
 
-async function createThumbs(mp4) {
+async function createThumbs(mp4, duration) {
   const frameFilePath = path.join(path.dirname(mp4), "frame.jpg");
+
+  // Calculate a point 20% into the video, or fallback to 1 second
+  const targetTime = (duration && duration > 0) ? Math.max(1, duration * 0.2) : 1;
 
   const command = ffmpeg(mp4)
     .setFfmpegPath(ffmpeg_static)
-    .seekInput("00:00:01") // seek to 1 second into the video
-    .frames(1) // extract only one frame
-    // .outputOptions("-vf", "scale=320:-1") // resize the frame to a width of 320 pixels
+    .seekInput(targetTime)
+    .outputOptions(["-vf", "thumbnail", "-vframes", "1"])
     .output(frameFilePath);
 
   await promisifyCommand(command);
