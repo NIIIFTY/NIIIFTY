@@ -3,13 +3,18 @@ import { hash2 } from './utils/Utils';
 import { basicAuthDisabled, isProduction } from '@/utils/Config';
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin', '/admin/:path*'],
 };
 
 const PUBLIC_PATHS = ['/_next/', '/favicon.ico', '/api/gcs/', '/api/ipfs/', '/api/auth'];
 
 export default function proxy(req: NextRequest) {
   const url = req.nextUrl;
+
+  // 0. Only trigger for /admin paths
+  if (!url.pathname.startsWith('/admin')) {
+    return NextResponse.next();
+  }
 
   // 1. Production-Only & Config Guard
   // Bypass if disabled in config or if we are on localhost
