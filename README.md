@@ -76,11 +76,11 @@ firebase functions:secrets:set FILEBASE_ACCESS_TOKEN
 
 NIIIFTY eliminates "popcorning" and reliability issues by using a specialized server-side deterministic version pinning proxy.
 
-### 1. IPFS Pinning Proxy (`/api/ipfs/...`)
+### 1. High-Performance Gateway (`/api/ipfs/...`)
 
 Instantly resolves content-addressed data using a dedicated Filebase gateway, ensuring high performance for IIIF viewers.
 
-### 2. IPFS Pinning Proxy (`/api/ipfs/...`)
+### 2. Deterministic Manifest Rewriter (`/api/ipfs/...`)
 
 To ensure long-term verifiability of files, we implemented a **deterministic version pinning proxy**.
 
