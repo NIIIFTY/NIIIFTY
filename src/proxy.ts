@@ -3,7 +3,7 @@ import { hash2 } from './utils/Utils';
 import { basicAuthDisabled, isProduction } from '@/utils/Config';
 
 export const config = {
-  matcher: ['/:path*'],
+  matcher: ['/admin/:path*'],
 };
 
 const PUBLIC_PATHS = ['/_next/', '/favicon.ico', '/api/gcs/', '/api/ipfs/', '/api/auth'];

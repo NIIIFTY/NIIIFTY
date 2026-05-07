@@ -31,17 +31,16 @@ export default function HomeClient() {
       <div className="mx-auto mt-8 max-w-sm">
         <UploadFilesButton.Large href="/admin" />
       </div>
-      {/* <div className="mx-auto mt-16 max-w-md lg:max-w-3xl">
-        <iframe
-          className="mx-auto h-[243px] lg:h-[416px]"
-          width="100%"
-          src="https://www.youtube.com/embed/OohBvWDvrIc"
-          title="YouTube video player"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-        ></iframe>
-      </div> */}
+      <div className="mx-auto mt-16 max-w-md lg:max-w-4xl">
+        <video
+          className="mx-auto w-full rounded-xl shadow-2xl"
+          src="/niiifty-demo.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      </div>
     </>
   );
 }
