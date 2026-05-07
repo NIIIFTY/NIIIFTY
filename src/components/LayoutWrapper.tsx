@@ -92,6 +92,7 @@ const MobileNav = () => {
           <div className="px-12 py-4">
             <Link
               href="/admin"
+              prefetch={false}
               className="text-2xl font-bold tracking-widest text-gray-900 dark:text-gray-100"
               onClick={onToggleNav}
             >
@@ -209,7 +210,7 @@ const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
               <Link href="/search" className="p-1 font-medium text-gray-900 sm:p-4 dark:text-gray-100">
                 {t('search')}
               </Link>
-              <Link href="/admin" className="p-1 font-medium text-gray-900 sm:p-4 dark:text-gray-100">
+              <Link href="/admin" prefetch={false} className="p-1 font-medium text-gray-900 sm:p-4 dark:text-gray-100">
                 {t('myFiles')}
               </Link>
               {username && (
