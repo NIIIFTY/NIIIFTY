@@ -11,29 +11,27 @@ export default function HomeClient() {
       <p className="text-xl font-semibold">{t('homePara1')}</p>
       <br />
       <p className="text-md">
-        <Trans i18nKey="homePara2">
-          This platform improves the reliability of <a href="https://iiif.io">IIIF</a> content by leveraging the
-          content-addressed immutability and decentralized retrieval properties of <a href="https://ipfs.io/">IPFS</a>.
-          This makes it ideal for use in third-party applications such as <a href="https://exhibit.so">Exhibit</a>. It
-          is built on top of <a href="https://firebase.google.com/">Firebase</a> and
-          <a href="https://web3.storage/">web3.storage</a> using <a href="https://nextjs.org/">Next.js</a> and
-          <a href="https://tailwindcss.com/">TailwindCSS</a>.
-        </Trans>
-      </p>
-      <br />
-      <p className="text-md">
-        <Trans i18nKey="homePara3">
-          NIIIFTY is a project funded by
-          <a href="https://github.com/filecoin-project/devgrants/issues/504">Protocol Labs Dev Grant #504</a> and built
-          by <a href="https://twitter.com/edsilv">Edward Silverton</a> at <a href="https://mnemoscene.io">Mnemoscene</a>
-          . Please contact <a href="https://twitter.com/edsilv">Edward</a> for details of how to access this online
-          demo, or refer to the <a href="/docs">docs</a> to set up your own instance.
-        </Trans>
+        <Trans
+          i18nKey="homePara2"
+          components={{
+            1: <a href="https://iiif.io" className="underline" />,
+            3: <a href="https://matadisco.org/" className="underline" />,
+            5: <a href="https://atproto.com/" className="underline" />,
+            7: <a href="https://ipfs.io/" className="underline" />,
+            9: <a href="https://exhibit.so" className="underline" />,
+            11: <a href="https://mnemoscene.io" className="underline" />,
+            13: <a href="https://ipfsgrants.io/utility-grants/" className="underline" />,
+            15: <a href="https://filebase.com/" className="underline" />,
+            17: <a href="https://firebase.google.com/" className="underline" />,
+            19: <a href="https://nextjs.org/" className="underline" />,
+            21: <a href="https://github.com/niiifty" className="underline" />,
+          }}
+        />
       </p>
       <div className="mx-auto mt-8 max-w-sm">
         <UploadFilesButton.Large href="/admin" />
       </div>
-      <div className="mx-auto mt-16 max-w-md lg:max-w-3xl">
+      {/* <div className="mx-auto mt-16 max-w-md lg:max-w-3xl">
         <iframe
           className="mx-auto h-[243px] lg:h-[416px]"
           width="100%"
@@ -43,7 +41,7 @@ export default function HomeClient() {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
         ></iframe>
-      </div>
+      </div> */}
     </>
   );
 }

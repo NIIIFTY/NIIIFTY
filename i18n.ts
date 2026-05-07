@@ -96,11 +96,9 @@ i18n
             'Please use 2 to 15 letters, numbers, underscores, or full stops. Underscores and full stops must not be at the start or end, or used sequentially.',
           features: 'Features',
           homePara1:
-            'NIIIFTY simplifies the sharing of IIIF-formatted high-resolution images, 3D models, and audiovisual content via IPFS.',
+            'NIIIFTY simplifies the sharing and global discovery of IIIF-formatted high-resolution images, 3D models, and audiovisual content.',
           homePara2:
-            'This platform improves the reliability of <1>IIIF</1> content by leveraging the content-addressed immutability and decentralized retrieval properties of <3>IPFS</3>. This makes it ideal for use in third-party applications such as <5>Exhibit</5>. It is built on top of <7>Firebase</7> and <9>web3.storage</9> using <11>Next.js</11> and <13>TailwindCSS</13>.',
-          homePara3:
-            'NIIIFTY is a project funded by <1>Protocol Labs Dev Grant #504</1> and built by <3>Edward Silverton</3> at <5>Mnemoscene</5>. Please contact <7>Edward</7> for details of how to access this online demo, or refer to the <9>docs</9> to set up your own instance.',
+            'NIIIFTY provides a powerful "search across" solution for <1>IIIF</1> content. By publishing records to the <3>Matadisco</3> network via the <5>AT Protocol</5>, the platform enables decentralized discovery while leveraging <7>IPFS</7> to ensure assets remain immutable and reliably accessible for third-party applications like <9>Exhibit</9>. Built by <11>Mnemoscene</11> with funding from <13>Protocol Labs</13>, NIIIFTY features automated AI tagging with Gemini, <15>Filebase</15> IPFS storage, and a modern tech stack built on <17>Firebase</17> and <19>Next.js</19>. View the project on <21>GitHub</21>.',
           search: 'Search',
           searchPlaceholder: 'Search for content...',
           searching: 'Searching...',
