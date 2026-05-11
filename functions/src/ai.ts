@@ -41,8 +41,9 @@ const responseSchema = {
     },
     tags: {
       type: 'array',
-      description: 'A list of 3-5 descriptive tags or keywords for search indexing.',
-      items: { type: 'string' }
+      description: 'A list of 1-3 broad, generic category tags. All tags MUST be strictly lowercase and preferably a single word.',
+      items: { type: 'string' },
+      maxItems: 3
     }
   },
   required: ['summary', 'metadata', 'tags']
@@ -60,7 +61,7 @@ export async function generateFileSummary(filePath: string, mimeType: string): P
     const fileBuffer = fs.readFileSync(filePath);
     const base64Content = fileBuffer.toString('base64');
 
-    const prompt = 'Analyze this item for an archival search index. Provide a concise natural language summary, a set of relevant metadata pairs, and a few descriptive tags. Focus on visual facts, subject matter, and style. For the "type" metadata field, use a single concise term (e.g., "Photograph", "Painting", "Drawing", "Manuscript", "Map"). Use standard terminology for metadata keys (subject, type, date, creator, format). Omit any keys or tags if the value is "unknown" or uncertain.';
+    const prompt = 'Analyze this item for an archival search index. Provide a concise natural language summary, a set of relevant metadata pairs, and a few descriptive tags. Constrain the tags to broad, generic categories (e.g., "economics", "science", "history", "art") and ensure all tags are strictly lowercase and ideally a single word. Focus on visual facts, subject matter, and style. For the "type" metadata field, use a single concise term (e.g., "Photograph", "Painting", "Drawing", "Manuscript", "Map"). Use standard terminology for metadata keys (subject, type, date, creator, format). Omit any keys or tags if the value is "unknown" or uncertain.';
 
     const startTime = Date.now();
     const result = await ai.models.generateContent({
