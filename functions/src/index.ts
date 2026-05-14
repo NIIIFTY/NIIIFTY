@@ -299,6 +299,7 @@ export const fileUpdated = functions
             cid: metadata.cid,
             label: metadata.label,
             summary: metadata.summary,
+            type: metadata.type, // Ensure the actual MIME type is pushed, not the AI metadata.type
             provider: metadata.provider,
             rights: metadata.rights,
             tags: metadata.tags,

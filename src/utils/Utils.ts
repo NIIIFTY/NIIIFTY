@@ -33,6 +33,10 @@ export const formatMimeType = (type: string | undefined | null): string => {
     return ext.toUpperCase();
   }
   if (lower === 'still image') return 'JPG';
+  
+  // Guard against unwieldy AI-generated tags that leaked into the type field
+  if (type.length > 20) return 'FILE';
+  
   return type.toUpperCase();
 };
 

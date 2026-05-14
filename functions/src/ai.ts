@@ -30,7 +30,25 @@ const responseSchema = {
         subject: { type: 'string' },
         type: { 
           type: 'string',
-          description: 'The archival type of the item (e.g., Photograph, Drawing). Use a single word if possible.'
+          description: 'The archival type of the item. Must be one of the specified terms.',
+          enum: [
+            'Photograph',
+            'Painting',
+            'Drawing',
+            'Manuscript',
+            'Map',
+            'Text',
+            'Image',
+            'Dataset',
+            'Sound',
+            'Interactive Resource',
+            'Physical Object',
+            'Illustration',
+            'Print',
+            'Poster',
+            'Document',
+            '3D Model'
+          ]
         },
         date: { type: 'string' },
         creator: { type: 'string' },
