@@ -63,7 +63,7 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
         .findNearest('embedding', FieldValue.vector(embedding), {
           limit: Math.min(limit, 50),
           distanceMeasure: 'COSINE',
-          distanceThreshold: 0.55 // Filter out poor semantic matches
+          distanceResultField: 'vectorDistance'
         } as any)
         .get();
         
@@ -71,7 +71,7 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
     }
       
     // 3. Return results
-    const results = snapshot.docs.map(doc => {
+    let results = snapshot.docs.map(doc => {
       const data = doc.data();
 
       return { 
@@ -84,8 +84,15 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
         author: data.did || 'unknown',
         handle: data.handle || null,
         thumbnailUrl: data.thumbnailUrl || null,
+        distance: data.vectorDistance
       };
     });
+    
+    // Manually filter out results that are too far semantically if running against vector search
+    if (process.env.FUNCTIONS_EMULATOR !== 'true') {
+      results = results.filter(r => r.distance === undefined || r.distance <= 0.65);
+      console.log(`Filtered down to ${results.length} relevant results based on distance.`);
+    }
     
     return { results };
   } catch (error: any) {
