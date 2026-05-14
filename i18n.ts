@@ -95,10 +95,15 @@ i18n
           usernameInvalid:
             'Please use 2 to 15 letters, numbers, underscores, or full stops. Underscores and full stops must not be at the start or end, or used sequentially.',
           features: 'Features',
-          homePara1:
-            'NIIIFTY simplifies the sharing and global discovery of IIIF-formatted high-resolution images, 3D models, and audiovisual content.',
-          homePara2:
-            'NIIIFTY provides a powerful "search across" solution for <1>IIIF</1> content. By publishing records to the <3>Matadisco</3> network via the <5>AT Protocol</5>, the platform enables decentralized discovery while leveraging <7>IPFS</7> to ensure assets remain immutable and reliably accessible for third-party applications like <9>Exhibit</9>. Built by <11>Mnemoscene</11> with funding from <13>Protocol Labs</13>, NIIIFTY features automated AI tagging with Gemini, <15>Filebase</15> IPFS storage, and a modern tech stack built on <17>Firebase</17> and <19>Next.js</19>. View the project on <21>GitHub</21>.',
+          homeWhatItDoesTitle: 'What it does',
+          homeWhatItDoes:
+            'NIIIFTY lets you upload high-resolution images, 3D models, and audiovisual files as <1>IIIF</1> manifests, stored immutably on <3>IPFS</3> and published for cross-institutional discovery via the <5>AT Protocol</5>. Think of it as a global index for IIIF content — interoperable with tools like <7>Exhibit.so</7> and searchable across the <9>Matadisco</9> network.',
+          homeFunding:
+            'Built by <1>Mnemoscene</1> with funding from <3>IPFS Implementations Grants</3>. View the project on <5>GitHub</5>.',
+          homeHowItWorksTitle: 'How it Works',
+          homeHowItWorksStep1: 'Upload files',
+          homeHowItWorksStep2: 'Autogenerate metadata & tags',
+          homeHowItWorksStep3: 'Publish to Matadisco network (ATProto) for discovery',
           search: 'Search',
           searchPlaceholder: 'Search for content...',
           searching: 'Searching...',

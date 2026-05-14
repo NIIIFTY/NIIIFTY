@@ -2,9 +2,11 @@
 
 **Official Lexicon:** [`cx.vmx.matadisco`](https://lexicon.garden/lexicon/did:plc:3mdq56yhyqq5k6d4guztheaf/cx.vmx.matadisco)
 
-## NIIIFTY 2 Grant Outcomes
+This repository contains an end-to-end sample implementation of NIIIFTY2, which uses Matadisco, AT Protocol, and IPFS to solve Stable Identity and Global Discovery for decentralized IIIF content. 
 
-This repository contains the infrastructure and deliverables for the **NIIIFTY 2** grant, aimed at solving Stable Identity and Global Discovery for decentralized IIIF content on IPFS.
+*(Note: This repository also serves as the deliverable for the **NIIIFTY 2** IPFS Implementations Grant.)*
+
+## Core Infrastructure
 
 ### 1. AT Protocol Publisher (Global Discovery)
 We built and published the [`@niiifty/atproto-publisher`](https://www.npmjs.com/package/@niiifty/atproto-publisher) module to NPM. This open-source, reusable Node.js package allows any application to construct and publish IIIF metadata records directly to an AT Protocol account. By tapping into the AT Protocol Firehose, we inverted the traditional IIIF "Pull" model (crawlers) into a highly scalable "Push" model, enabling instant, global discoverability.
