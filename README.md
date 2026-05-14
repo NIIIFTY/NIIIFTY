@@ -120,15 +120,20 @@ A persistent **Bun** service running on **Cloud Run** that subscribes to the AT 
 
 ### 2. AI-Powered Indexing
 We use the official **Vector Search with Firestore** extension to generate semantic embeddings.
-- **Provider**: Vertex AI (`europe-west1`)
-- **Model**: `text-embedding-004` (768 dimensions)
-- **Input**: A combined `searchText` field (Label + Summary)
-- **Trigger**: Automatic on Firestore document writes.
+
+**Extension Configuration:**
+- **Provider**: Google AI (Gemini API)
+- **Model**: `gemini-embedding-001`
+- **Output Dimensionality**: `768` (Must be explicitly set, as Firestore limits vectors to 2048 dimensions)
+- **Collection**: `matadisco_index`
+- **Input Field**: `searchText`
+- **Output Field**: `embedding`
 
 ### 3. Semantic Search API
 A callable Firebase Cloud Function (`searchAppView`) provides fuzzy, vector-based search.
-- **Logic**: Converts user queries into vectors using Vertex AI and performs a `findNearest` query on Firestore.
-- **Performance**: Entirely regionalized in `europe-west1` to match the `eur3` Firestore location, ensuring sub-100ms search latency.
+- **Logic**: Converts user queries into 768-dimensional vectors using the `@google/genai` SDK and performs a `findNearest` cosine distance query on Firestore.
+- **Distance Filtering**: Firestore `findNearest` always returns the requested limit of documents regardless of relevance. The function manually filters out results with a cosine distance `> 0.45` to prevent semantically unrelated records from appearing in search results.
+- **Performance**: Entirely regionalized in `europe-west1` to match the `eur3` Firestore location, ensuring low-latency search.
 
 ## Federation & Discovery
 

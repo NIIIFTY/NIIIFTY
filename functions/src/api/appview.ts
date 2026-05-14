@@ -3,20 +3,33 @@ import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { GoogleGenAI } from '@google/genai';
 
+import { defineSecret } from 'firebase-functions/params';
+
 if (!getApps().length) {
   initializeApp();
 }
 const db = getFirestore();
 
-// Initialize Vertex AI
-const project = process.env.GCLOUD_PROJECT || 'niiifty-bd2e2';
-const location = 'europe-west1';
+const geminiApiKey = defineSecret('firestore-vector-search-GEMINI_API_KEY-j01j');
 
-// In Cloud Functions, ADC (Application Default Credentials) will be used automatically
-// as long as the environment supports it (which Cloud Functions does).
-const ai = new GoogleGenAI({ vertexai: true, project, location });
+function cosineDistance(vecA: number[], vecB: number[]): number {
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  const len = Math.min(vecA.length, vecB.length);
+  for (let i = 0; i < len; i++) {
+    dotProduct += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
+  }
+  if (normA === 0 || normB === 0) return 1;
+  return 1 - (dotProduct / (Math.sqrt(normA) * Math.sqrt(normB)));
+}
 
-export const searchAppView = onCall({ region: 'europe-west1' }, async (request) => {
+export const searchAppView = onCall({ 
+  region: 'europe-west1',
+  secrets: [geminiApiKey]
+}, async (request) => {
   const { query, limit = 10 } = request.data;
 
   if (!query || typeof query !== 'string') {
@@ -25,6 +38,7 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
 
   try {
     let snapshot;
+    let queryEmbedding: number[] | null = null;
     
     if (process.env.FUNCTIONS_EMULATOR === 'true') {
       console.log(`[EMULATOR] Bypassing Vertex AI vector search. Performing local text search for "${query}"...`);
@@ -42,11 +56,14 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
       // Re-map to match snapshot structure expected below
       snapshot = { size: filteredDocs.length, docs: filteredDocs } as any;
     } else {
-      // 1. Generate embedding for the query
-      console.log(`Generating embedding for query: "${query}" using model text-embedding-004...`);
+      const ai = new GoogleGenAI({ apiKey: geminiApiKey.value() });
+      
       const response = await ai.models.embedContent({
-        model: 'text-embedding-004',
+        model: 'gemini-embedding-001',
         contents: query,
+        config: {
+          outputDimensionality: 768
+        }
       });
       
       const embedding = response.embeddings?.[0]?.values;
@@ -55,6 +72,7 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
         throw new Error('Failed to generate embedding: empty response from AI');
       }
       
+      queryEmbedding = embedding;
       console.log(`Generated embedding (length: ${embedding.length}). Performing vector search in matadisco_index...`);
       
       // 2. Perform vector search on Firestore
@@ -62,8 +80,7 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
       snapshot = await db.collection('matadisco_index')
         .findNearest('embedding', FieldValue.vector(embedding), {
           limit: Math.min(limit, 50),
-          distanceMeasure: 'COSINE',
-          distanceResultField: 'vectorDistance'
+          distanceMeasure: 'COSINE'
         } as any)
         .get();
         
@@ -73,6 +90,14 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
     // 3. Return results
     let results = snapshot.docs.map(doc => {
       const data = doc.data();
+      
+      let distance: number | undefined = undefined;
+      if (queryEmbedding && data.embedding) {
+         const docEmb = typeof data.embedding.toArray === 'function' ? data.embedding.toArray() : data.embedding;
+         if (Array.isArray(docEmb)) {
+           distance = cosineDistance(queryEmbedding, docEmb);
+         }
+      }
 
       return { 
         ...data,
@@ -84,13 +109,14 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
         author: data.did || 'unknown',
         handle: data.handle || null,
         thumbnailUrl: data.thumbnailUrl || null,
-        distance: data.vectorDistance
+        distance
       };
     });
     
     // Manually filter out results that are too far semantically if running against vector search
     if (process.env.FUNCTIONS_EMULATOR !== 'true') {
-      results = results.filter(r => r.distance === undefined || r.distance <= 0.65);
+      console.log(`Raw distances before filter: ${results.map(r => r.distance).join(', ')}`);
+      results = results.filter(r => r.distance === undefined || r.distance <= 0.45);
       console.log(`Filtered down to ${results.length} relevant results based on distance.`);
     }
     
