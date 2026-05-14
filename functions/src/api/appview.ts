@@ -62,8 +62,9 @@ export const searchAppView = onCall({ region: 'europe-west1' }, async (request) 
       snapshot = await db.collection('matadisco_index')
         .findNearest('embedding', FieldValue.vector(embedding), {
           limit: Math.min(limit, 50),
-          distanceMeasure: 'COSINE'
-        })
+          distanceMeasure: 'COSINE',
+          distanceThreshold: 0.55 // Filter out poor semantic matches
+        } as any)
         .get();
         
       console.log(`Search returned ${snapshot.size} results.`);
