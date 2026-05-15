@@ -8,8 +8,8 @@ export default function HomeClient() {
 
   return (
     <>
-      <h2 className="text-2xl font-bold mb-4">{t('homeWhatItDoesTitle')}</h2>
-      <p className="text-lg mb-4">
+      <h2 className="mb-4 text-2xl font-bold">{t('homeWhatItDoesTitle')}</h2>
+      <p className="mb-4 text-lg">
         <Trans
           i18nKey="homeWhatItDoes"
           components={{
@@ -21,7 +21,7 @@ export default function HomeClient() {
           }}
         />
       </p>
-      
+
       <p className="text-md mb-8 text-gray-400">
         <Trans
           i18nKey="homeFunding"
@@ -38,25 +38,43 @@ export default function HomeClient() {
       </div>
 
       <div className="mt-16">
-        <h2 className="text-2xl font-bold mb-6 text-center">{t('homeHowItWorksTitle')}</h2>
-        
-        <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-8 text-center text-sm font-semibold">
-          <div className="bg-white/10 dark:bg-black/10 px-4 py-2 rounded-lg">{t('homeHowItWorksStep1')}</div>
-          <div className="text-gray-500">→</div>
-          <div className="bg-white/10 dark:bg-black/10 px-4 py-2 rounded-lg">{t('homeHowItWorksStep2')}</div>
-          <div className="text-gray-500">→</div>
-          <div className="bg-white/10 dark:bg-black/10 px-4 py-2 rounded-lg">{t('homeHowItWorksStep3')}</div>
+        <h2 className="mb-6 text-center text-2xl font-bold">{t('homeHowItWorksTitle')}</h2>
+
+        <div className="mb-8 flex flex-col items-center justify-center gap-4 text-center text-sm font-semibold md:flex-row">
+          <div className="rounded-lg bg-white/10 px-4 py-2 dark:bg-black/10">{t('homeHowItWorksStep1')}</div>
+          <div className="hidden text-gray-500 md:block">→</div>
+          <div className="text-gray-500 md:hidden">↓</div>
+          <div className="rounded-lg bg-white/10 px-4 py-2 dark:bg-black/10">{t('homeHowItWorksStep2')}</div>
+          <div className="hidden text-gray-500 md:block">→</div>
+          <div className="text-gray-500 md:hidden">↓</div>
+          <div className="rounded-lg bg-white/10 px-4 py-2 dark:bg-black/10">{t('homeHowItWorksStep3')}</div>
         </div>
 
-        <div className="mx-auto max-w-md lg:max-w-4xl">
-          <video
-            className="mx-auto w-full rounded-xl shadow-2xl"
-            src="/niiifty-demo.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
+        <div className="mx-auto grid max-w-full grid-cols-1 gap-8 px-4 md:grid-cols-2 lg:max-w-6xl">
+          <div>
+            <h3 className="mb-4 text-center text-xl font-semibold">Publish via AT Protocol</h3>
+            <video
+              className="mx-auto w-full rounded-xl shadow-2xl"
+              src="/niiifty-demo.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              controls
+            />
+          </div>
+          <div>
+            <h3 className="mb-4 text-center text-xl font-semibold">Discover via Semantic Search</h3>
+            <video
+              className="mx-auto w-full rounded-xl shadow-2xl"
+              src="/search.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              controls
+            />
+          </div>
         </div>
       </div>
     </>
